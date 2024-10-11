@@ -1,7 +1,6 @@
-const User = require('../models/User');
-const { signToken } = require('../utils/jwtUtils');
-const TokenBlacklist = require('../models/TokenBlacklist');
-
+const User = require("../models/User");
+const { signToken } = require("../utils/jwtUtils");
+const TokenBlacklist = require("../models/TokenBlacklist");
 
 // Get all users without relationships
 exports.getUsers = async function (req, res) {
@@ -10,11 +9,13 @@ exports.getUsers = async function (req, res) {
     console.log("Users are here: " + users);
 
     const currentUser = await User.findById(req.user.id);
-    const blockedUsers = currentUser ? currentUser.blockedUsers.map(id => id.toString()) : [];
+    const blockedUsers = currentUser
+      ? currentUser.blockedUsers.map((id) => id.toString())
+      : [];
 
     const userResponses = users
-      .filter(user => !blockedUsers.includes(user._id.toString()))
-      .map(user => ({
+      .filter((user) => !blockedUsers.includes(user._id.toString()))
+      .map((user) => ({
         userId: user._id,
         name: user.name,
         username: user.username,
@@ -26,7 +27,10 @@ exports.getUsers = async function (req, res) {
         bio: user.bio,
         link: user.link,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        updatedAt: user.updatedAt,
+        bgColor:user.bgColor,
+        isPrivate:user.isPrivate,
+        pages:user.pages
       }));
 
     res.json(userResponses);
@@ -39,12 +43,13 @@ exports.getUsers = async function (req, res) {
 exports.getUserById = async function (req, res) {
   try {
     const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const currentUser = await User.findById(req.user.id);
-    const isBlocked = currentUser && currentUser.blockedUsers.includes(user._id.toString());
+    const isBlocked =
+      currentUser && currentUser.blockedUsers.includes(user._id.toString());
 
-    if (isBlocked) return res.status(403).json({ message: 'User is blocked' });
+    if (isBlocked) return res.status(403).json({ message: "User is blocked" });
 
     const userResponse = {
       userId: user._id,
@@ -58,7 +63,10 @@ exports.getUserById = async function (req, res) {
       bio: user.bio,
       link: user.link,
       createdAt: user.createdAt,
-      updatedAt: user.updatedAt
+      updatedAt: user.updatedAt,
+      bgColor:user.bgColor,
+      isPrivate:user.isPrivate,
+      pages:user.pages
     };
 
     res.json(userResponse);
@@ -71,28 +79,35 @@ exports.getUserById = async function (req, res) {
 exports.searchUsersByName = async function (req, res) {
   const searchTerm = req.query.name;
   if (!searchTerm) {
-    return res.status(400).json({ message: 'Name query parameter is required' });
+    return res
+      .status(400)
+      .json({ message: "Name query parameter is required" });
   }
 
   try {
     const users = await User.find({
       $or: [
-        { name: { $regex: `^${searchTerm}`, $options: 'i' } },
-        { username: { $regex: `^${searchTerm}`, $options: 'i' } }
-      ]
+        { name: { $regex: `^${searchTerm}`, $options: "i" } },
+        { username: { $regex: `^${searchTerm}`, $options: "i" } },
+      ],
     });
 
     const currentUser = await User.findById(req.user.id);
-    const blockedUsers = currentUser ? currentUser.blockedUsers.map(id => id.toString()) : [];
+    const blockedUsers = currentUser
+      ? currentUser.blockedUsers.map((id) => id.toString())
+      : [];
 
-    const filteredUsers = users
-      .filter(user => !blockedUsers.includes(user._id.toString()) && user._id.toString() !== req.user.id);
+    const filteredUsers = users.filter(
+      (user) =>
+        !blockedUsers.includes(user._id.toString()) &&
+        user._id.toString() !== req.user.id
+    );
 
     if (filteredUsers.length === 0) {
-      return res.status(404).json({ message: 'No users found' });
+      return res.status(404).json({ message: "No users found" });
     }
 
-    const userResponses = filteredUsers.map(user => ({
+    const userResponses = filteredUsers.map((user) => ({
       userId: user._id,
       name: user.name,
       username: user.username,
@@ -104,7 +119,10 @@ exports.searchUsersByName = async function (req, res) {
       bio: user.bio,
       link: user.link,
       createdAt: user.createdAt,
-      updatedAt: user.updatedAt
+      updatedAt: user.updatedAt,
+      bgColor:user.bgColor,
+      isPrivate:user.isPrivate,
+      pages:user.pages
     }));
 
     res.json(userResponses);
@@ -113,17 +131,16 @@ exports.searchUsersByName = async function (req, res) {
   }
 };
 
-
 //logout
 exports.signoutUser = async (req, res) => {
   try {
-    const token = req.headers.authorization.split(' ')[1]; 
+    const token = req.headers.authorization.split(" ")[1];
     await TokenBlacklist.create({ token });
 
-    res.status(200).json({ message: 'Successfully signed out' });
+    res.status(200).json({ message: "Successfully signed out" });
   } catch (err) {
-    console.error('Error signing out:', err);
-    res.status(500).json({ message: 'Error signing out' });
+    console.error("Error signing out:", err);
+    res.status(500).json({ message: "Error signing out" });
   }
 };
 
@@ -137,14 +154,18 @@ exports.signupUser = async function (req, res) {
     mailAddress,
     bio,
     link,
-    profileImg
+    profileImg,
+    bgColor,
   } = req.body;
 
   try {
-    let existingUser = await User.findOne({ phoneNumber });
+    let existingUser = await User.findOne({ phoneNumber }).populate('pages');
+
 
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists. Please log in.' });
+      return res
+        .status(400)
+        .json({ message: "User already exists. Please log in." });
     }
 
     const user = new User({
@@ -156,7 +177,8 @@ exports.signupUser = async function (req, res) {
       mailAddress,
       bio,
       link,
-      profileImg
+      profileImg,
+      bgColor
     });
 
     await user.save();
@@ -175,7 +197,10 @@ exports.signupUser = async function (req, res) {
       link: user.link,
       profileImg: user.profileImg,
       createdAt: user.createdAt,
-      updatedAt: user.updatedAt
+      updatedAt: user.updatedAt,
+      isPrivate: user.isPrivate,
+      bgColor:user.bgColor
+      
     };
 
     return res.status(201).send(userResponse);
@@ -183,18 +208,29 @@ exports.signupUser = async function (req, res) {
     return res.status(500).json({ message: err.message });
   }
 };
-
-
-
 exports.loginUser = async function (req, res) {
   const { phoneNumber } = req.body;
 
   try {
-    let user = await User.findOne({ phoneNumber });
+    // Query to fetch the user by phoneNumber
+    const user = await User.findOne({ phoneNumber }).populate('pages');
 
+    // Check if user exists
     if (user) {
       const token = signToken(user._id);
 
+      // If the user has pages, populate their pageName and profileImg
+      let userPages = [];
+      if (user.pages && user.pages.length > 0) {
+        userPages = user.pages.map(page => ({
+          pageId:page._id,
+          pageName: page.pageName,
+          profileImg: page.profileImg,
+          profileBackground:page.profileBackground
+        }));
+      }
+
+      // Construct the response
       const userResponse = {
         token,
         userId: user._id,
@@ -208,9 +244,13 @@ exports.loginUser = async function (req, res) {
         link: user.link,
         profileImg: user.profileImg,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        updatedAt: user.updatedAt,
+        bgColor:user.bgColor,
+        isPrivate:user.isPrivate,
+        pages: userPages  // Include pages with pageName and profileImg if available
       };
-      return res.status(200).send(userResponse);
+
+      return res.status(200).json(userResponse);
     } else {
       return res.status(404).json({ userExists: false, phoneNumber });
     }
@@ -221,21 +261,28 @@ exports.loginUser = async function (req, res) {
 
 
 
-
-
-
-
 exports.updateUser = async function (req, res) {
   try {
-    const { name, gender, dob, bio, profession, website, profileImg, link } = req.body;
+    const { name, gender, dob, bio, profileImg, link,bgColor } =
+      req.body;
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { name, gender, dob, bio, profession, website, profileImg, link, updatedAt: Date.now() },
+      {
+        name,
+        gender,
+        dob,
+        bio,
+        profileImg,
+        link,
+        bgColor,
+        updatedAt: Date.now(),
+        isPrivate
+      },
       { new: true }
     );
 
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const userResponse = {
       userId: user._id,
@@ -249,7 +296,9 @@ exports.updateUser = async function (req, res) {
       link: user.link,
       profileImg: user.profileImg,
       createdAt: user.createdAt,
-      updatedAt: user.updatedAt
+      updatedAt: user.updatedAt,
+      isPrivate: user.isPrivate,
+      bgColor:bgColor,
     };
 
     res.json(userResponse);
@@ -258,22 +307,13 @@ exports.updateUser = async function (req, res) {
   }
 };
 
-
-
-
-
-
-
 // Delete current user (Authenticated User)
 exports.deleteUser = async function (req, res) {
   try {
     const user = await User.findByIdAndDelete(req.user.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    res.json({ message: 'User account deleted successfully' });
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json({ message: "User account deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
-
-
