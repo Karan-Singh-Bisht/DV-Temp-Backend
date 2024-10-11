@@ -1,11 +1,11 @@
 const User = require("../../models/User");
 const Pages = require("../../models/Pages Model/PagesModel");
-const UserBlockPages = require("../../models/Pages Model/userBlockedPagesModel");
+const PageActions = require("../../models/Pages Model/PageActionsModel");
 
 const getAllpages = async (req, res) => {
   try {
     const allPages = await Pages.find();
-    const blockedData = await UserBlockPages.findOne({ userId: req.userId });
+    const blockedData = await PageActions.findOne({ userId: req.userId });
     let filteredPages = allPages;
     if (blockedData) {
       filteredPages = allPages.filter((page) => {
@@ -141,7 +141,7 @@ const searchPages = async (req, res) => {
     });
 
     if (pages.length > 0) {
-      const blockedData = await UserBlockPages.findOne({ userId: req.userId });
+      const blockedData = await PageActions.findOne({ userId: req.userId });
       let filteredPages = pages;
       if (blockedData) {
         filteredPages = pages.filter((page) => {

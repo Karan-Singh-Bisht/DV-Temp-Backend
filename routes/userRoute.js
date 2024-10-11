@@ -11,7 +11,7 @@ const {
 } = require('../controllers/userController');
 
 const PagesController= require('../controllers/PagesController/PagesController')
-const userBlockedPagesController= require('../controllers/PagesController/userBlockedPagesController')
+const PageActionsController= require('../controllers/PagesController/PageActionsController')
 
 const userAuthMiddleware = require('../middlewares/userAuthMiddleware');
 
@@ -37,9 +37,15 @@ router.get ('/users/togglepagestatus/:pageId',userAuthMiddleware,PagesController
 router.get('/users/searchpages/:search',userAuthMiddleware,PagesController.searchPages)
 router.get ('/users/getpage/:pageId',userAuthMiddleware,PagesController.getPage)
 
-//page blocking
 
-router.get('/users/blockpage/:userId/:pageId',
-  userAuthMiddleware,userBlockedPagesController.updateUserBlockEntry)
+//Page Action
+
+//page blocking
+router.get('/users/blockpage/:pageId',
+  userAuthMiddleware,PageActionsController.updateUserBlockEntry)
+
+// page following
+router.get('/users/followpage/:pageId',userAuthMiddleware,PageActionsController.addToFollowing)
+
 
 module.exports = router;
