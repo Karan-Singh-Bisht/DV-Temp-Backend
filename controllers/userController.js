@@ -46,30 +46,31 @@ exports.getUserById = async function (req, res) {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const currentUser = await User.findById(req.user.id);
-    const isBlocked =
-      currentUser && currentUser.blockedUsers.includes(user._id.toString());
+    
 
-    if (isBlocked) return res.status(403).json({ message: "User is blocked" });
+    if (currentUser){
+      const userResponse = {
+        userId: user._id,
+        name: user.name,
+        username: user.username,
+        profileImg: user.profileImg,
+        gender: user.gender,
+        dob: user.dob,
+        phoneNumber: user.phoneNumber,
+        mailAddress: user.mailAddress,
+        bio: user.bio,
+        link: user.link,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        bgColor:user.bgColor,
+        isPrivate:user.isPrivate,
+        pages:user.pages
+      };
+  
+      res.json(userResponse);
+    }
 
-    const userResponse = {
-      userId: user._id,
-      name: user.name,
-      username: user.username,
-      profileImg: user.profileImg,
-      gender: user.gender,
-      dob: user.dob,
-      phoneNumber: user.phoneNumber,
-      mailAddress: user.mailAddress,
-      bio: user.bio,
-      link: user.link,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      bgColor:user.bgColor,
-      isPrivate:user.isPrivate,
-      pages:user.pages
-    };
-
-    res.json(userResponse);
+  
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
