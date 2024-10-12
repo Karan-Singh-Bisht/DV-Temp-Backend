@@ -236,19 +236,11 @@ exports.loginUser = async function (req, res) {
         bio: user.bio,
         link: user.link,
         profileImg: user.profileImg,
-<<<<<<< HEAD
-        // createdAt: user.createdAt,
-        // updatedAt: user.updatedAt,
-        bgColor:user.bgColor,
-        isPrivate:user.isPrivate,
-        pages: userPages  // Include pages with pageName and profileImg if available
-=======
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
+        //createdAt: user.createdAt,
+        //updatedAt: user.updatedAt,
         bgColor: user.bgColor,
         isPrivate: user.isPrivate,
         pages: userPages, // Include pages with pageName and profileImg if available
->>>>>>> 8a07d02e0707a74311fbb43aed4eaa253acb713e
       };
 
       return res.status(200).json(userResponse);
