@@ -26,7 +26,7 @@ const userAuthMiddleware = async (req, res, next) => {
       if (!decoded.id) {
         throw createHttpError(401, "Token payload is missing required fields");
       }
-      req.userId = decoded.id;
+
       const user = await User.findById(decoded.id);
       if (!user) {
         throw createHttpError(404, "User not found");

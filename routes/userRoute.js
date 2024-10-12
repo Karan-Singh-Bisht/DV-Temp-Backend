@@ -41,11 +41,13 @@ router.get ('/users/getpage/:pageId',userAuthMiddleware,PagesController.getPage)
 //Page Action
 
 //page blocking
-router.get('/users/blockpage/:pageId',
+router.get('/users/blockpage/:pageId/:blockpageId',
   userAuthMiddleware,PageActionsController.updateUserBlockEntry)
 
 // page following
-router.get('/users/followpage/:pageId',userAuthMiddleware,PageActionsController.addToFollowing)
+router.get('/users/followpage/:pageId/:followingId',userAuthMiddleware,PageActionsController.addToFollowing)
+router.get('/users/getallfollower/:pageId',userAuthMiddleware,PageActionsController.getAllFollowers)
+router.get('/users/getallfollowing/:pageId',userAuthMiddleware,PageActionsController.getAllFollowing)
 
 
 module.exports = router;

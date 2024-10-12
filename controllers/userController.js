@@ -45,8 +45,9 @@ exports.getUserById = async function (req, res) {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const currentUser = await User.findById(req.user.id);
-    const userPages = await Pages.find({ userId: req.user.id });
+    const currentUser = await User.findById(req.user._id);
+    const userPages = await Pages.find({ userId: req.user._id },  { pageName: 1, profileImg: 1, profileBackground: 1 });
+   
 
     if (currentUser) {
       const userResponse = {
@@ -64,10 +65,7 @@ exports.getUserById = async function (req, res) {
         updatedAt: user.updatedAt,
         bgColor: user.bgColor,
         isPrivate: user.isPrivate,
-        pages: {
-          pageName: userPages.PageName,
-          profileImg: userPages.profileImg,
-        },
+        pages: userPages
       };
 
       res.json(userResponse);

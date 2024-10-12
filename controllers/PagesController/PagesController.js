@@ -5,7 +5,7 @@ const PageActions = require("../../models/Pages Model/PageActionsModel");
 const getAllpages = async (req, res) => {
   try {
     const allPages = await Pages.find();
-    const blockedData = await PageActions.findOne({ userId: req.userId });
+    const blockedData = await PageActions.findOne({ userId: req.user._id });
     let filteredPages = allPages;
     if (blockedData) {
       filteredPages = allPages.filter((page) => {
@@ -33,7 +33,7 @@ const addNewPage = async (req, res) => {
       profileBackground
     } = req.body;
 
-    const userId=req.userId
+    const userId=req.user._id
     const PageData = {
       userId,
       pageName,
@@ -50,10 +50,12 @@ const addNewPage = async (req, res) => {
     const newPage = new Pages(PageData);
     const savePageData = await newPage.save();
     if (savePageData) {
-      let setInUser = await User.findByIdAndUpdate(req.userId, {
-        $push: { pages: savePageData._id },
+      let PageAction  = new PageActions({
+        pageId:savePageData._id
       });
-      if (setInUser) {
+      const savedPagesAction= await PageAction.save()
+    
+      if (savedPagesAction) {
         return res.status(201).json({
           success: true,
           message: "Page created successfully",
@@ -146,7 +148,7 @@ const searchPages = async (req, res) => {
     });
 
     if (pages.length > 0) {
-      const blockedData = await PageActions.findOne({ userId: req.userId });
+      const blockedData = await PageActions.findOne({ userId: req.user._id});
       let filteredPages = pages;
       if (blockedData) {
         filteredPages = pages.filter((page) => {

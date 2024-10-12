@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const PageActionsSchema = new mongoose.Schema({
-  userId: {
+  pageId: {
     type: String,
     required: true,
   },
