@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const { signToken } = require("../utils/jwtUtils");
 const TokenBlacklist = require("../models/TokenBlacklist");
+const Pages = require("../models/Pages Model/PagesModel");
 
 // Get all users without relationships
 exports.getUsers = async function (req, res) {
@@ -28,9 +29,8 @@ exports.getUsers = async function (req, res) {
         link: user.link,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-        bgColor:user.bgColor,
-        isPrivate:user.isPrivate,
-        pages:user.pages
+        bgColor: user.bgColor,
+        isPrivate: user.isPrivate,
       }));
 
     res.json(userResponses);
@@ -46,9 +46,9 @@ exports.getUserById = async function (req, res) {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const currentUser = await User.findById(req.user.id);
-    
+    const userPages = await Pages.find({ userId: req.user.id });
 
-    if (currentUser){
+    if (currentUser) {
       const userResponse = {
         userId: user._id,
         name: user.name,
@@ -62,15 +62,16 @@ exports.getUserById = async function (req, res) {
         link: user.link,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-        bgColor:user.bgColor,
-        isPrivate:user.isPrivate,
-        pages:user.pages
+        bgColor: user.bgColor,
+        isPrivate: user.isPrivate,
+        pages: {
+          pageName: userPages.PageName,
+          profileImg: userPages.profileImg,
+        },
       };
-  
+
       res.json(userResponse);
     }
-
-  
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -121,9 +122,8 @@ exports.searchUsersByName = async function (req, res) {
       link: user.link,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      bgColor:user.bgColor,
-      isPrivate:user.isPrivate,
-      pages:user.pages
+      bgColor: user.bgColor,
+      isPrivate: user.isPrivate,
     }));
 
     res.json(userResponses);
@@ -160,8 +160,7 @@ exports.signupUser = async function (req, res) {
   } = req.body;
 
   try {
-    let existingUser = await User.findOne({ phoneNumber }).populate('pages');
-
+    let existingUser = await User.findOne({ phoneNumber }).populate("pages");
 
     if (existingUser) {
       return res
@@ -179,7 +178,7 @@ exports.signupUser = async function (req, res) {
       bio,
       link,
       profileImg,
-      bgColor
+      bgColor,
     });
 
     await user.save();
@@ -200,8 +199,7 @@ exports.signupUser = async function (req, res) {
       // createdAt: user.createdAt,
       // updatedAt: user.updatedAt,
       isPrivate: user.isPrivate,
-      bgColor:user.bgColor
-      
+      bgColor: user.bgColor,
     };
 
     return res.status(201).send(userResponse);
@@ -214,22 +212,16 @@ exports.loginUser = async function (req, res) {
 
   try {
     // Query to fetch the user by phoneNumber
-    const user = await User.findOne({ phoneNumber }).populate('pages');
+    const user = await User.findOne({ phoneNumber });
 
     // Check if user exists
     if (user) {
       const token = signToken(user._id);
 
-      // If the user has pages, populate their pageName and profileImg
-      let userPages = [];
-      if (user.pages && user.pages.length > 0) {
-        userPages = user.pages.map(page => ({
-          pageId:page._id,
-          pageName: page.pageName,
-          profileImg: page.profileImg,
-          profileBackground:page.profileBackground
-        }));
-      }
+      const userPages = await Pages.find(
+        { userId: user._id },
+        { pageName: 1, profileImg: 1, profileBackground: 1 }
+      );
 
       // Construct the response
       const userResponse = {
@@ -244,11 +236,19 @@ exports.loginUser = async function (req, res) {
         bio: user.bio,
         link: user.link,
         profileImg: user.profileImg,
+<<<<<<< HEAD
         // createdAt: user.createdAt,
         // updatedAt: user.updatedAt,
         bgColor:user.bgColor,
         isPrivate:user.isPrivate,
         pages: userPages  // Include pages with pageName and profileImg if available
+=======
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        bgColor: user.bgColor,
+        isPrivate: user.isPrivate,
+        pages: userPages, // Include pages with pageName and profileImg if available
+>>>>>>> 8a07d02e0707a74311fbb43aed4eaa253acb713e
       };
 
       return res.status(200).json(userResponse);
@@ -260,12 +260,9 @@ exports.loginUser = async function (req, res) {
   }
 };
 
-
-
 exports.updateUser = async function (req, res) {
   try {
-    const { name, gender, dob, bio, profileImg, link,bgColor } =
-      req.body;
+    const { name, gender, dob, bio, profileImg, link, bgColor } = req.body;
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
@@ -278,7 +275,7 @@ exports.updateUser = async function (req, res) {
         link,
         bgColor,
         updatedAt: Date.now(),
-        isPrivate
+        isPrivate,
       },
       { new: true }
     );
@@ -299,7 +296,7 @@ exports.updateUser = async function (req, res) {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       isPrivate: user.isPrivate,
-      bgColor:bgColor,
+      bgColor: bgColor,
     };
 
     res.json(userResponse);

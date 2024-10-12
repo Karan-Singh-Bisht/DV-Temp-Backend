@@ -6,6 +6,10 @@ const PagesSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "Pages", 
+    },
     userName: {
       type: String,
       required: true,
