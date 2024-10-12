@@ -1,3 +1,4 @@
+const { messaging } = require("firebase-admin");
 const PageActions = require("../../models/Pages Model/PageActionsModel");
 const { find } = require("../../models/User");
 
@@ -140,9 +141,42 @@ const getAllFollowing = async (req, res) => {
   }
 };
 
+const unFollowing = async (req, res) => {
+  try {
+    const { pageId, unfollowingId } = req.params;
+
+console.log(unfollowingId,'unfollowingId');
+
+    // Use MongoDB's $pull to remove unfollowingId from followingList and pageId from followersList
+    const pageActionUpdate = await PageActions.updateOne(
+      { pageId },
+      { $pull: { followingList: unfollowingId } }
+    );
+
+    const unfollowedPageActionUpdate = await PageActions.updateOne(
+      { pageId: unfollowingId },
+      { $pull: { followersList: pageId } }
+    );
+
+    // Check if the updates affected any documents
+    if (pageActionUpdate.nModified === 0 || unfollowedPageActionUpdate.nModified === 0) {
+      return res.status(400).json({ success: false, message: "Unfollowing operation failed" });
+    }
+
+    return res.status(200).json({ success: true, message: "Successfully unfollowed the Page" });
+    
+  } catch (error) {
+    console.error("Error updating the document:", error); // Log error for debugging
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
 module.exports = {
   updateUserBlockEntry,
   addToFollowing,
   getAllFollowers,
   getAllFollowing,
+  unFollowing,
 };

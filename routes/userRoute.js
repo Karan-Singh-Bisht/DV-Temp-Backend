@@ -48,6 +48,7 @@ router.get('/users/blockpage/:pageId/:blockpageId',
 router.get('/users/followpage/:pageId/:followingId',userAuthMiddleware,PageActionsController.addToFollowing)
 router.get('/users/getallfollower/:pageId',userAuthMiddleware,PageActionsController.getAllFollowers)
 router.get('/users/getallfollowing/:pageId',userAuthMiddleware,PageActionsController.getAllFollowing)
+router.get('/users/unfollowpage/:pageId/:unfollowingId',userAuthMiddleware,PageActionsController.unFollowing)
 
 
 module.exports = router;
