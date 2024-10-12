@@ -194,8 +194,8 @@ exports.signupUser = async function (req, res) {
       bio: user.bio,
       link: user.link,
       profileImg: user.profileImg,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
+      // createdAt: user.createdAt,
+      // updatedAt: user.updatedAt,
       isPrivate: user.isPrivate,
       bgColor: user.bgColor,
     };
@@ -234,8 +234,8 @@ exports.loginUser = async function (req, res) {
         bio: user.bio,
         link: user.link,
         profileImg: user.profileImg,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
+        //createdAt: user.createdAt,
+        //updatedAt: user.updatedAt,
         bgColor: user.bgColor,
         isPrivate: user.isPrivate,
         pages: userPages, // Include pages with pageName and profileImg if available
