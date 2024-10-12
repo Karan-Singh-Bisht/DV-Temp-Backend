@@ -252,7 +252,7 @@ exports.loginUser = async function (req, res) {
 
 exports.updateUser = async function (req, res) {
   try {
-    const { name, gender, dob, bio, profileImg, link, bgColor } = req.body;
+    const { name, gender, dob, bio, profileImg, link, bgColor,isPrivate } = req.body;
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
@@ -263,9 +263,9 @@ exports.updateUser = async function (req, res) {
         bio,
         profileImg,
         link,
-        bgColor,
         updatedAt: Date.now(),
         isPrivate,
+        bgColor,
       },
       { new: true }
     );
@@ -291,7 +291,7 @@ exports.updateUser = async function (req, res) {
 
     res.json(userResponse);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 

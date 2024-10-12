@@ -24,7 +24,7 @@ router.get('/users',userAuthMiddleware, getUsers);
 router.get('/users/search',userAuthMiddleware, searchUsersByName);  
 router.get('/users/:id',userAuthMiddleware, getUserById);            
 router.post('/users/signout', userAuthMiddleware, signoutUser);
-router.put('/users/update',userAuthMiddleware, updateUser);              
+router.patch('/users/update',userAuthMiddleware, updateUser);              
 router.delete('/users/delete',userAuthMiddleware, deleteUser);
 
 
