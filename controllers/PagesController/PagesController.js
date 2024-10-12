@@ -29,10 +29,13 @@ const addNewPage = async (req, res) => {
       Bio,
       Website,
       isCreator,
+      profileImg,
       profileBackground
     } = req.body;
 
+    const userId=req.userId
     const PageData = {
+      userId,
       pageName,
       userName,
       Category,
@@ -41,6 +44,7 @@ const addNewPage = async (req, res) => {
       Bio,
       Website,
       isCreator,
+      profileImg,
       profileBackground
     };
     const newPage = new Pages(PageData);
@@ -79,6 +83,7 @@ const updatePage = async (req, res) => {
       "Website",
       "isCreator",
       "profileBackground",
+      " profileImg",
       "isPrivate"
     ];
 
