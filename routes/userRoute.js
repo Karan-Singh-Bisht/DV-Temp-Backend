@@ -45,10 +45,10 @@ router.get('/users/blockpage/:pageId/:blockpageId',
   userAuthMiddleware,PageActionsController.updateUserBlockEntry)
 
 // page following
-router.get('/users/followpage/:pageId/:followingId',userAuthMiddleware,PageActionsController.addToFollowing)
+// router.get('/users/followpage/:pageId/:followingId',userAuthMiddleware,PageActionsController.addToFollowing)
 router.get('/users/getallfollower/:pageId',userAuthMiddleware,PageActionsController.getAllFollowers)
 router.get('/users/getallfollowing/:pageId',userAuthMiddleware,PageActionsController.getAllFollowing)
-router.get('/users/unfollowpage/:pageId/:unfollowingId',userAuthMiddleware,PageActionsController.unFollowing)
+router.get('/users/followpageaction/:pageId/:followId',userAuthMiddleware,PageActionsController.followActions)
 
 
 module.exports = router;
