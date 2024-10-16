@@ -2,52 +2,6 @@ const User = require('../models/User');
 const Friendship = require('../models/friendshipSchema');
 const Contact = require('../models/Contacts');
 
-// // Send a friend request
-// exports.sendFriendRequest = async (req, res) => {
-//     const { recipientId } = req.params;
-//     const requesterId = req.user._id;
-  
-//     try {
-      
-//       const recipient = await User.findById(recipientId);
-//       if (!recipient) {
-//         return res.status(404).json({ error: 'User not found.' });
-//       }
-  
-      
-//       const contactExists = await Contact.findOne({
-//         user: requesterId,
-//         phoneNumber: recipient.phoneNumber
-//       });
-//       if (!contactExists) {
-//         return res.status(400).json({ error: 'User must be in your contacts to send a request.' });
-//       }
-  
-      
-//       const existingFriendship = await Friendship.findOne({
-//         $or: [
-//           { requester: requesterId, recipient: recipientId },
-//           { requester: recipientId, recipient: requesterId }
-//         ]
-//       });
-  
-//       if (existingFriendship) {
-//         return res.status(400).json({ error: 'Friendship or request already exists.' });
-//       }
-  
-     
-//       const friendship = new Friendship({
-//         requester: requesterId,
-//         recipient: recipientId
-//       });
-  
-//       await friendship.save();
-//       res.status(200).json({ message: 'Friend request sent.' });
-//     } catch (error) {
-//       res.status(500).json({ error: 'Failed to send friend request.' });
-//     }
-//   };
-
 
 // Send a friend request
 exports.sendFriendRequest = async (req, res) => {
@@ -214,9 +168,10 @@ exports.listFriends = async (req, res) => {
               : friendship.requester;
           return {
               id: friend._id,
+              requesterId: friendship.requester._id,
               name: friend.name,
               username: friend.username,
-              profileImg: friend.profileImg
+              profileImg: friend.profileImg,
           };
       });
 
@@ -264,6 +219,7 @@ exports.getIncomingFriendRequests = async (req, res) => {
 
       const requests = friendRequests.map(request => ({
           id: request._id,
+          requesterId: request.requester._id,
           name: request.requester.name,
           username: request.requester.username,
           profileImg: request.requester.profileImg,
