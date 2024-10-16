@@ -12,7 +12,7 @@ const {
 
 const PagesController= require('../controllers/PagesController/PagesController')
 const PageActionsController= require('../controllers/PagesController/PageActionsController')
-const { sendFriendRequest, acceptFriendRequest, declineFriendRequest, checkFriendshipStatus, listFriends,unfriendUser, getIncomingFriendRequests } = require('../controllers/friendshipController');
+const { sendFriendRequest, acceptFriendRequest, declineFriendRequest, checkFriendshipStatus, listFriends,unfriendUser, getIncomingFriendRequests, handleFriendRequestOrUnfriend } = require('../controllers/friendshipController');
 const userAuthMiddleware = require('../middlewares/userAuthMiddleware');
 
 const router = express.Router();
@@ -32,6 +32,8 @@ router.delete('/users/delete',userAuthMiddleware, deleteUser);
 router.post('/users/friend/request/:recipientId', userAuthMiddleware, sendFriendRequest);
 router.post('/users/friend/request/accept/:userId', userAuthMiddleware, acceptFriendRequest);
 router.post('/users/friend/request/decline/:userId', userAuthMiddleware, declineFriendRequest);
+
+router.post('/users/friend/requests/:recipientId', userAuthMiddleware, handleFriendRequestOrUnfriend);
 
 
 // Additional routes remain the same
