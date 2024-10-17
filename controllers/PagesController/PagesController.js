@@ -5,13 +5,15 @@ const PageActions = require("../../models/Pages Model/PageActionsModel");
 const getAllpages = async (req, res) => {
   try {
     const allPages = await Pages.find();
-    const blockedData = await PageActions.findOne({ userId: req.user._id });
+    const pageId= req.params.pageId
+    const blockedData = await PageActions.findOne({ pageId});
     let filteredPages = allPages;
     if (blockedData) {
       filteredPages = allPages.filter((page) => {
-        !blockedData.blockedList.includes(page._id.toString());
+       return !blockedData.blockedList.includes(page._id.toString());
       });
-      return res.status(200).json({success:true,data:filteredPages,message:''})
+      console.log(filteredPages)
+      return res.status(200).json({success:true,data:filteredPages,message:'ok done'})
     }
   } catch (error) {
     console.error(error.message);
