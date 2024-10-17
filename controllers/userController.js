@@ -75,60 +75,65 @@ exports.getUserById = async function (req, res) {
   }
 };
 
-// Search users by name without relationships
-exports.searchUsersByName = async function (req, res) {
-  const searchTerm = req.query.name;
-  if (!searchTerm) {
-    return res
-      .status(400)
-      .json({ message: "Name query parameter is required" });
-  }
 
-  try {
-    const users = await User.find({
-      $or: [
-        { name: { $regex: `^${searchTerm}`, $options: "i" } },
-        { username: { $regex: `^${searchTerm}`, $options: "i" } },
-      ],
-    });
 
-    const currentUser = await User.findById(req.user.id);
-    const blockedUsers = currentUser
-      ? currentUser.blockedUsers.map((id) => id.toString())
-      : [];
+// // Search users by name without relationships
+// exports.searchUsersByName = async function (req, res) {
+//   const searchTerm = req.query.name;
+//   if (!searchTerm) {
+//     return res
+//       .status(400)
+//       .json({ message: "Name query parameter is required" });
+//   }
 
-    const filteredUsers = users.filter(
-      (user) =>
-        !blockedUsers.includes(user._id.toString()) &&
-        user._id.toString() !== req.user.id
-    );
+//   try {
+//     const users = await User.find({
+//       $or: [
+//         { name: { $regex: `^${searchTerm}`, $options: "i" } },
+//         { username: { $regex: `^${searchTerm}`, $options: "i" } },
+//       ],
+//     });
 
-    if (filteredUsers.length === 0) {
-      return res.status(404).json({ message: "No users found" });
-    }
+//     const currentUser = await User.findById(req.user.id);
+//     const blockedUsers = currentUser
+//       ? currentUser.blockedUsers.map((id) => id.toString())
+//       : [];
 
-    const userResponses = filteredUsers.map((user) => ({
-      userId: user._id,
-      name: user.name,
-      username: user.username,
-      profileImg: user.profileImg,
-      gender: user.gender,
-      dob: user.dob,
-      phoneNumber: user.phoneNumber,
-      mailAddress: user.mailAddress,
-      bio: user.bio,
-      link: user.link,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      bgColor: user.bgColor,
-      isPrivate: user.isPrivate,
-    }));
+//     const filteredUsers = users.filter(
+//       (user) =>
+//         !blockedUsers.includes(user._id.toString()) &&
+//         user._id.toString() !== req.user.id
+//     );
 
-    res.json(userResponses);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
+//     if (filteredUsers.length === 0) {
+//       return res.status(404).json({ message: "No users found" });
+//     }
+
+//     const userResponses = filteredUsers.map((user) => ({
+//       userId: user._id,
+//       name: user.name,
+//       username: user.username,
+//       profileImg: user.profileImg,
+//       gender: user.gender,
+//       dob: user.dob,
+//       phoneNumber: user.phoneNumber,
+//       mailAddress: user.mailAddress,
+//       bio: user.bio,
+//       link: user.link,
+//       createdAt: user.createdAt,
+//       updatedAt: user.updatedAt,
+//       bgColor: user.bgColor,
+//       isPrivate: user.isPrivate,
+//     }));
+
+//     res.json(userResponses);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+
+
 
 //logout
 exports.signoutUser = async (req, res) => {

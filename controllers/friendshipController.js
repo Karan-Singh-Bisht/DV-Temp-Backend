@@ -236,8 +236,6 @@ exports.getIncomingFriendRequests = async (req, res) => {
 
 
 
-
-
 // Handle both sending friend request and unfriending
 exports.handleFriendRequestOrUnfriend = async (req, res) => {
   const { recipientId } = req.params;
