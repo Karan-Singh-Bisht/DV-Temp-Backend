@@ -139,34 +139,42 @@ exports.getContacts = async (req, res) => {
 
 
 
-// Search by name (within user's contact list) 
+// Search by name or username (within user's contact list)  
 exports.searchByName = async (req, res) => {
   const searchTerm = req.query.name;
   const userId = req.user._id;
 
   if (!searchTerm) {
-    return res.status(400).json({ error: 'Name query parameter is required for search.' });
+    return res.status(400).json({ error: 'Name or username query parameter is required for search.' });
   }
 
   try {
+    
     const contact = await Contact.findOne({
       user: userId,
-      name: { $regex: `^${searchTerm}`, $options: 'i' }
+      $or: [
+        { name: { $regex: `^${searchTerm}`, $options: 'i' } },
+        { username: { $regex: `^${searchTerm}`, $options: 'i' } } 
+      ]
     });
 
     if (!contact) {
-      return res.status(404).json({ message: 'No contact found with this name in your contacts.' });
+      return res.status(404).json({ message: 'No contact found with this name or username in your contacts.' });
     }
+
+   
     const user = await User.findOne({ phoneNumber: contact.phoneNumber });
-    
+
     let status = null;
 
     if (user) {
+      
       const isInContacts = await Contact.findOne({ user: userId, phoneNumber: user.phoneNumber });
       if (isInContacts) {
         status = 'contacts';
       }
 
+     
       const friendship = await Friendship.findOne({
         $or: [
           { requester: userId, recipient: user._id, status: 'accepted' },
@@ -178,6 +186,7 @@ exports.searchByName = async (req, res) => {
         status = 'looped';
       }
 
+      
       return res.status(200).json({
         message: 'User found in User collection.',
         data: {
@@ -195,7 +204,7 @@ exports.searchByName = async (req, res) => {
       });
     }
 
-  
+   
     return res.status(200).json({
       message: 'User not found in User collection. Displaying contact from your contacts list.',
       data: {
@@ -207,8 +216,8 @@ exports.searchByName = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error searching by name:', error);
-    return res.status(500).json({ error: 'Failed to search by name.' });
+    console.error('Error searching by name or username:', error);
+    return res.status(500).json({ error: 'Failed to search by name or username.' });
   }
 };
 
