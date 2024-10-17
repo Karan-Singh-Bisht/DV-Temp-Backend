@@ -139,42 +139,128 @@ exports.getContacts = async (req, res) => {
 
 
 
-// Search by name or username (within user's contact list)
-exports.searchByName = async (req, res) => {
-  const searchTerm = req.query.name;
+// // Search by name or username (within user's contact list)
+// exports.searchByName = async (req, res) => {
+//   const searchTerm = req.query.name;
+//   const userId = req.user._id;
+
+//   if (!searchTerm) {
+//     return res.status(400).json({ error: 'Name or username query parameter is required for search.' });
+//   }
+
+//   try {
+    
+//     const contacts = await Contact.find({
+//       user: userId,
+//       $or: [
+//         { name: { $regex: `^${searchTerm}`, $options: 'i' } },
+//         { username: { $regex: `^${searchTerm}`, $options: 'i' } }
+//       ]
+//     });
+
+   
+//     if (!contacts.length) {
+//       return res.status(404).json({ message: 'No contacts found with this name or username in your contacts.' });
+//     }
+
+   
+//     const result = [];
+
+//     for (const contact of contacts) {
+     
+//       const user = await User.findOne({ phoneNumber: contact.phoneNumber });
+
+//       let status = 'devian';
+      
+//       if (user) {
+//         const isInContacts = await Contact.findOne({ user: userId, phoneNumber: user.phoneNumber });
+//         if (isInContacts) {
+//           status = 'contacts';
+//         }
+
+//         const friendship = await Friendship.findOne({
+//           $or: [
+//             { requester: userId, recipient: user._id, status: 'accepted' },
+//             { requester: user._id, recipient: userId, status: 'accepted' }
+//           ]
+//         });
+
+//         if (friendship) {
+//           status = 'looped';
+//         }
+
+//         result.push({
+//           name: user.name,
+//           username: user.username,
+//           profileImg: user.profileImg,
+//           gender: user.gender,
+//           dob: user.dob,
+//           phoneNumber: user.phoneNumber,
+//           mailAddress: user.mailAddress,
+//           bio: user.bio,
+//           link: user.link,
+//           status: status
+//         });
+//       } else {
+      
+//         result.push({
+//           name: contact.name,
+//           phoneNumber: contact.phoneNumber,
+//           email: contact.email,
+//           status: 'contacts'
+//         });
+//       }
+//     }
+
+    
+//     return res.status(200).json({
+//       message: 'Search completed successfully.',
+//       data: result
+//     });
+
+//   } catch (error) {
+//     console.error('Error searching by name or username:', error);
+//     return res.status(500).json({ error: 'Failed to search by name or username.' });
+//   }
+// };
+
+
+
+// Search by name, username, or phone number (within user's contact list)
+exports.searchByNameOrPhoneNumber = async (req, res) => {
+  const searchTerm = req.query.search; 
   const userId = req.user._id;
 
-  // Validate that the search term is provided
   if (!searchTerm) {
-    return res.status(400).json({ error: 'Name or username query parameter is required for search.' });
+    return res.status(400).json({ error: 'Search query parameter (name, username, or phone number) is required.' });
   }
 
   try {
-    // Find all contacts that match the search term in the name or username field
+    
     const contacts = await Contact.find({
       user: userId,
       $or: [
         { name: { $regex: `^${searchTerm}`, $options: 'i' } },
-        { username: { $regex: `^${searchTerm}`, $options: 'i' } }
+        { username: { $regex: `^${searchTerm}`, $options: 'i' } },
+        { phoneNumber: { $regex: `^${searchTerm}`, $options: 'i' } } 
       ]
     });
 
-    // If no contacts are found, return a 404 error
+    
     if (!contacts.length) {
-      return res.status(404).json({ message: 'No contacts found with this name or username in your contacts.' });
+      return res.status(404).json({ message: 'No contacts found with this name, username, or phone number in your contacts.' });
     }
 
-    // Initialize an array to store the results
+   
     const result = [];
 
-    // Iterate through all the found contacts
+    
     for (const contact of contacts) {
-      // Find if the contact exists in the User collection
+      
       const user = await User.findOne({ phoneNumber: contact.phoneNumber });
 
-      let status = 'devian'; // Default status
-
-      // If the user exists in the User collection, check for relationship or contact status
+      let status = 'devian';
+     
       if (user) {
         const isInContacts = await Contact.findOne({ user: userId, phoneNumber: user.phoneNumber });
         if (isInContacts) {
@@ -192,7 +278,7 @@ exports.searchByName = async (req, res) => {
           status = 'looped';
         }
 
-        // Push user data to result array
+        
         result.push({
           name: user.name,
           username: user.username,
@@ -206,7 +292,7 @@ exports.searchByName = async (req, res) => {
           status: status
         });
       } else {
-        // If user is not found in the User collection, push contact data to result array
+        
         result.push({
           name: contact.name,
           phoneNumber: contact.phoneNumber,
@@ -216,15 +302,14 @@ exports.searchByName = async (req, res) => {
       }
     }
 
-    // Return the result array with all the matched contacts and users
+   
     return res.status(200).json({
       message: 'Search completed successfully.',
       data: result
     });
 
   } catch (error) {
-    console.error('Error searching by name or username:', error);
-    return res.status(500).json({ error: 'Failed to search by name or username.' });
+    console.error('Error searching by name, username, or phone number:', error);
+    return res.status(500).json({ error: 'Failed to search by name, username, or phone number.' });
   }
 };
-
