@@ -6,7 +6,7 @@ const {
   getUserById,
   updateUser,
   deleteUser,
-  searchUsersByName,
+  //searchUsersByName,
   signoutUser,
 } = require('../controllers/userController');
 
@@ -21,11 +21,31 @@ const router = express.Router();
 router.post('/users/login', loginUser);      
 router.post('/users/signup', signupUser);   
 router.get('/users',userAuthMiddleware, getUsers);                     
-router.get('/users/search',userAuthMiddleware, searchUsersByName);  
+//router.get('/users/search',userAuthMiddleware, searchUsersByName);  
 router.get('/users/:id',userAuthMiddleware, getUserById);            
 router.post('/users/signout', userAuthMiddleware, signoutUser);
 router.patch('/users/update',userAuthMiddleware, updateUser);              
 router.delete('/users/delete',userAuthMiddleware, deleteUser);
+
+
+
+// Send friend request & unfriend
+router.post('/users/friend/requests/:recipientId', userAuthMiddleware, handleFriendRequestOrUnfriend);
+
+//use if any need
+router.post('/users/friend/request/:recipientId', userAuthMiddleware, sendFriendRequest);
+router.post('/users/friends/unfriend/:userId', userAuthMiddleware, unfriendUser);
+
+//accept n decline req
+router.post('/users/friend/request/accept/:userId', userAuthMiddleware, acceptFriendRequest);
+router.post('/users/friend/request/decline/:userId', userAuthMiddleware, declineFriendRequest);
+
+
+// Additional routes remain the same
+router.get('/users/friend/status/:userId', userAuthMiddleware, checkFriendshipStatus);
+router.post('/users/friends', userAuthMiddleware, listFriends);
+router.get('/users/friend-requests/incoming', userAuthMiddleware, getIncomingFriendRequests);
+
 
 
 
