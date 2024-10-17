@@ -139,57 +139,61 @@ exports.getContacts = async (req, res) => {
 
 
 
-// Search by name or username (within user's contact list)  
+// Search by name or username (within user's contact list)
 exports.searchByName = async (req, res) => {
   const searchTerm = req.query.name;
   const userId = req.user._id;
 
+  // Validate that the search term is provided
   if (!searchTerm) {
     return res.status(400).json({ error: 'Name or username query parameter is required for search.' });
   }
 
   try {
-    
-    const contact = await Contact.findOne({
+    // Find all contacts that match the search term in the name or username field
+    const contacts = await Contact.find({
       user: userId,
       $or: [
         { name: { $regex: `^${searchTerm}`, $options: 'i' } },
-        { username: { $regex: `^${searchTerm}`, $options: 'i' } } 
+        { username: { $regex: `^${searchTerm}`, $options: 'i' } }
       ]
     });
 
-    if (!contact) {
-      return res.status(404).json({ message: 'No contact found with this name or username in your contacts.' });
+    // If no contacts are found, return a 404 error
+    if (!contacts.length) {
+      return res.status(404).json({ message: 'No contacts found with this name or username in your contacts.' });
     }
 
-   
-    const user = await User.findOne({ phoneNumber: contact.phoneNumber });
+    // Initialize an array to store the results
+    const result = [];
 
-    let status = null;
+    // Iterate through all the found contacts
+    for (const contact of contacts) {
+      // Find if the contact exists in the User collection
+      const user = await User.findOne({ phoneNumber: contact.phoneNumber });
 
-    if (user) {
-      
-      const isInContacts = await Contact.findOne({ user: userId, phoneNumber: user.phoneNumber });
-      if (isInContacts) {
-        status = 'contacts';
-      }
+      let status = 'devian'; // Default status
 
-     
-      const friendship = await Friendship.findOne({
-        $or: [
-          { requester: userId, recipient: user._id, status: 'accepted' },
-          { requester: user._id, recipient: userId, status: 'accepted' }
-        ]
-      });
+      // If the user exists in the User collection, check for relationship or contact status
+      if (user) {
+        const isInContacts = await Contact.findOne({ user: userId, phoneNumber: user.phoneNumber });
+        if (isInContacts) {
+          status = 'contacts';
+        }
 
-      if (friendship) {
-        status = 'looped';
-      }
+        const friendship = await Friendship.findOne({
+          $or: [
+            { requester: userId, recipient: user._id, status: 'accepted' },
+            { requester: user._id, recipient: userId, status: 'accepted' }
+          ]
+        });
 
-      
-      return res.status(200).json({
-        message: 'User found in User collection.',
-        data: {
+        if (friendship) {
+          status = 'looped';
+        }
+
+        // Push user data to result array
+        result.push({
           name: user.name,
           username: user.username,
           profileImg: user.profileImg,
@@ -199,20 +203,23 @@ exports.searchByName = async (req, res) => {
           mailAddress: user.mailAddress,
           bio: user.bio,
           link: user.link,
-          status: status || 'devian'
-        }
-      });
+          status: status
+        });
+      } else {
+        // If user is not found in the User collection, push contact data to result array
+        result.push({
+          name: contact.name,
+          phoneNumber: contact.phoneNumber,
+          email: contact.email,
+          status: 'contacts'
+        });
+      }
     }
 
-   
+    // Return the result array with all the matched contacts and users
     return res.status(200).json({
-      message: 'User not found in User collection. Displaying contact from your contacts list.',
-      data: {
-        name: contact.name,
-        phoneNumber: contact.phoneNumber,
-        email: contact.email,
-        status: 'devian'
-      }
+      message: 'Search completed successfully.',
+      data: result
     });
 
   } catch (error) {
