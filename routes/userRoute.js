@@ -10,8 +10,8 @@ const {
   signoutUser,
 } = require('../controllers/userController');
 
-const PagesController= require('../controllers/PagesController/PagesController')
-const PageActionsController= require('../controllers/PagesController/PageActionsController')
+const PagesController= require('../controllers/Pages/PagesController')
+const PageActionsController= require('../controllers/Pages/PageActionsController')
 
 const userAuthMiddleware = require('../middlewares/userAuthMiddleware');
 
@@ -30,7 +30,7 @@ router.delete('/users/delete',userAuthMiddleware, deleteUser);
 
 
 //account creation 
-router.get('/users/getallpages',userAuthMiddleware,PagesController.getAllpages)
+router.get('/users/getallpages/:pageId',userAuthMiddleware,PagesController.getAllpages)
 router.post('/users/addnewpage',userAuthMiddleware,PagesController.addNewPage)
 router.patch ('/users/updatepage',userAuthMiddleware,PagesController.updatePage)
 router.get ('/users/togglepagestatus/:pageId',userAuthMiddleware,PagesController.togglePageStatus)

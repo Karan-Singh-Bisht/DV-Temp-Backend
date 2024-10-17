@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const adminRoutes = require('./routes/adminRoute');
 const userRoutes = require('./routes/userRoute');
 const contactRoutes = require('./routes/contactRoute')
+const pageRoute = require('./routes/pageRoute')
 const cors = require('cors');
 require('dotenv').config();
 
@@ -23,6 +24,7 @@ res.send('server ready')
 const apiRoutes = express.Router();
 apiRoutes.use('/admin', adminRoutes);
 apiRoutes.use(userRoutes);
+apiRoutes.use(pageRoute);
 app.use('/api', apiRoutes);
 
 apiRoutes.use(contactRoutes)
