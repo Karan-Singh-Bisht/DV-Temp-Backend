@@ -29,22 +29,22 @@ router.delete('/users/delete',userAuthMiddleware, deleteUser);
 
 
 
-// Send friend request & unfriend
-router.post('/users/friend/requests/:recipientId', userAuthMiddleware, handleFriendRequestOrUnfriend);
+// // Send friend request & unfriend
+// router.post('/users/friend/requests/:recipientId', userAuthMiddleware, handleFriendRequestOrUnfriend);
 
-//use if any need
-router.post('/users/friend/request/:recipientId', userAuthMiddleware, sendFriendRequest);
-router.post('/users/friends/unfriend/:userId', userAuthMiddleware, unfriendUser);
+// //use if any need
+// router.post('/users/friend/request/:recipientId', userAuthMiddleware, sendFriendRequest);
+// router.post('/users/friends/unfriend/:userId', userAuthMiddleware, unfriendUser);
 
-//accept n decline req
-router.post('/users/friend/request/accept/:userId', userAuthMiddleware, acceptFriendRequest);
-router.post('/users/friend/request/decline/:userId', userAuthMiddleware, declineFriendRequest);
+// //accept n decline req
+// router.post('/users/friend/request/accept/:userId', userAuthMiddleware, acceptFriendRequest);
+// router.post('/users/friend/request/decline/:userId', userAuthMiddleware, declineFriendRequest);
 
 
-// Additional routes remain the same
-router.get('/users/friend/status/:userId', userAuthMiddleware, checkFriendshipStatus);
-router.post('/users/friends', userAuthMiddleware, listFriends);
-router.get('/users/friend-requests/incoming', userAuthMiddleware, getIncomingFriendRequests);
+// // Additional routes remain the same
+// router.get('/users/friend/status/:userId', userAuthMiddleware, checkFriendshipStatus);
+// router.post('/users/friends', userAuthMiddleware, listFriends);
+// router.get('/users/friend-requests/incoming', userAuthMiddleware, getIncomingFriendRequests);
 
 
 
