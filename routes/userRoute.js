@@ -56,14 +56,14 @@ router.post('/users/addnewpage',userAuthMiddleware, PagesController.addNewPage)
 router.patch ('/users/updatepage',userAuthMiddleware, PagesController.updatePage)
 router.get ('/users/togglepagestatus/:pageId',userAuthMiddleware, PagesController.togglePageStatus)
 router.get('/users/searchpages/:search',userAuthMiddleware, PagesController.searchPages)
+//router.get('/users/searchpages',userAuthMiddleware, PagesController.searchPages)
 router.get ('/users/getpage/:pageId',userAuthMiddleware, PagesController.getPage)
 
 
 //Page Action
 
 //page blocking
-router.get('/users/blockpage/:pageId/:blockpageId',
-  userAuthMiddleware,PageActionsController.updateUserBlockEntry)
+router.get('/users/blockpage/:pageId/:blockpageId', userAuthMiddleware,PageActionsController.updateUserBlockEntry)
 
 // page following
 // router.get('/users/followpage/:pageId/:followingId',userAuthMiddleware,PageActionsController.addToFollowing)

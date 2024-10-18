@@ -142,6 +142,7 @@ const togglePageStatus = async (req, res) => {
   }
 };
 
+
 const searchPages = async (req, res) => {
   try {
     const search = req.params.search;
