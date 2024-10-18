@@ -10,6 +10,7 @@ const {
   signoutUser,
 } = require('../controllers/userController');
 
+const { sendFriendRequest, acceptFriendRequest, declineFriendRequest, checkFriendshipStatus, listFriends,unfriendUser, getIncomingFriendRequests, handleFriendRequestOrUnfriend } = require('../controllers/friendshipController');
 const PagesController= require('../controllers/Pages/PagesController')
 const PageActionsController= require('../controllers/Pages/PageActionsController')
 
@@ -51,18 +52,17 @@ router.delete('/users/delete',userAuthMiddleware, deleteUser);
 
 //account creation 
 router.get('/users/getallpages/:pageId',userAuthMiddleware,PagesController.getAllpages)
-router.post('/users/addnewpage',userAuthMiddleware,PagesController.addNewPage)
-router.patch ('/users/updatepage',userAuthMiddleware,PagesController.updatePage)
-router.get ('/users/togglepagestatus/:pageId',userAuthMiddleware,PagesController.togglePageStatus)
-router.get('/users/searchpages/:search',userAuthMiddleware,PagesController.searchPages)
-router.get ('/users/getpage/:pageId',userAuthMiddleware,PagesController.getPage)
+router.post('/users/addnewpage',userAuthMiddleware, PagesController.addNewPage)
+router.patch ('/users/updatepage',userAuthMiddleware, PagesController.updatePage)
+router.get ('/users/togglepagestatus/:pageId',userAuthMiddleware, PagesController.togglePageStatus)
+router.get('/users/searchpages/:search',userAuthMiddleware, PagesController.searchPages)
+router.get ('/users/getpage/:pageId',userAuthMiddleware, PagesController.getPage)
 
 
 //Page Action
 
 //page blocking
-router.get('/users/blockpage/:pageId/:blockpageId',
-  userAuthMiddleware,PageActionsController.updateUserBlockEntry)
+router.get('/users/blockpage/:pageId/:blockpageId', userAuthMiddleware,PageActionsController.updateUserBlockEntry)
 
 // page following
 // router.get('/users/followpage/:pageId/:followingId',userAuthMiddleware,PageActionsController.addToFollowing)

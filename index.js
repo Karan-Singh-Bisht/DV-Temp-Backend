@@ -5,6 +5,7 @@ const adminRoutes = require('./routes/adminRoute');
 const userRoutes = require('./routes/userRoute');
 const contactRoutes = require('./routes/contactRoute')
 const pageRoute = require('./routes/pageRoute')
+const userPostRoutes = require('./routes/userPostRoute');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -29,6 +30,8 @@ app.use('/api', apiRoutes);
 
 apiRoutes.use(contactRoutes)
 app.use('/contacts', contactRoutes);
+
+app.use('/api/user/posts', userPostRoutes);
 
 //const PORT = process.env.PORT;
 const PORT = process.env.PORT || 8080;
