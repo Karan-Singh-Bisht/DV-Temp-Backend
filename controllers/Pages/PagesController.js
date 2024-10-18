@@ -5,15 +5,17 @@ const PageActions = require("../../models/Pages/PageActionsModel");
 const getAllpages = async (req, res) => {
   try {
     const allPages = await Pages.find();
-    const pageId= req.params.pageId
-    const blockedData = await PageActions.findOne({ pageId});
+    const pageId = req.params.pageId;
+    const blockedData = await PageActions.findOne({ pageId });
     let filteredPages = allPages;
     if (blockedData) {
       filteredPages = allPages.filter((page) => {
-       return !blockedData.blockedList.includes(page._id.toString());
+        return !blockedData.blockedList.includes(page._id.toString());
       });
-      console.log(filteredPages)
-      return res.status(200).json({success:true,data:filteredPages,message:'ok done'})
+      console.log(filteredPages);
+      return res
+        .status(200)
+        .json({ success: true, data: filteredPages, message: "ok done" });
     }
   } catch (error) {
     console.error(error.message);
@@ -32,10 +34,10 @@ const addNewPage = async (req, res) => {
       Website,
       isCreator,
       profileImg,
-      profileBackground
+      profileBackground,
     } = req.body;
 
-    const userId=req.user._id
+    const userId = req.user._id;
     const PageData = {
       userId,
       pageName,
@@ -47,23 +49,23 @@ const addNewPage = async (req, res) => {
       Website,
       isCreator,
       profileImg,
-      profileBackground
+      profileBackground,
     };
     const newPage = new Pages(PageData);
     const savePageData = await newPage.save();
     if (savePageData) {
-      let PageAction  = new PageActions({
-        pageId:savePageData._id
+      let PageAction = new PageActions({
+        pageId: savePageData._id,
       });
-      const savedPagesAction= await PageAction.save()
-    
+      const savedPagesAction = await PageAction.save();
+
       if (savedPagesAction) {
         return res.status(201).json({
           success: true,
           message: "Page created successfully",
           data: savePageData,
         });
-      }else{
+      } else {
         return res.status(404).json({ message: "Page created Fail" });
       }
     }
@@ -88,7 +90,7 @@ const updatePage = async (req, res) => {
       "isCreator",
       "profileBackground",
       " profileImg",
-      "isPrivate"
+      "isPrivate",
     ];
 
     // Filter only the fields that are present in req.body
@@ -98,20 +100,23 @@ const updatePage = async (req, res) => {
       }
       return acc;
     }, {});
-    const updatedPage = await Pages.findByIdAndUpdate(
-      req.body.pageId,
+    const updatedPage = await Pages.updateOne(
+      { _id: req.body.pageId, userId: req.user._id },
       updateData,
       {
         new: true, // Return the updated document
       }
     );
-   
 
     if (!updatedPage) {
       return res.status(404).json({ message: "Page  not found" });
     }
 
-    return res.status(200).json({ success:true,message:"Page Updated successfully",data: updatedPage });
+    return res.status(200).json({
+      success: true,
+      message: "Page Updated successfully",
+      data: updatedPage,
+    });
   } catch (error) {
     return res.status(500).json({ message: "Error updating user", error });
   }
@@ -121,13 +126,14 @@ const togglePageStatus = async (req, res) => {
   try {
     const pageId = req.params.pageId;
 
-    const page = await Pages.findById(pageId);
+    const page = await Pages.findOne({ _id: pageId, userId: req.user._id });
     if (page) {
       const isUpdatedPage = await Pages.findByIdAndUpdate(
         pageId,
         { isActive: !page.isActive },
         { new: true }
       );
+      console.log(isUpdatedPage)
       if (isUpdatedPage) {
         let boo = isUpdatedPage.isActive ? "Activation" : "Deactivation";
         res
@@ -138,7 +144,7 @@ const togglePageStatus = async (req, res) => {
       res.status(404).json({ success: false, message: "Page not Found" });
     }
   } catch (error) {
-    res.status(500).json({success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -150,11 +156,11 @@ const searchPages = async (req, res) => {
     });
 
     if (pages.length > 0) {
-      const blockedData = await PageActions.findOne({ userId: req.user._id});
+      const blockedData = await PageActions.findOne({ userId: req.user._id });
       let filteredPages = pages;
       if (blockedData) {
         filteredPages = pages.filter((page) => {
-        return  !blockedData.blockedList.includes(page._id.toString());
+          return !blockedData.blockedList.includes(page._id.toString());
         });
       }
       return res.status(200).json({ success: true, data: filteredPages });
@@ -164,7 +170,7 @@ const searchPages = async (req, res) => {
         .json({ success: false, message: "Pages not found" });
     }
   } catch (error) {
-    return res.status(500).json({success: false,  message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 

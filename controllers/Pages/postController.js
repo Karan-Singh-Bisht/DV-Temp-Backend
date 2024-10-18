@@ -243,19 +243,19 @@ const deletePost = async (req, res) => {
 
     // Delete the post
     const deletedPost = await PostModel.findByIdAndDelete(id);
-    console.log(deletedPost);  // Log the deleted post
+    console.log(deletedPost); // Log the deleted post
 
     if (deletedPost) {
-      return res.status(200).json({ success: true, message: 'Deleted successfully' });
+      return res
+        .status(200)
+        .json({ success: true, message: "Deleted successfully" });
     }
-    return res.status(400).json({ success: false, message: 'Delete failed' });
-  
+    return res.status(400).json({ success: false, message: "Delete failed" });
   } catch (error) {
     console.log(error.message);
     return res.status(500).json({ message: error.message });
   }
 };
-
 
 module.exports = {
   createPost,
@@ -263,5 +263,5 @@ module.exports = {
   getPosts,
   getAllPosts,
   updatePost,
-  deletePost
+  deletePost,
 };
