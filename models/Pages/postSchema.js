@@ -1,6 +1,17 @@
 const mongoose = require("mongoose");
 const { Schema, model } = mongoose;
 
+const mediaSchema = new Schema({
+  path: {
+    type: String,
+    required: true,
+  },
+  public_id: {
+    type: String,
+    required: true,
+  },
+});
+
 const postSchema = new Schema(
   {
     pageId: {
@@ -10,26 +21,17 @@ const postSchema = new Schema(
     },
     title: {
       type: String,
-      required: true
+      required: true,
     },
     description: {
       type: String,
     },
-    media:[
-      {
-         path:{
-          type:String,
-         },
-         public_id:{
-          type:String,
-         }
-      }
-    ],
+    media: [mediaSchema], // Array of media objects with path and public_id
     coverPhoto: {
-      type: String,
+      type: mediaSchema, // Single cover photo object with path and public_id
     },
     video: {
-      type: String,
+      type: mediaSchema, // Single video object with path and public_id
     },
     location: {
       type: String,
@@ -48,7 +50,6 @@ const postSchema = new Schema(
         ref: "User",
       },
     ],
-    
     shared: [
       {
         type: mongoose.Types.ObjectId,
@@ -65,6 +66,7 @@ const postSchema = new Schema(
     },
     isBlog: {
       type: Boolean,
+      // Uncomment if you want to enforce it as a required field
       // required: [true, 'isBlog field is required'],
     },
   },
