@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const { signToken } = require("../utils/jwtUtils");
 const TokenBlacklist = require("../models/TokenBlacklist");
-const Pages = require("../models/Pages Model/PagesModel");
+const Pages = require("../models/Pages/PagesModel");
 
 // Get all users without relationships
 exports.getUsers = async function (req, res) {

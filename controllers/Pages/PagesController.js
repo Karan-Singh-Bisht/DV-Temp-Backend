@@ -1,6 +1,6 @@
 const User = require("../../models/User");
-const Pages = require("../../models/Pages Model/PagesModel");
-const PageActions = require("../../models/Pages Model/PageActionsModel");
+const Pages = require("../../models/Pages/PagesModel");
+const PageActions = require("../../models/Pages/PageActionsModel");
 
 const getAllpages = async (req, res) => {
   try {

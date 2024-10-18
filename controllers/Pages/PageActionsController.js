@@ -1,5 +1,5 @@
 const { messaging } = require("firebase-admin");
-const PageActions = require("../../models/Pages Model/PageActionsModel");
+const PageActions = require("../../models/Pages/PageActionsModel");
 const { find } = require("../../models/User");
 
 
