@@ -10,6 +10,7 @@ const {
   signoutUser,
 } = require('../controllers/userController');
 
+const { sendFriendRequest, acceptFriendRequest, declineFriendRequest, checkFriendshipStatus, listFriends,unfriendUser, getIncomingFriendRequests, handleFriendRequestOrUnfriend } = require('../controllers/friendshipController');
 const PagesController= require('../controllers/Pages/PagesController')
 const PageActionsController= require('../controllers/Pages/PageActionsController')
 
