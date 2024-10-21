@@ -110,12 +110,14 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
       
       const user = await User.findOne({ phoneNumber: contact.phoneNumber });
 
-      let status = 'devian';
+      // let status = 'devian';
+      let status = 'contacts';
      
       if (user) {
         const isInContacts = await Contact.findOne({ user: userId, phoneNumber: user.phoneNumber });
         if (isInContacts) {
-          status = 'contacts';
+          // status = 'contacts';
+          status = 'devian';
         }
 
         const friendship = await Friendship.findOne({

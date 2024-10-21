@@ -1,4 +1,5 @@
 const Post = require("../models/userPostSchema");
+const UserSavePosts = require("../models/userSavePosts");
 const User = require("../models/User");
 
 const multer = require('multer');
@@ -233,6 +234,107 @@ exports.likePost = async (req, res) => {
     }
   } catch (error) {
     console.error("Error liking/unliking post:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+
+//Functions which have to update the API documentation
+
+
+// Get all posts from every user
+exports.getAllPosts = async (req, res) => {
+  try {
+    const posts = await Post.find({ isBlocked: false }).populate("user", "name username profileImg");
+
+    if (!posts.length) {
+      return res.status(404).json({ message: "No posts found" });
+    }
+
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error("Error fetching all posts:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+// Get all posts of a specific user by user ID
+exports.getPostsByUserId = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const posts = await Post.find({ user: userId, isBlocked: false }).populate("user", "name username profileImg");
+
+    if (!posts.length) {
+      return res.status(404).json({ message: "No posts found for this user" });
+    }
+
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error("Error fetching user posts:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+
+
+
+
+
+// Save or unsave a post
+exports.saveOrUnsavePost = async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const userId = req.user._id;
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    let userSave = await UserSavePosts.findOne({ user: userId });
+
+    if (!userSave) {
+      userSave = new UserSavePosts({ user: userId, savedPosts: [] });
+    }
+
+    
+    const postIndex = userSave.savedPosts.indexOf(postId);
+    if (postIndex > -1) {
+      
+      userSave.savedPosts.splice(postIndex, 1);
+      await userSave.save();
+      return res.status(200).json({ message: "Post unsaved successfully", savedPosts: userSave.savedPosts });
+    } else {
+      
+      userSave.savedPosts.push(postId);
+      await userSave.save();
+      return res.status(200).json({ message: "Post saved successfully", savedPosts: userSave.savedPosts });
+    }
+  } catch (error) {
+    console.error("Error saving/unsaving post:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+
+// Get all saved posts of the user
+exports.getSavedPosts = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const userSave = await UserSavePosts.findOne({ user: userId }).populate("savedPosts");
+
+    if (!userSave || userSave.savedPosts.length === 0) {
+      return res.status(404).json({ message: "No saved posts found" });
+    }
+
+    res.status(200).json({ savedPosts: userSave.savedPosts });
+  } catch (error) {
+    console.error("Error fetching saved posts:", error);
     res.status(500).json({ message: error.message });
   }
 };
