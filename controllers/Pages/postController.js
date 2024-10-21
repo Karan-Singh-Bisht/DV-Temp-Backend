@@ -36,9 +36,7 @@ const createPost = async (req, res) => {
       : null;
 
     // Validate required fields
-    if (!title) {
-      return res.status(400).json({ error: "Title is required" });
-    }
+   
 
     // Create new post
     const newPost = await PostModel.create({
@@ -69,19 +67,26 @@ const createPost = async (req, res) => {
     // }
 
     // Respond with the post and user data
-    res.status(201).json({
-      ...newPost.toObject(),
-    });
+    if(newPost){
+      return res.status(400).json({ error: "Page creation failed" });
+    }else{
+      res.status(201).json({
+        ...newPost.toObject(),
+        message:"Created"
+      });
+  
+    }
+   
   } catch (error) {
     // Log the error and send a response
-    console.error("Error creating post:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error creating post:", error.message);
+    res.status(500).json({ error: error.message });
   }
 };
 
 const getPostById = async (req, res) => {
   try {
-    const id = req.params.id;
+    const id = req.params.postId;
     const post = await PostModel.findById(id);
     return res.status(200).json({
       data: post,
@@ -102,11 +107,19 @@ const getPostById = async (req, res) => {
 const getPosts = async (req, res) => {
   try {
     const pageId = req.params.pageId;
-    const allPagePosts = await PostModel.find({ pageId });
+    const allPagePosts =await PostModel.find({ pageId, isArchive: false })
+    .sort({ isPinned: -1, pinCreatedAt: -1 }); 
+
+  if(allPagePosts){
     return res.status(200).json({
       data: allPagePosts,
       message: allPagePosts.length ? "Successful" : "No posts found",
     });
+  }else{
+    return res.status(400).json({
+      message:  "No posts found",
+    });
+  }
   } catch (error) {
     // Log the error for debugging
     console.error("Error fetching posts:", error);
@@ -121,7 +134,7 @@ const getPosts = async (req, res) => {
 
 const getAllPosts = async (req, res) => {
   try {
-    const allPagePosts = await PostModel.find();
+    const allPagePosts = await PostModel.find({ isArchive: false });
     return res.status(200).json({
       data: allPagePosts,
       message: allPagePosts.length ? "Successful" : "No posts found",
@@ -148,6 +161,7 @@ const updatePost = async (req, res) => {
       category,
       subCategory,
       isBlog,
+      isArchive,
     } = req.body;
 
     const post = await PostModel.findById(postId);
@@ -179,6 +193,7 @@ const updatePost = async (req, res) => {
         description,
         coverPhoto: coverPhotoURL,
         location,
+        isArchive,
         category: Array.isArray(category) ? category : [category],
         subCategory: Array.isArray(subCategory) ? subCategory : [subCategory],
         isBlog,
@@ -250,7 +265,7 @@ const deletePost = async (req, res) => {
         .status(200)
         .json({ success: true, message: "Deleted successfully" });
     }
-    return res.status(400).json({ success: false, message: "Delete failed" });
+    return res.status(404).json({ success: false, message: "Delete failed" });
   } catch (error) {
     console.log(error.message);
     return res.status(500).json({ message: error.message });

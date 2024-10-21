@@ -7,8 +7,8 @@ const PagesSchema = new mongoose.Schema(
       required: true,
     },
     userId: {
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "Pages", 
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Pages",
     },
     userName: {
       type: String,
@@ -20,7 +20,6 @@ const PagesSchema = new mongoose.Schema(
     },
     Phone: {
       type: Number,
-     
     },
     email: {
       type: String,
@@ -29,9 +28,9 @@ const PagesSchema = new mongoose.Schema(
     Bio: {
       type: String,
     },
-    profileBackground:{
-      type:String,
-      required:true
+    profileBackground: {
+      type: String,
+      required: true,
     },
     Website: {
       type: String,
@@ -40,22 +39,23 @@ const PagesSchema = new mongoose.Schema(
       type: Boolean,
       requried: true,
     },
-    profileImg:{
-        type:String,
-        requried: true,
+    profileImg: {
+      type: String,
+      requried: true,
     },
-    isActive:{
-      type:Boolean,
-      default:true
+    isActive: {
+      type: Boolean,
+      default: true,
     },
-    isPrivate:{
-      type:Boolean,
-      default:false
+    isPrivate: {
+      type: Boolean,
+      default: false,
     },
-    profileBackground:{
-      type:String,
-      required :true
-    }
+
+    profileBackground: {
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true }
 );

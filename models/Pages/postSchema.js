@@ -56,6 +56,18 @@ const postSchema = new Schema(
         ref: "User",
       },
     ],
+    isArchive:{
+      type:Boolean,
+      default:false
+    },
+    isPinned:{
+      type:Boolean,
+      default:false
+    },
+    pinCreatedAt: {
+      type: Date
+    },
+    
     isBlocked: {
       type: Boolean,
       default: false,
