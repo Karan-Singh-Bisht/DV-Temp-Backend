@@ -21,4 +21,7 @@ router.get('/user/:userId', userAuthMiddleware, postController.getPostsByUserId)
 router.post('/save/:id', userAuthMiddleware, postController.saveOrUnsavePost);
 router.post('/saved', userAuthMiddleware, postController.getSavedPosts);
 
+router.patch('/toggle-pin/:id', userAuthMiddleware, postController.togglePinPost);
+
+
 module.exports = router;

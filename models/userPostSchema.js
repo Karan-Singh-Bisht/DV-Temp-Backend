@@ -65,6 +65,13 @@ const userPostSchema = new mongoose.Schema({
   isBlog: {
       type: Boolean,
   },
+  pinned: {
+    type: Boolean,
+    default: false,
+},
+pinnedAt: {
+    type: Date,
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model("userPost", userPostSchema);

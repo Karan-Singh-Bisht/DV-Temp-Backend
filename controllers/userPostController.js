@@ -102,7 +102,8 @@ exports.getPostById = async (req, res) => {
 exports.getPosts = async (req, res) => {
   try {
     const userId = req.user._id;
-    const posts = await Post.find({ user: userId, isBlocked: false }).populate("user", "name username profileImg");
+    const posts = await Post.find({ user: userId, isBlocked: false }).populate("user", "name username profileImg")
+    .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
     
     res.status(200).json(posts.length ? posts : { message: "No posts found" });
   } catch (error) {
@@ -267,7 +268,8 @@ exports.getPostsByUserId = async (req, res) => {
     const posts = await Post.find({ user: userId, isBlocked: false }).populate("user", "name username profileImg");
 
     if (!posts.length) {
-      return res.status(404).json({ message: "No posts found for this user" });
+      return res.status(404).json({ message: "No posts found for this user" })
+      .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
     }
 
     res.status(200).json(posts);
@@ -336,5 +338,44 @@ exports.getSavedPosts = async (req, res) => {
   } catch (error) {
     console.error("Error fetching saved posts:", error);
     res.status(500).json({ message: error.message });
+  }
+};
+
+
+
+exports.togglePinPost = async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const userId = req.user._id;
+
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    if (post.user.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "You are not authorized to pin/unpin this post" });
+    }
+    const pinnedCount = await Post.countDocuments({ user: userId, pinned: true });
+    
+    
+    if (post.pinned) {
+      post.pinned = false;
+      post.pinnedAt = null;
+    } else {
+     
+      if (pinnedCount >= 3) {
+        return res.status(400).json({ error: 'You can only pin up to 3 posts' });
+      }
+      post.pinnedAt = new Date();
+    }
+    await post.save();
+
+    const status = post.pinned ? "pinned" : "unpinned";
+    return res.status(200).json({ message: `Post ${status} successfully`, post });
+  } catch (error) {
+    console.error("Error toggling pin status:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
