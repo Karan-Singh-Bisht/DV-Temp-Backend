@@ -2,25 +2,56 @@ const User = require("../../models/User");
 const Pages = require("../../models/Pages/PagesModel");
 const PageActions = require("../../models/Pages/PageActionsModel");
 
+// const getAllpages = async (req, res) => {
+//   try {
+//     const allPages = await Pages.find();
+//     const pageId = req.params.pageId;
+//     const blockedData = await PageActions.findOne({ pageId });
+//     let filteredPages = allPages;
+//     if (blockedData) {
+//       filteredPages = allPages.filter((page) => {
+//         return !blockedData.blockedList.includes(page._id.toString());
+//       });
+//       console.log(filteredPages);
+//       return res
+//         .status(200)
+//         .json({ success: true, data: filteredPages, message: "ok done" });
+//     }
+//   } catch (error) {
+//     console.error(error.message);
+//   }
+// };
+
+const mongoose = require('mongoose'); // Make sure to import mongoose
+
 const getAllpages = async (req, res) => {
   try {
     const allPages = await Pages.find();
     const pageId = req.params.pageId;
+
+    // Validate if pageId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(pageId)) {
+      return res.status(400).json({ success: false, message: "Invalid pageId" });
+    }
+
     const blockedData = await PageActions.findOne({ pageId });
     let filteredPages = allPages;
+
     if (blockedData) {
       filteredPages = allPages.filter((page) => {
         return !blockedData.blockedList.includes(page._id.toString());
       });
-      console.log(filteredPages);
-      return res
-        .status(200)
-        .json({ success: true, data: filteredPages, message: "ok done" });
     }
+
+    return res
+      .status(200)
+      .json({ success: true, data: filteredPages, message: "ok done" });
   } catch (error) {
     console.error(error.message);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
 
 const addNewPage = async (req, res) => {
   try {

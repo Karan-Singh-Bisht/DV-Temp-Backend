@@ -2,6 +2,8 @@ const PostModel = require("../../models/Pages/postSchema");
 const UserModel = require("../../models/User");
 const createHttpError = require("http-errors");
 const cloudinary = require("../../config/cloudinaryConfig");
+
+
 const createPost = async (req, res) => {
   try {
     const {

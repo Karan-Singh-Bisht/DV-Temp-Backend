@@ -26,12 +26,12 @@ const postSchema = new Schema(
     description: {
       type: String,
     },
-    media: [mediaSchema], // Array of media objects with path and public_id
+    media: [mediaSchema],
     coverPhoto: {
-      type: mediaSchema, // Single cover photo object with path and public_id
+      type: mediaSchema,
     },
     video: {
-      type: mediaSchema, // Single video object with path and public_id
+      type: mediaSchema,
     },
     location: {
       type: String,
@@ -78,7 +78,6 @@ const postSchema = new Schema(
     },
     isBlog: {
       type: Boolean,
-      // Uncomment if you want to enforce it as a required field
       // required: [true, 'isBlog field is required'],
     },
   },
