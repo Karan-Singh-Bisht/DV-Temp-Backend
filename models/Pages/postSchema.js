@@ -60,11 +60,11 @@ const postSchema = new Schema(
       type:Boolean,
       default:false
     },
-    isPinned:{
+    pinned:{
       type:Boolean,
       default:false
     },
-    pinCreatedAt: {
+    pinnedAt: {
       type: Date
     },
     

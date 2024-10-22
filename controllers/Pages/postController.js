@@ -69,14 +69,13 @@ const createPost = async (req, res) => {
     // }
 
     // Respond with the post and user data
-    if(newPost){
+    if(!newPost){
       return res.status(400).json({ error: "Page creation failed" });
     }else{
       res.status(201).json({
-        ...newPost.toObject(),
-        message:"Created"
+        post: newPost, 
+        message: "Created"       
       });
-  
     }
    
   } catch (error) {
