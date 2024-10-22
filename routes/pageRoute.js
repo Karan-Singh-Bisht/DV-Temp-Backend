@@ -7,7 +7,7 @@ const userAuthMiddleware = require('../middlewares/userAuthMiddleware');
 
 const multer = require("../middlewares/multer");
 
-router.post("/page/createpost", multer,userAuthMiddleware, postController.createPost);
+router.post("/page/create-post", multer,userAuthMiddleware, postController.createPost);
 router.get("/page/getposts/:pageId",userAuthMiddleware, postController.getPosts);
 router.get("/page/getpostbyid/:postId",userAuthMiddleware, postController.getPostById);
 router.get("/page/getallpost", userAuthMiddleware,postController.getAllPosts);
