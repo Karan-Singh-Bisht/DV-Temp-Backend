@@ -102,7 +102,7 @@ exports.getPostById = async (req, res) => {
 exports.getPosts = async (req, res) => {
   try {
     const userId = req.user._id;
-    const posts = await Post.find({ user: userId, isBlocked: false }).populate("user", "name username profileImg")
+    const posts = await Post.find({ user: userId, isBlocked: false, isArchived: false }).populate("user", "name username profileImg")
     .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
     
     res.status(200).json(posts.length ? posts : { message: "No posts found" });
@@ -241,13 +241,10 @@ exports.likePost = async (req, res) => {
 
 
 
-//Functions which have to update the API documentation
-
-
 // Get all posts from every user
 exports.getAllPosts = async (req, res) => {
   try {
-    const posts = await Post.find({ isBlocked: false }).populate("user", "name username profileImg");
+    const posts = await Post.find({ isBlocked: false, isArchived: false }).populate("user", "name username profileImg");
 
     if (!posts.length) {
       return res.status(404).json({ message: "No posts found" });
@@ -265,7 +262,7 @@ exports.getAllPosts = async (req, res) => {
 exports.getPostsByUserId = async (req, res) => {
   try {
     const userId = req.params.userId;
-    const posts = await Post.find({ user: userId, isBlocked: false }).populate("user", "name username profileImg");
+    const posts = await Post.find({ user: userId, isBlocked: false, isArchived: false }).populate("user", "name username profileImg");
 
     if (!posts.length) {
       return res.status(404).json({ message: "No posts found for this user" })
@@ -343,6 +340,9 @@ exports.getSavedPosts = async (req, res) => {
 
 
 
+
+//Functions which have to update the API documentation
+
 exports.togglePinPost = async (req, res) => {
   try {
     const postId = req.params.id;
@@ -379,3 +379,75 @@ exports.togglePinPost = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+
+
+exports.archivePost = async (req, res, next) => {
+  const userId = req.user.id;
+  const postId = req.params.id;
+
+  try {
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    if (post.user.toString() !== userId) {
+      return res.status(401).json({ message: "You are not authorized to archive/unarchive this post" });
+    }
+
+    post.isArchived = !post.isArchived;
+    await post.save();
+
+    res.status(200).json({
+      message: post.isArchived ? "Post archived successfully" : "Post unarchived successfully",
+      post
+    });
+  } catch (error) {
+    console.error("Error archiving/unarchiving post:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+
+exports.getArchivedPosts = async (req, res, next) => {
+  const userId = req.user.id;
+
+  try {
+    const archivedPosts = await Post.find({ user: userId, isArchived: true })
+      .populate("user", "name username profileImg")
+      .sort({ createdAt: -1 });
+
+    if (!archivedPosts.length) {
+      return res.status(404).json({ message: "No archived posts found" });
+    }
+
+    res.status(200).json(archivedPosts);
+  } catch (error) {
+    console.error("Error fetching archived posts:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+exports.getArchivedPostById = async (req, res, next) => {
+  const { id: postId } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const post = await Post.findOne({ _id: postId, isArchived: true, user: userId })
+      .populate("user", "name username profileImg");
+
+    if (!post) {
+      return res.status(404).json({ message: "Archived post not found" });
+    }
+
+    res.status(200).json(post);
+  } catch (error) {
+    console.error("Error fetching archived post:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+

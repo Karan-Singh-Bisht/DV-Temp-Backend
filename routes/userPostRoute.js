@@ -16,12 +16,17 @@ router.post('/all', userAuthMiddleware, postController.getAllPosts);
 router.get('/user/:userId', userAuthMiddleware, postController.getPostsByUserId);
 
 
-
 // Save/Unsave a post
 router.post('/save/:id', userAuthMiddleware, postController.saveOrUnsavePost);
 router.post('/saved', userAuthMiddleware, postController.getSavedPosts);
 
 router.patch('/toggle-pin/:id', userAuthMiddleware, postController.togglePinPost);
+
+
+// Archive or unarchive post
+router.patch('/archive:id', postController.archivePost);
+router.get('/archived', postController.getArchivedPosts);
+router.get('/archived/:id', postController.getArchivedPostById);
 
 
 module.exports = router;
