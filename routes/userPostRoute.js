@@ -24,9 +24,9 @@ router.patch('/toggle-pin/:id', userAuthMiddleware, postController.togglePinPost
 
 
 // Archive or unarchive post
-router.patch('/archive:id', postController.archivePost);
-router.get('/archived', postController.getArchivedPosts);
-router.get('/archived/:id', postController.getArchivedPostById);
+router.patch('/archive/:id', userAuthMiddleware, postController.archivePost);
+router.get('/archived/all', userAuthMiddleware, postController.getArchivedPosts);
+router.get('/archived/:id', userAuthMiddleware, postController.getArchivedPostById);
 
 
 module.exports = router;

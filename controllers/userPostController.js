@@ -98,19 +98,35 @@ exports.getPostById = async (req, res) => {
 };
 
 
+// // Get all user posts
+// exports.getPosts = async (req, res) => {
+//   try {
+//     const userId = req.user._id;
+//     const posts = await Post.find({ user: userId, isBlocked: false, isArchived: false }).populate("user", "name username profileImg")
+//     .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
+    
+//     res.status(200).json(posts.length ? posts : { message: "No posts found" });
+//   } catch (error) {
+//     console.error("Error fetching posts:", error);
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+
 // Get all user posts
 exports.getPosts = async (req, res) => {
   try {
     const userId = req.user._id;
-    const posts = await Post.find({ user: userId, isBlocked: false, isArchived: false }).populate("user", "name username profileImg")
-    .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
-    
+    const posts = await Post.find({ user: userId, isBlocked: false, isArchived: false })
+      .populate("user", "name username profileImg").sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
+
     res.status(200).json(posts.length ? posts : { message: "No posts found" });
   } catch (error) {
     console.error("Error fetching posts:", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 
@@ -368,6 +384,7 @@ exports.togglePinPost = async (req, res) => {
       if (pinnedCount >= 3) {
         return res.status(400).json({ error: 'You can only pin up to 3 posts' });
       }
+      post.pinned = true;
       post.pinnedAt = new Date();
     }
     await post.save();
@@ -384,7 +401,10 @@ exports.togglePinPost = async (req, res) => {
 
 
 exports.archivePost = async (req, res, next) => {
+  // userId = req.user._id;
   const userId = req.user.id;
+  console.log("user id ethann"+req.user.id);
+  
   const postId = req.params.id;
 
   try {
