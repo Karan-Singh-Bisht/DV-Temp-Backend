@@ -19,16 +19,26 @@ const savePost = async (req, res) => {
           { $push: { savedPosts: saveId } },
           { new: true, upsert: true } // 'upsert' creates a new document if none exists
         );
-  
-        res.status(200).json({ message: 'Post saved successfully', success:true });
+  if(updatedData){
+
+    res.status(200).json({ message: 'Post saved successfully', success:true });
+  }else{
+    res.status(400).json({ message: 'Post saved fail', success:false });
+
+  }
       } else {
    const deletedData = await PostSave.findOneAndUpdate(
   { pageId },
   { $pull: { savedPosts: saveId } },
   { new: true } // 'new: true' returns the modified document
 );
+if(deletedData){
+  
+  res.status(200).json({ message: 'Saved Post Deleted successfully' ,success:true});
+}else{
+  res.status(404).json({ message: 'Post deleted fail' ,success:false});
 
-        res.status(200).json({ message: 'Post already saved' ,data:deletedData});
+}
 
       }
     } catch (error) {
@@ -47,7 +57,7 @@ const savePost = async (req, res) => {
       if (allData) {
         res.status(200).json({data:allData,success:true});
       } else {
-        res.status(404).json({ message: 'No saved posts found for this postId' });
+        res.status(404).json({ success:false, message: 'No saved posts found for this postId' });
       }
     } catch (error) {
       console.error(error.message);
@@ -68,7 +78,7 @@ const savePost = async (req, res) => {
       }
     } catch (error) {
       console.log(error.message);
-      res.status(500).json({ message: "Internal  Server error" });  // Return a response in case of error
+      res.status(500).json({ error: "Internal  Server error" });  // Return a response in case of error
     }
   };
   
@@ -107,7 +117,7 @@ const setToPin = async (req, res) => {
     }
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ success: false, message: "Internal  Server error" });
+    res.status(500).json({ success: false, error: "Internal  Server error" });
   }
 };
 

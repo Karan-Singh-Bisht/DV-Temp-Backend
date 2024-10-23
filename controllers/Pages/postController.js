@@ -70,10 +70,10 @@ const createPost = async (req, res) => {
 
     // Respond with the post and user data
     if(!newPost){
-      return res.status(400).json({ error: "Page creation failed" });
+      return res.status(400).json({ message: "Page creation failed" });
     }else{
       res.status(201).json({
-        post: newPost, 
+        data: newPost, 
         message: "Created"       
       });
     }
@@ -89,18 +89,26 @@ const getPostById = async (req, res) => {
   try {
     const id = req.params.postId;
     const post = await PostModel.findById(id);
-    return res.status(200).json({
-      data: post,
-      message: post.length ? "Successful" : "No posts found",
-    });
+    if(post){
+      return res.status(200).json({
+        data: post,
+        message:  "Successful",
+      });
+
+    }else{
+      return res.status(400).json({
+
+        message: "No posts found",
+      });
+    }
   } catch (error) {
     // Log the error for debugging
     console.error("Error fetching posts:", error);
 
     // Return 500 (Internal Server Error) with a generic message
     return res.status(500).json({
-      data: [],
-      message: "An error occurred while fetching posts",
+   
+      error: "An error occurred while fetching posts",
     });
   }
 };
@@ -113,7 +121,7 @@ const getPosts = async (req, res) => {
 
   if(allPagePosts){
     return res.status(200).json({
-      data: allPagePosts,
+       data:allPagePosts,
       message: allPagePosts.length ? "Successful" : "No posts found",
     });
   }else{
@@ -127,8 +135,8 @@ const getPosts = async (req, res) => {
 
     // Return 500 (Internal Server Error) with a generic message
     return res.status(500).json({
-      data: [],
-      message: "An error occurred while fetching posts",
+      
+      error: "An error occurred while fetching posts",
     });
   }
 };
@@ -136,18 +144,24 @@ const getPosts = async (req, res) => {
 const getAllPosts = async (req, res) => {
   try {
     const allPagePosts = await PostModel.find({ isArchive: false });
-    return res.status(200).json({
-      data: allPagePosts,
-      message: allPagePosts.length ? "Successful" : "No posts found",
-    });
+    if (allPagePosts) {
+      return res.status(200).json({
+        data: allPagePosts,
+        message: allPagePosts.length ? "Successful" : "No posts found",
+      });
+    } else {
+      return res.status(404).json({
+        message:"No posts found",
+      });
+    }
+   
   } catch (error) {
     // Log the error for debugging
     console.error("Error fetching posts:", error);
 
     // Return 500 (Internal Server Error) with a generic message
     return res.status(500).json({
-      data: [],
-      message: "An error occurred while fetching posts",
+      message: error.message,
     });
   }
 };
@@ -181,10 +195,7 @@ const updatePost = async (req, res) => {
           }
         : post.coverPhoto;
 
-    // Validate required fields
-    if (!title) {
-      return res.status(400).json({ error: "Title is required" });
-    }
+   
 
     // Update the post with new values
     const updatedPost = await PostModel.findByIdAndUpdate(
@@ -201,12 +212,18 @@ const updatePost = async (req, res) => {
       },
       { new: true } // This returns the updated document
     );
+if (updatePost) {
+  res.status(200).json({
+    data: updatedPost,
+    message: "Post updated successfully",
+  });
+} else {
+  res.status(404).json({
+    message: "Post updated fail",
+  });
+}
 
-    // Respond with the updated post data
-    res.status(200).json({
-      data: updatedPost,
-      message: "Post updated successfully",
-    });
+
   } catch (error) {
     // Log the error and send a response
     console.error("Error updating post:", error);
@@ -269,7 +286,7 @@ const deletePost = async (req, res) => {
     return res.status(404).json({ success: false, message: "Delete failed" });
   } catch (error) {
     console.log(error.message);
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
 
