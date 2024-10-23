@@ -2,60 +2,66 @@ const Post = require("../models/userPostSchema");
 const UserSavePosts = require("../models/userSavePosts");
 const User = require("../models/User");
 
-const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('../config/cloudinaryConfig');
+const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("../config/cloudinaryConfig");
 
 // Cloudinary storage for posts
 const postStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => {
-    let folder = 'post_media';
+    let folder = "post_media";
 
-    
-    if (file.mimetype.startsWith('video')) {
-      folder = 'post_videos';
+    if (file.mimetype.startsWith("video")) {
+      folder = "post_videos";
     } else {
-      folder = 'post_images';
+      folder = "post_images";
     }
 
     return {
       folder: folder,
-      resource_type: file.mimetype.startsWith('video') ? 'video' : 'image',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'mp4', 'mov'],
-      public_id: `${Date.now()}-${file.originalname}`.replace(/\s+/g, '_'),
+      resource_type: file.mimetype.startsWith("video") ? "video" : "image",
+      allowed_formats: ["jpg", "jpeg", "png", "mp4", "mov"],
+      public_id: `${Date.now()}-${file.originalname}`.replace(/\s+/g, "_"),
     };
   },
 });
 
-
 const uploadPostMedia = multer({
   storage: postStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, 
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
-
 
 exports.createPost = [
   uploadPostMedia.fields([
-    { name: 'media', maxCount: 5 },
-    { name: 'coverPhoto', maxCount: 1 },
-    { name: 'video', maxCount: 1 }
+    { name: "media", maxCount: 5 },
+    { name: "coverPhoto", maxCount: 1 },
+    { name: "video", maxCount: 1 },
   ]),
   async (req, res, next) => {
     try {
-      const { title, description, location, category, subCategory, isBlog } = req.body;
+      const { title, description, location, category, subCategory, isBlog } =
+        req.body;
 
-      const mediaURLs = req.files['media']
-        ? req.files['media'].map(file => ({ path: file.path, public_id: file.filename }))
+      const mediaURLs = req.files["media"]
+        ? req.files["media"].map((file) => ({
+            path: file.path,
+            public_id: file.filename,
+          }))
         : [];
-      const coverPhotoURL = req.files['coverPhoto']
-        ? { path: req.files['coverPhoto'][0].path, public_id: req.files['coverPhoto'][0].filename }
+      const coverPhotoURL = req.files["coverPhoto"]
+        ? {
+            path: req.files["coverPhoto"][0].path,
+            public_id: req.files["coverPhoto"][0].filename,
+          }
         : null;
-      const videoURL = req.files['video']
-        ? { path: req.files['video'][0].path, public_id: req.files['video'][0].filename }
+      const videoURL = req.files["video"]
+        ? {
+            path: req.files["video"][0].path,
+            public_id: req.files["video"][0].filename,
+          }
         : null;
 
-      
       const newPost = await Post.create({
         user: req.user._id,
         title,
@@ -74,59 +80,52 @@ exports.createPost = [
         isBlog,
       });
 
-      res.status(201).json({ message: 'Post created successfully', post: newPost });
+      if (newPost) {
+        res
+          .status(201)
+          .json({ message: "Post created successfully", data: newPost });
+      } else {
+        res.status(400).json({ message: "Page creation failed" });
+      }
     } catch (error) {
-      console.error('Error creating post:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      console.error("Error creating post:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   },
 ];
 
-
-
-
 exports.getPostById = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).populate("user", "name username profileImg");
-    if (!post) return res.status(404).json({ message: "Post not found" });
-    
-    res.status(200).json(post);
+    const post = await Post.findById(req.params.postId).populate(
+      "user",
+      "name username profileImg"
+    );
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    } else {
+      res.status(200).json({data:post,message:"successfull"});
+    }
   } catch (error) {
     console.error("Error fetching post:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ error: "An error occurred while fetching posts" });
   }
 };
-
-
-// // Get all user posts
-// exports.getPosts = async (req, res) => {
-//   try {
-//     const userId = req.user._id;
-//     const posts = await Post.find({ user: userId, isBlocked: false, isArchived: false }).populate("user", "name username profileImg")
-//     .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
-    
-//     res.status(200).json(posts.length ? posts : { message: "No posts found" });
-//   } catch (error) {
-//     console.error("Error fetching posts:", error);
-//     res.status(500).json({ message: error.message });
-//   }
-// };
 
 
 // Get all user posts
 exports.getPosts = async (req, res) => {
   try {
     const userId = req.user._id;
-    const posts = await Post.find({ user: userId, isBlocked: false, isArchived: false })
-      .populate("user", "name username profileImg").sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
-
+    const posts = await Post.find({ user: userId, isBlocked: false, isArchived: false }).populate("user", "name username profileImg")
+    .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
+    
     res.status(200).json(posts.length ? posts : { message: "No posts found" });
   } catch (error) {
     console.error("Error fetching posts:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 
 
@@ -136,35 +135,41 @@ exports.getPosts = async (req, res) => {
 // Update user post
 exports.updatePost = [
   uploadPostMedia.fields([
-    { name: 'media', maxCount: 5 },
-    { name: 'coverPhoto', maxCount: 1 },
-    { name: 'video', maxCount: 1 }
+    { name: "media", maxCount: 5 },
+    { name: "coverPhoto", maxCount: 1 },
+    { name: "video", maxCount: 1 },
   ]),
   async (req, res) => {
     try {
-      const { title, description, location, category, subCategory, isBlog } = req.body;
+      const { title, description, location, category, subCategory,postId,isBlog } =
+        req.body;
 
-      const post = await Post.findById(req.params.id);
+      const post = await Post.findById(req.params.postId);
       if (!post) return res.status(404).json({ message: "Post not found" });
 
-      if (post.user.toString() !== req.user._id.toString()) {
-        return res.status(403).json({ message: "You are not authorized to update this post" });
-      }
+     
 
-      
-      const mediaURLs = req.files['media']
-        ? req.files['media'].map(file => ({ path: file.path, public_id: file.filename }))
+      const mediaURLs = req.files["media"]
+        ? req.files["media"].map((file) => ({
+            path: file.path,
+            public_id: file.filename,
+          }))
         : post.media;
 
-      const coverPhotoURL = req.files['coverPhoto']
-        ? { path: req.files['coverPhoto'][0].path, public_id: req.files['coverPhoto'][0].filename }
+      const coverPhotoURL = req.files["coverPhoto"]
+        ? {
+            path: req.files["coverPhoto"][0].path,
+            public_id: req.files["coverPhoto"][0].filename,
+          }
         : post.coverPhoto;
 
-      const videoURL = req.files['video']
-        ? { path: req.files['video'][0].path, public_id: req.files['video'][0].filename }
+      const videoURL = req.files["video"]
+        ? {
+            path: req.files["video"][0].path,
+            public_id: req.files["video"][0].filename,
+          }
         : post.video;
 
-     
       const updatedPost = await Post.findByIdAndUpdate(
         req.params.id,
         {
@@ -181,26 +186,31 @@ exports.updatePost = [
         { new: true }
       );
 
-      res.status(200).json({ message: "Post updated successfully", post: updatedPost });
+      if(updatedPost){
+        res
+        .status(200)
+        .json({ message: "Post updated successfully", data: updatedPost });
+      }else{
+        res
+        .status(404)
+        .json({ message: "Post updated fail"});
+      }
+
+   
     } catch (error) {
       console.error("Error updating post:", error);
-      res.status(500).json({ message: error.message });
+      res.status(500).json({ error:  "Internal server error" });
     }
   },
 ];
 
-
-
 // Delete post
 exports.deletePost = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const post = await Post.findById(req.params.postId);
 
     if (!post) return res.status(404).json({ message: "Post not found" });
 
-    if (post.user.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "You are not authorized to delete this post" });
-    }
 
     if (post.media) {
       post.media.forEach((file) => {
@@ -211,9 +221,12 @@ exports.deletePost = async (req, res) => {
     }
 
     if (post.coverPhoto) {
-      cloudinary.uploader.destroy(post.coverPhoto.public_id, (error, result) => {
-        if (error) console.error("Error deleting cover photo:", error);
-      });
+      cloudinary.uploader.destroy(
+        post.coverPhoto.public_id,
+        (error, result) => {
+          if (error) console.error("Error deleting cover photo:", error);
+        }
+      );
     }
 
     if (post.video) {
@@ -222,16 +235,19 @@ exports.deletePost = async (req, res) => {
       });
     }
 
-    
-    await Post.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: "Post deleted successfully" });
+   const deletedPost= await Post.findByIdAndDelete(req.params.id);
+   if(deletedPost){
+     res.status(200).json({ message: "deleted successfully",success:true });
+     
+    }else{
+      res.status(404).json({ message: "delete fail",success:fale });
+
+    }
   } catch (error) {
     console.error("Error deleting post:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
-
-
 
 // Like or unlike a post
 exports.likePost = async (req, res) => {
@@ -241,7 +257,7 @@ exports.likePost = async (req, res) => {
 
     const userId = req.user._id;
     if (post.likes.includes(userId)) {
-      post.likes = post.likes.filter(like => !like.equals(userId)); 
+      post.likes = post.likes.filter((like) => !like.equals(userId));
       await post.save();
       return res.status(200).json({ message: "Post unliked", post });
     } else {
@@ -255,12 +271,13 @@ exports.likePost = async (req, res) => {
   }
 };
 
-
-
 // Get all posts from every user
 exports.getAllPosts = async (req, res) => {
   try {
-    const posts = await Post.find({ isBlocked: false, isArchived: false }).populate("user", "name username profileImg");
+    const posts = await Post.find({
+      isBlocked: false,
+      isArchived: false,
+    }).populate("user", "name username profileImg");
 
     if (!posts.length) {
       return res.status(404).json({ message: "No posts found" });
@@ -273,16 +290,21 @@ exports.getAllPosts = async (req, res) => {
   }
 };
 
-
 // Get all posts of a specific user by user ID
 exports.getPostsByUserId = async (req, res) => {
   try {
     const userId = req.params.userId;
-    const posts = await Post.find({ user: userId, isBlocked: false, isArchived: false }).populate("user", "name username profileImg");
+    const posts = await Post.find({
+      user: userId,
+      isBlocked: false,
+      isArchived: false,
+    }).populate("user", "name username profileImg");
 
     if (!posts.length) {
-      return res.status(404).json({ message: "No posts found for this user" })
-      .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
+      return res
+        .status(404)
+        .json({ message: "No posts found for this user" })
+        .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
     }
 
     res.status(200).json(posts);
@@ -291,12 +313,6 @@ exports.getPostsByUserId = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-
-
-
-
-
 
 // Save or unsave a post
 exports.saveOrUnsavePost = async (req, res) => {
@@ -315,18 +331,25 @@ exports.saveOrUnsavePost = async (req, res) => {
       userSave = new UserSavePosts({ user: userId, savedPosts: [] });
     }
 
-    
     const postIndex = userSave.savedPosts.indexOf(postId);
     if (postIndex > -1) {
-      
       userSave.savedPosts.splice(postIndex, 1);
       await userSave.save();
-      return res.status(200).json({ message: "Post unsaved successfully", savedPosts: userSave.savedPosts });
+      return res
+        .status(200)
+        .json({
+          message: "Post unsaved successfully",
+          savedPosts: userSave.savedPosts,
+        });
     } else {
-      
       userSave.savedPosts.push(postId);
       await userSave.save();
-      return res.status(200).json({ message: "Post saved successfully", savedPosts: userSave.savedPosts });
+      return res
+        .status(200)
+        .json({
+          message: "Post saved successfully",
+          savedPosts: userSave.savedPosts,
+        });
     }
   } catch (error) {
     console.error("Error saving/unsaving post:", error);
@@ -334,14 +357,14 @@ exports.saveOrUnsavePost = async (req, res) => {
   }
 };
 
-
-
 // Get all saved posts of the user
 exports.getSavedPosts = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const userSave = await UserSavePosts.findOne({ user: userId }).populate("savedPosts");
+    const userSave = await UserSavePosts.findOne({ user: userId }).populate(
+      "savedPosts"
+    );
 
     if (!userSave || userSave.savedPosts.length === 0) {
       return res.status(404).json({ message: "No saved posts found" });
@@ -353,9 +376,6 @@ exports.getSavedPosts = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-
-
 
 //Functions which have to update the API documentation
 
@@ -371,18 +391,23 @@ exports.togglePinPost = async (req, res) => {
     }
 
     if (post.user.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "You are not authorized to pin/unpin this post" });
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to pin/unpin this post" });
     }
-    const pinnedCount = await Post.countDocuments({ user: userId, pinned: true });
-    
-    
+    const pinnedCount = await Post.countDocuments({
+      user: userId,
+      pinned: true,
+    });
+
     if (post.pinned) {
       post.pinned = false;
       post.pinnedAt = null;
     } else {
-     
       if (pinnedCount >= 3) {
-        return res.status(400).json({ error: 'You can only pin up to 3 posts' });
+        return res
+          .status(400)
+          .json({ error: "You can only pin up to 3 posts" });
       }
       post.pinned = true;
       post.pinnedAt = new Date();
@@ -390,15 +415,14 @@ exports.togglePinPost = async (req, res) => {
     await post.save();
 
     const status = post.pinned ? "pinned" : "unpinned";
-    return res.status(200).json({ message: `Post ${status} successfully`, post });
+    return res
+      .status(200)
+      .json({ message: `Post ${status} successfully`, post });
   } catch (error) {
     console.error("Error toggling pin status:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
-
 
 exports.archivePost = async (req, res, next) => {
   // userId = req.user._id;
@@ -414,23 +438,27 @@ exports.archivePost = async (req, res, next) => {
       return res.status(404).json({ message: "Post not found" });
     }
     if (post.user.toString() !== userId) {
-      return res.status(401).json({ message: "You are not authorized to archive/unarchive this post" });
+      return res
+        .status(401)
+        .json({
+          message: "You are not authorized to archive/unarchive this post",
+        });
     }
 
     post.isArchived = !post.isArchived;
     await post.save();
 
     res.status(200).json({
-      message: post.isArchived ? "Post archived successfully" : "Post unarchived successfully",
-      post
+      message: post.isArchived
+        ? "Post archived successfully"
+        : "Post unarchived successfully",
+      post,
     });
   } catch (error) {
     console.error("Error archiving/unarchiving post:", error);
     res.status(500).json({ message: error.message });
   }
 };
-
-
 
 exports.getArchivedPosts = async (req, res, next) => {
   const userId = req.user.id;
@@ -451,14 +479,16 @@ exports.getArchivedPosts = async (req, res, next) => {
   }
 };
 
-
 exports.getArchivedPostById = async (req, res, next) => {
   const { id: postId } = req.params;
   const userId = req.user.id;
 
   try {
-    const post = await Post.findOne({ _id: postId, isArchived: true, user: userId })
-      .populate("user", "name username profileImg");
+    const post = await Post.findOne({
+      _id: postId,
+      isArchived: true,
+      user: userId,
+    }).populate("user", "name username profileImg");
 
     if (!post) {
       return res.status(404).json({ message: "Archived post not found" });
@@ -470,4 +500,3 @@ exports.getArchivedPostById = async (req, res, next) => {
     res.status(500).json({ message: error.message });
   }
 };
-

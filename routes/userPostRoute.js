@@ -4,11 +4,11 @@ const postController = require('../controllers/userPostController');
 const userAuthMiddleware = require('../middlewares/userAuthMiddleware');
 
 // Routes for managing posts
-router.post('/create-post', userAuthMiddleware, postController.createPost);
-router.get('/user', userAuthMiddleware, postController.getPosts);
-router.get('/:id', userAuthMiddleware, postController.getPostById);
-router.put('/:id', userAuthMiddleware, postController.updatePost);
-router.delete('/:id', userAuthMiddleware, postController.deletePost);
+router.post('/createpost', userAuthMiddleware, postController.createPost);
+router.get('/user/getallpost', userAuthMiddleware, postController.getPosts);
+router.get('/getpostbyid/:postId', userAuthMiddleware, postController.getPostById);
+router.patch('/upatepost', userAuthMiddleware, postController.updatePost);
+router.delete('/deletepost/:postId', userAuthMiddleware, postController.deletePost);
 router.post('/like/:id', userAuthMiddleware, postController.likePost);
 
 
