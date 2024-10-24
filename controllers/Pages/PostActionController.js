@@ -148,11 +148,31 @@ const archivePost = async (req, res) => {
   }
 };
 
+const actionLike= async(req,res)=>{
+
+  const {postId, userPageId}=req.params
+  
+  const isPost=await PostModel.findById(postId,{likes:[userPageId]})
+
+  if(isPost){
+    const checkLike= await pageModel.findByIdAndUpdate(postId,{$pull:{likes:userPageId}})
+  }else{
+    
+  }
+
+
+  try {
+    
+  } catch (error) {
+    console.log(error.message)
+  }
+}
 
   module.exports={
     savePost,
     allSavedPost,
     allArchivedPost,
     setToPin,
-    archivePost
+    archivePost,
+    actionLike
   }
