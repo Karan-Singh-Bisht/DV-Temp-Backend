@@ -121,10 +121,38 @@ const setToPin = async (req, res) => {
   }
 };
 
+const archivePost = async (req, res) => {
+  const postId = req.params.postId;
+
+  try {
+    // Find the post by its ID
+    const post = await PostModel.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found'  ,success:false});
+    }
+
+    // Toggle the isArchive field
+    const updatedPost = await PostModel.findByIdAndUpdate(
+      postId,
+      { isArchive: !post.isArchive }, // Toggle the value
+      { new: true } // Return the updated document
+    );
+
+    res.status(200).json({
+      message: `Post ${updatedPost.isArchive ? 'archived' : 'unarchived'} successfully`,
+      success:true
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error updating the post', error });
+  }
+};
+
 
   module.exports={
     savePost,
     allSavedPost,
     allArchivedPost,
-    setToPin
+    setToPin,
+    archivePost
   }

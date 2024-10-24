@@ -283,7 +283,7 @@ exports.getAllPosts = async (req, res) => {
       return res.status(404).json({ message: "No posts found" });
     }
 
-    res.status(200).json(posts);
+    res.status(200).json({data:posts,message:"Successful"});
   } catch (error) {
     console.error("Error fetching all posts:", error);
     res.status(500).json({ message: error.message });
@@ -307,22 +307,22 @@ exports.getPostsByUserId = async (req, res) => {
         .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
     }
 
-    res.status(200).json(posts);
+    res.status(200).json({data:posts,message:"Successful"});
   } catch (error) {
     console.error("Error fetching user posts:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ error:"An error occurred while fetching posts" });
   }
 };
 
 // Save or unsave a post
 exports.saveOrUnsavePost = async (req, res) => {
   try {
-    const postId = req.params.id;
+    const postId = req.params.saveId;
     const userId = req.user._id;
 
     const post = await Post.findById(postId);
     if (!post) {
-      return res.status(404).json({ message: "Post not found" });
+      return res.status(404).json({ success:false, message: "Post saving / deleted fail" });
     }
 
     let userSave = await UserSavePosts.findOne({ user: userId });
@@ -338,8 +338,8 @@ exports.saveOrUnsavePost = async (req, res) => {
       return res
         .status(200)
         .json({
-          message: "Post unsaved successfully",
-          savedPosts: userSave.savedPosts,
+          message: "Saved Post Deleted successfully",
+          success :true
         });
     } else {
       userSave.savedPosts.push(postId);
@@ -348,12 +348,12 @@ exports.saveOrUnsavePost = async (req, res) => {
         .status(200)
         .json({
           message: "Post saved successfully",
-          savedPosts: userSave.savedPosts,
+          success:true
         });
     }
   } catch (error) {
     console.error("Error saving/unsaving post:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -367,13 +367,13 @@ exports.getSavedPosts = async (req, res) => {
     );
 
     if (!userSave || userSave.savedPosts.length === 0) {
-      return res.status(404).json({ message: "No saved posts found" });
+      return res.status(404).json({ message: "No saved posts found",success:false });
     }
 
-    res.status(200).json({ savedPosts: userSave.savedPosts });
+    res.status(200).json({ data: userSave.savedPosts,success:true,  message:"successfully"});
   } catch (error) {
     console.error("Error fetching saved posts:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -381,13 +381,13 @@ exports.getSavedPosts = async (req, res) => {
 
 exports.togglePinPost = async (req, res) => {
   try {
-    const postId = req.params.id;
+    const postId = req.params.postId;
     const userId = req.user._id;
 
     const post = await Post.findById(postId);
 
     if (!post) {
-      return res.status(404).json({ message: "Post not found" });
+      return res.status(404).json({ message: "Post not found",success:false });
     }
 
     if (post.user.toString() !== userId.toString()) {
@@ -414,28 +414,26 @@ exports.togglePinPost = async (req, res) => {
     }
     await post.save();
 
-    const status = post.pinned ? "pinned" : "unpinned";
+   
     return res
       .status(200)
-      .json({ message: `Post ${status} successfully`, post });
+      .json({ message: ` successfully`, success:true });
   } catch (error) {
     console.error("Error toggling pin status:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 exports.archivePost = async (req, res, next) => {
   // userId = req.user._id;
   const userId = req.user.id;
-  console.log("user id ethann"+req.user.id);
-  
-  const postId = req.params.id;
+  const postId = req.params.postId;
 
   try {
     const post = await Post.findById(postId);
 
     if (!post) {
-      return res.status(404).json({ message: "Post not found" });
+      return res.status(404).json({ message: "Post not found" ,success:false});
     }
     if (post.user.toString() !== userId) {
       return res
@@ -452,11 +450,11 @@ exports.archivePost = async (req, res, next) => {
       message: post.isArchived
         ? "Post archived successfully"
         : "Post unarchived successfully",
-      post,
+      success:true,
     });
   } catch (error) {
     console.error("Error archiving/unarchiving post:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ error: 'Error updating the post', error });
   }
 };
 
@@ -469,13 +467,13 @@ exports.getArchivedPosts = async (req, res, next) => {
       .sort({ createdAt: -1 });
 
     if (!archivedPosts.length) {
-      return res.status(404).json({ message: "No archived posts found" });
+      return res.status(404).json({ success:true, message: "fail to fetch archived data" });
     }
 
     res.status(200).json(archivedPosts);
   } catch (error) {
     console.error("Error fetching archived posts:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -494,9 +492,9 @@ exports.getArchivedPostById = async (req, res, next) => {
       return res.status(404).json({ message: "Archived post not found" });
     }
 
-    res.status(200).json(post);
+    res.status(200).json({data:post,message:"Fetch successfully"});
   } catch (error) {
     console.error("Error fetching archived post:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ error: error.message });
   }
 };

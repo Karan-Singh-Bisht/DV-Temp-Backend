@@ -122,7 +122,7 @@ const getPosts = async (req, res) => {
   if(allPagePosts){
     return res.status(200).json({
        data:allPagePosts,
-      message: allPagePosts.length ? "Successful" : "No posts found",
+      message: "Successful",
     });
   }else{
     return res.status(400).json({
@@ -147,7 +147,7 @@ const getAllPosts = async (req, res) => {
     if (allPagePosts) {
       return res.status(200).json({
         data: allPagePosts,
-        message: allPagePosts.length ? "Successful" : "No posts found",
+        message: "Successful" ,
       });
     } else {
       return res.status(404).json({

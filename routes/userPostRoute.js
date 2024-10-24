@@ -12,21 +12,19 @@ router.delete('/deletepost/:postId', userAuthMiddleware, postController.deletePo
 router.post('/like/:id', userAuthMiddleware, postController.likePost);
 
 
-router.post('/all', userAuthMiddleware, postController.getAllPosts);
-router.get('/user/:userId', userAuthMiddleware, postController.getPostsByUserId);
+router.post('/getallpost', userAuthMiddleware, postController.getAllPosts);
+router.get('/user/getposts/:userId', userAuthMiddleware, postController.getPostsByUserId);
 
 
 // Save/Unsave a post
-router.post('/save/:id', userAuthMiddleware, postController.saveOrUnsavePost);
-router.post('/saved', userAuthMiddleware, postController.getSavedPosts);
-
-router.patch('/toggle-pin/:id', userAuthMiddleware, postController.togglePinPost);
+router.post('/savepost/:saveId', userAuthMiddleware, postController.saveOrUnsavePost);
+router.post('/allsavedpost', userAuthMiddleware, postController.getSavedPosts);
+router.patch('/pinpost/:postId', userAuthMiddleware, postController.togglePinPost);
 
 
 // Archive or unarchive post
-router.patch('/archive/:id', userAuthMiddleware, postController.archivePost);
-router.get('/archived/all', userAuthMiddleware, postController.getArchivedPosts);
-router.get('/archived/:id', userAuthMiddleware, postController.getArchivedPostById);
-
+router.patch('/archivepost/:pageId',userAuthMiddleware, postController.archivePost);
+router.get('/allarchivedpost',userAuthMiddleware, postController.getArchivedPosts);
+router.get('/archived/:id',userAuthMiddleware, postController.getArchivedPostById);
 
 module.exports = router;
