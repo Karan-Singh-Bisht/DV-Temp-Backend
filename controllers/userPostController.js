@@ -112,30 +112,25 @@ exports.getPostById = async (req, res) => {
   }
 };
 
+
 // Get all user posts
 exports.getPosts = async (req, res) => {
   try {
     const userId = req.user._id;
-    const posts = await Post.find({
-      user: userId,
-      isBlocked: false,
-      isArchived: false,
-    })
-      .populate("user", "name username profileImg")
-      .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
-
-    if (posts) {
-      res
-        .status(200)
-        .json({ data: posts, message: "Post created successfully" });
-    } else {
-      res.status(200).json({ message: "Page creation failed" });
-    }
+    const posts = await Post.find({ user: userId, isBlocked: false, isArchived: false }).populate("user", "name username profileImg")
+    .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
+    
+    res.status(200).json(posts.length ? posts : { message: "No posts found" });
   } catch (error) {
     console.error("Error fetching posts:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+
+
+
+
 
 // Update user post
 exports.updatePost = [
@@ -414,6 +409,7 @@ exports.togglePinPost = async (req, res) => {
           .status(400)
           .json({ error: "You can only pin up to 3 posts" });
       }
+      post.pinned = true;
       post.pinnedAt = new Date();
     }
     await post.save();
@@ -429,6 +425,7 @@ exports.togglePinPost = async (req, res) => {
 };
 
 exports.archivePost = async (req, res, next) => {
+  // userId = req.user._id;
   const userId = req.user.id;
   const postId = req.params.postId;
 
