@@ -77,6 +77,145 @@ exports.getContacts = async (req, res) => {
 
 
 
+// Combined Search by name, username, or phone number
+exports.searchByNameOrPhoneNumber = async (req, res) => {
+  const searchTerm = req.query.search;
+  const userId = req.user._id;
+
+  if (!searchTerm) {
+    return res.status(400).json({ error: 'Search query parameter (name, username, or phone number) is required.' });
+  }
+
+  // Function to normalize phone numbers
+  const normalizePhoneNumber = (phoneNumber) => {
+    if (phoneNumber.startsWith('+91')) {
+      phoneNumber = phoneNumber.slice(3);
+    }
+    return phoneNumber.replace(/[^0-9]/g, '');
+  };
+
+  try {
+    const result = [];
+    const normalizedSearchTerm = normalizePhoneNumber(searchTerm);
+
+    // Step 1: Fetch contacts matching name prefix or normalized phone number
+    const contacts = await Contact.find({
+      user: userId,
+      $or: [
+        { name: { $regex: `^${searchTerm}`, $options: 'i' } }, // Prefix match on name
+        { phoneNumber: { $regex: `^${normalizedSearchTerm}`, $options: 'i' } } // Exact match on phone number
+      ]
+    });
+
+    for (const contact of contacts) {
+      const normalizedContactPhone = normalizePhoneNumber(contact.phoneNumber);
+      const user = await User.findOne({ phoneNumber: normalizedContactPhone });
+      let status = 'contacts';
+
+      if (user) {
+        status = 'devian';
+
+        // Check if the user and contact are friends
+        const friendship = await Friendship.findOne({
+          $or: [
+            { requester: userId, recipient: user._id, status: 'accepted' },
+            { requester: user._id, recipient: userId, status: 'accepted' }
+          ]
+        });
+
+        if (friendship) {
+          status = 'looped';
+        }
+
+        result.push({
+          name: user.name,
+          username: user.username,
+          profileImg: user.profileImg,
+          gender: user.gender,
+          dob: user.dob,
+          phoneNumber: user.phoneNumber,
+          mailAddress: user.mailAddress,
+          bio: user.bio,
+          link: user.link,
+          status: status
+        });
+      } else {
+        result.push({
+          name: contact.name,
+          phoneNumber: contact.phoneNumber,
+          email: contact.email,
+          status: 'contacts'
+        });
+      }
+    }
+
+    // Step 2: Fetch users matching username, name, or normalized phone number
+    const users = await User.find({
+      $or: [
+        { username: { $regex: `^${searchTerm}`, $options: 'i' } }, // Prefix match on username
+        { name: { $regex: `^${searchTerm}`, $options: 'i' } },     // Prefix match on name
+        { phoneNumber: { $regex: `^${normalizedSearchTerm}$`, $options: 'i' } } // Exact match on phone number
+      ]
+    });
+
+    for (const user of users) {
+      const isInContacts = result.some(item => item.phoneNumber === user.phoneNumber);
+      let status = 'contacts';
+
+      if (!isInContacts) {
+        const friendship = await Friendship.findOne({
+          $or: [
+            { requester: userId, recipient: user._id, status: 'accepted' },
+            { requester: user._id, recipient: userId, status: 'accepted' }
+          ]
+        });
+
+        if (friendship) {
+          status = 'looped';
+        }
+
+        result.push({
+          name: user.name,
+          username: user.username,
+          profileImg: user.profileImg,
+          gender: user.gender,
+          dob: user.dob,
+          phoneNumber: user.phoneNumber,
+          mailAddress: user.mailAddress,
+          bio: user.bio,
+          link: user.link,
+          status: status
+        });
+      }
+    }
+
+    // Filter result to match prefix in name/username or exact match by phone number
+    const filteredResult = result.filter(
+      item => 
+        item.name.toLowerCase().startsWith(searchTerm.toLowerCase()) || 
+        (item.username && item.username.toLowerCase().startsWith(searchTerm.toLowerCase())) ||
+        item.phoneNumber === normalizedSearchTerm
+    );
+
+    if (filteredResult.length === 0) {
+      return res.status(404).json({ message: 'No matching users or contacts found.' });
+    }
+
+    return res.status(200).json({
+      message: 'Search completed successfully.',
+      data: filteredResult
+    });
+  } catch (error) {
+    console.error('Error searching by name, username, or phone number:', error);
+    return res.status(500).json({ error: 'Failed to search by name, username, or phone number.' });
+  }
+};
+
+
+
+
+
+
 // // Search by name, username, or phone number (within user's contact list)
 // exports.searchByNameOrPhoneNumber = async (req, res) => {
 //   const searchTerm = req.query.search; 
@@ -174,8 +313,6 @@ exports.getContacts = async (req, res) => {
 
 
 
-
-
 // // Search by name, username, or phone number
 // exports.searchByNameOrPhoneNumber = async (req, res) => {
 //   const searchTerm = req.query.search;
@@ -185,45 +322,55 @@ exports.getContacts = async (req, res) => {
 //     return res.status(400).json({ error: 'Search query parameter (name, username, or phone number) is required.' });
 //   }
 
+  
+//   const normalizePhoneNumber = (phoneNumber) => {
+   
+//     if (phoneNumber.startsWith('+91')) {
+//       phoneNumber = phoneNumber.slice(3);
+//     }
+   
+//     return phoneNumber.replace(/[^0-9]/g, '');
+//   };
+
 //   try {
+//     const result = [];
+
+    
+//     const normalizedSearchTerm = normalizePhoneNumber(searchTerm);
+
    
 //     const contacts = await Contact.find({
 //       user: userId,
 //       $or: [
+        
 //         { name: { $regex: `^${searchTerm}`, $options: 'i' } },
-//         { phoneNumber: { $regex: `^${searchTerm}`, $options: 'i' } }
+       
+//         { phoneNumber: { $regex: `^${normalizedSearchTerm}`, $options: 'i' } }
 //       ]
 //     });
 
-//     const result = [];
-
-    
 //     for (const contact of contacts) {
      
-//       const user = await User.findOne({ phoneNumber: contact.phoneNumber });
+//       const normalizedContactPhone = normalizePhoneNumber(contact.phoneNumber);
 
+      
+//       const user = await User.findOne({ phoneNumber: normalizedContactPhone });
 
 //       let status = 'contacts';
 
-    
 //       if (user) {
-       
-//         const isInContacts = await Contact.findOne({ user: userId, phoneNumber: user.phoneNumber });
-//         if (isInContacts) {
-//           status = 'devian';
+//         status = 'devian';
 
-         
-//           const friendship = await Friendship.findOne({
-//             $or: [
-//               { requester: userId, recipient: user._id, status: 'accepted' },
-//               { requester: user._id, recipient: userId, status: 'accepted' }
-//             ]
-//           });
+      
+//         const friendship = await Friendship.findOne({
+//           $or: [
+//             { requester: userId, recipient: user._id, status: 'accepted' },
+//             { requester: user._id, recipient: userId, status: 'accepted' }
+//           ]
+//         });
 
-         
-//           if (friendship) {
-//             status = 'looped';
-//           }
+//         if (friendship) {
+//           status = 'looped';
 //         }
 
        
@@ -240,7 +387,7 @@ exports.getContacts = async (req, res) => {
 //           status: status
 //         });
 //       } else {
-       
+      
 //         result.push({
 //           name: contact.name,
 //           phoneNumber: contact.phoneNumber,
@@ -250,20 +397,24 @@ exports.getContacts = async (req, res) => {
 //       }
 //     }
 
-   
+    
 //     const users = await User.find({
-//       username: { $regex: `^${searchTerm}`, $options: 'i' }
+//       $or: [
+      
+//         { username: { $regex: `^${searchTerm}`, $options: 'i' } },
+       
+//         { phoneNumber: { $regex: `^${normalizedSearchTerm}`, $options: 'i' } }
+//       ]
 //     });
 
 //     for (const user of users) {
-      
-//       const isInContacts = await Contact.findOne({ user: userId, phoneNumber: user.phoneNumber });
+//       const isInContacts = await Contact.findOne({ user: userId, phoneNumber: normalizePhoneNumber(user.phoneNumber) });
 //       let status = 'contacts';
 
 //       if (isInContacts) {
 //         status = 'devian';
 
-       
+        
 //         const friendship = await Friendship.findOne({
 //           $or: [
 //             { requester: userId, recipient: user._id, status: 'accepted' },
@@ -276,7 +427,7 @@ exports.getContacts = async (req, res) => {
 //         }
 //       }
 
-    
+     
 //       result.push({
 //         name: user.name,
 //         username: user.username,
@@ -304,149 +455,3 @@ exports.getContacts = async (req, res) => {
 //     return res.status(500).json({ error: 'Failed to search by name, username, or phone number.' });
 //   }
 // };
-
-
-
-
-// Search by name, username, or phone number
-exports.searchByNameOrPhoneNumber = async (req, res) => {
-  const searchTerm = req.query.search;
-  const userId = req.user._id;
-
-  if (!searchTerm) {
-    return res.status(400).json({ error: 'Search query parameter (name, username, or phone number) is required.' });
-  }
-
-  
-  const normalizePhoneNumber = (phoneNumber) => {
-   
-    if (phoneNumber.startsWith('+91')) {
-      phoneNumber = phoneNumber.slice(3);
-    }
-   
-    return phoneNumber.replace(/[^0-9]/g, '');
-  };
-
-  try {
-    const result = [];
-
-    
-    const normalizedSearchTerm = normalizePhoneNumber(searchTerm);
-
-   
-    const contacts = await Contact.find({
-      user: userId,
-      $or: [
-        
-        { name: { $regex: `^${searchTerm}`, $options: 'i' } },
-       
-        { phoneNumber: { $regex: `^${normalizedSearchTerm}`, $options: 'i' } }
-      ]
-    });
-
-    for (const contact of contacts) {
-     
-      const normalizedContactPhone = normalizePhoneNumber(contact.phoneNumber);
-
-      
-      const user = await User.findOne({ phoneNumber: normalizedContactPhone });
-
-      let status = 'contacts';
-
-      if (user) {
-        status = 'devian';
-
-      
-        const friendship = await Friendship.findOne({
-          $or: [
-            { requester: userId, recipient: user._id, status: 'accepted' },
-            { requester: user._id, recipient: userId, status: 'accepted' }
-          ]
-        });
-
-        if (friendship) {
-          status = 'looped';
-        }
-
-       
-        result.push({
-          name: user.name,
-          username: user.username,
-          profileImg: user.profileImg,
-          gender: user.gender,
-          dob: user.dob,
-          phoneNumber: user.phoneNumber,
-          mailAddress: user.mailAddress,
-          bio: user.bio,
-          link: user.link,
-          status: status
-        });
-      } else {
-      
-        result.push({
-          name: contact.name,
-          phoneNumber: contact.phoneNumber,
-          email: contact.email,
-          status: 'contacts'
-        });
-      }
-    }
-
-    
-    const users = await User.find({
-      $or: [
-      
-        { username: { $regex: `^${searchTerm}`, $options: 'i' } },
-       
-        { phoneNumber: { $regex: `^${normalizedSearchTerm}`, $options: 'i' } }
-      ]
-    });
-
-    for (const user of users) {
-      const isInContacts = await Contact.findOne({ user: userId, phoneNumber: normalizePhoneNumber(user.phoneNumber) });
-      let status = 'contacts';
-
-      if (isInContacts) {
-        status = 'devian';
-
-        
-        const friendship = await Friendship.findOne({
-          $or: [
-            { requester: userId, recipient: user._id, status: 'accepted' },
-            { requester: user._id, recipient: userId, status: 'accepted' }
-          ]
-        });
-
-        if (friendship) {
-          status = 'looped';
-        }
-      }
-
-     
-      result.push({
-        name: user.name,
-        username: user.username,
-        profileImg: user.profileImg,
-        gender: user.gender,
-        dob: user.dob,
-        phoneNumber: user.phoneNumber,
-        mailAddress: user.mailAddress,
-        bio: user.bio,
-        link: user.link,
-        status: status
-      });
-    }
-
-    if (result.length === 0) {
-      return res.status(404).json({ message: 'No matching users or contacts found.' });
-    }
-
-    return res.status(200).json({
-      message: 'Search completed successfully.',
-      data: result
-    });
-  } catch (error) {
-    console.error('Error searching by name, username, or phone number:', error);
-    return res.status(500).json({ error: 'Failed to search by name, username, or phone number.' });
-  }
-};
