@@ -65,6 +65,9 @@ const userPostSchema = new mongoose.Schema({
   isBlog: {
       type: Boolean,
   },
+  mediatype: {
+    type: String,
+  },
   pinned: {
     type: Boolean,
     default: false,

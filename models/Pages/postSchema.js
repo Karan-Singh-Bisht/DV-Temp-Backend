@@ -36,6 +36,9 @@ const postSchema = new Schema(
     location: {
       type: String,
     },
+    mediatype: {
+      type: String,
+    },
     category: {
       type: [String],
       default: [],
@@ -76,6 +79,7 @@ const postSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    
     isBlog: {
       type: Boolean,
       // required: [true, 'isBlog field is required'],

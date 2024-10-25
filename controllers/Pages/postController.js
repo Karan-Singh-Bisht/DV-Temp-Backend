@@ -3,7 +3,6 @@ const UserModel = require("../../models/User");
 const createHttpError = require("http-errors");
 const cloudinary = require("../../config/cloudinaryConfig");
 
-
 const createPost = async (req, res) => {
   try {
     const {
@@ -38,7 +37,13 @@ const createPost = async (req, res) => {
       : null;
 
     // Validate required fields
-   
+    let postType = "";
+
+    if (mediaURLs.length) {
+      postType = "image";
+    } else if (videoURL) {
+      postType = "video";
+    }
 
     // Create new post
     const newPost = await PostModel.create({
@@ -57,6 +62,7 @@ const createPost = async (req, res) => {
       isBlocked: false,
       sensitive: false,
       isBlog,
+      mediatype: postType,
     });
 
     // // Fetch the associated user by pageId
@@ -69,15 +75,14 @@ const createPost = async (req, res) => {
     // }
 
     // Respond with the post and user data
-    if(!newPost){
+    if (!newPost) {
       return res.status(400).json({ message: "Page creation failed" });
-    }else{
+    } else {
       res.status(201).json({
-        data: newPost, 
-        message: "Created"       
+        data: newPost,
+        message: "Created",
       });
     }
-   
   } catch (error) {
     // Log the error and send a response
     console.error("Error creating post:", error.message);
@@ -89,15 +94,13 @@ const getPostById = async (req, res) => {
   try {
     const id = req.params.postId;
     const post = await PostModel.findById(id);
-    if(post){
+    if (post) {
       return res.status(200).json({
         data: post,
-        message:  "Successful",
+        message: "Successful",
       });
-
-    }else{
+    } else {
       return res.status(400).json({
-
         message: "No posts found",
       });
     }
@@ -107,7 +110,6 @@ const getPostById = async (req, res) => {
 
     // Return 500 (Internal Server Error) with a generic message
     return res.status(500).json({
-   
       error: "An error occurred while fetching posts",
     });
   }
@@ -116,26 +118,27 @@ const getPostById = async (req, res) => {
 const getPosts = async (req, res) => {
   try {
     const pageId = req.params.pageId;
-    const allPagePosts =await PostModel.find({ pageId, isArchive: false })
-    .sort({ isPinned: -1, pinCreatedAt: -1 }); 
+    const allPagePosts = await PostModel.find({
+      pageId,
+      isArchive: false,
+    }).sort({ isPinned: -1, pinCreatedAt: -1 });
 
-  if(allPagePosts){
-    return res.status(200).json({
-       data:allPagePosts,
-      message: "Successful",
-    });
-  }else{
-    return res.status(400).json({
-      message:  "No posts found",
-    });
-  }
+    if (allPagePosts) {
+      return res.status(200).json({
+        data: allPagePosts,
+        message: "Successful",
+      });
+    } else {
+      return res.status(400).json({
+        message: "No posts found",
+      });
+    }
   } catch (error) {
     // Log the error for debugging
     console.error("Error fetching posts:", error);
 
     // Return 500 (Internal Server Error) with a generic message
     return res.status(500).json({
-      
       error: "An error occurred while fetching posts",
     });
   }
@@ -147,14 +150,13 @@ const getAllPosts = async (req, res) => {
     if (allPagePosts) {
       return res.status(200).json({
         data: allPagePosts,
-        message: "Successful" ,
+        message: "Successful",
       });
     } else {
       return res.status(404).json({
-        message:"No posts found",
+        message: "No posts found",
       });
     }
-   
   } catch (error) {
     // Log the error for debugging
     console.error("Error fetching posts:", error);
@@ -195,8 +197,6 @@ const updatePost = async (req, res) => {
           }
         : post.coverPhoto;
 
-   
-
     // Update the post with new values
     const updatedPost = await PostModel.findByIdAndUpdate(
       postId,
@@ -212,18 +212,16 @@ const updatePost = async (req, res) => {
       },
       { new: true } // This returns the updated document
     );
-if (updatePost) {
-  res.status(200).json({
-    data: updatedPost,
-    message: "Post updated successfully",
-  });
-} else {
-  res.status(404).json({
-    message: "Post updated fail",
-  });
-}
-
-
+    if (updatePost) {
+      res.status(200).json({
+        data: updatedPost,
+        message: "Post updated successfully",
+      });
+    } else {
+      res.status(404).json({
+        message: "Post updated fail",
+      });
+    }
   } catch (error) {
     // Log the error and send a response
     console.error("Error updating post:", error);

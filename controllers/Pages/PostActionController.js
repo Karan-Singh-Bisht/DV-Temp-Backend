@@ -148,25 +148,35 @@ const archivePost = async (req, res) => {
   }
 };
 
-const actionLike= async(req,res)=>{
-
-  const {postId, userPageId}=req.params
-  
-  const isPost=await PostModel.findById(postId,{likes:[userPageId]})
-
-  if(isPost){
-    const checkLike= await pageModel.findByIdAndUpdate(postId,{$pull:{likes:userPageId}})
-  }else{
-    
-  }
-
+const actionLike = async (req, res) => {
+  const { postId, userPageId } = req.params;
 
   try {
-    
+    // Check if the post exists and if the user has already liked it
+    const post = await PostModel.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Check if the user has already liked the post
+    const isLiked = post.likes.includes(userPageId);
+
+    if (isLiked) {
+      // If the post is already liked, remove the like
+      await PostModel.findByIdAndUpdate(postId, { $pull: { likes: userPageId } });
+      return res.status(200).json({ message: "Like removed" });
+    } else {
+      // If the post is not liked, add the like
+      await PostModel.findByIdAndUpdate(postId, { $push: { likes: userPageId } });
+      return res.status(200).json({ message: "Post liked" });
+    }
   } catch (error) {
-    console.log(error.message)
+    console.log(error.message);
+    return res.status(500).json({ message: "Server error" });
   }
-}
+};
+
 
   module.exports={
     savePost,
