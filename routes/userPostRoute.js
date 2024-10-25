@@ -12,7 +12,7 @@ router.delete('/deletepost/:postId', userAuthMiddleware, postController.deletePo
 router.post('/like/:id', userAuthMiddleware, postController.likePost);
 
 
-router.post('/getallpost', userAuthMiddleware, postController.getAllPosts);
+router.get('/getallpost', userAuthMiddleware, postController.getAllPosts);
 router.get('/user/getposts/:userId', userAuthMiddleware, postController.getPostsByUserId);
 
 
