@@ -247,7 +247,7 @@ exports.deletePost = async (req, res) => {
     if (deletedPost) {
       res.status(200).json({ message: "deleted successfully", success: true });
     } else {
-      res.status(404).json({ message: "delete fail", success: fale });
+      res.status(404).json({ message: "delete fail", success: false });
     }
   } catch (error) {
     console.error("Error deleting post:", error);
