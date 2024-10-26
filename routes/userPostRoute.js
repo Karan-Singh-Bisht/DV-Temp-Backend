@@ -7,12 +7,13 @@ const userAuthMiddleware = require('../middlewares/userAuthMiddleware');
 router.post('/createpost', userAuthMiddleware, postController.createPost);
 router.get('/user/getposts', userAuthMiddleware, postController.getPosts);
 router.get('/getpostbyid/:postId', userAuthMiddleware, postController.getPostById);
-router.patch('/upatepost', userAuthMiddleware, postController.updatePost);
+router.patch('/updatepost', userAuthMiddleware, postController.updatePost);
 router.delete('/deletepost/:postId', userAuthMiddleware, postController.deletePost);
 router.post('/like/:id', userAuthMiddleware, postController.likePost);
 
 
 router.get('/getallpost', userAuthMiddleware, postController.getAllPosts);
+
 router.get('/user/getposts/:userId', userAuthMiddleware, postController.getPostsByUserId);
 
 
