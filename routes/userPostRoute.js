@@ -13,6 +13,7 @@ router.post('/like/:id', userAuthMiddleware, postController.likePost);
 
 
 router.get('/getallpost', userAuthMiddleware, postController.getAllPosts);
+
 router.get('/user/getposts/:userId', userAuthMiddleware, postController.getPostsByUserId);
 
 

@@ -159,7 +159,7 @@ exports.updatePost = [
         isBlog,
       } = req.body;
 
-      const post = await Post.findById(req.params.postId);
+      const post = await Post.findById(postId);
       if (!post) return res.status(404).json({ message: "Post not found" });
 
       const mediaURLs = req.files["media"]
