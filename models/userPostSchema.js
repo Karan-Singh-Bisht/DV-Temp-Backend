@@ -24,7 +24,7 @@ const userPostSchema = new mongoose.Schema({
       }
   }],
   coverPhoto: {
-      path: { type: String },
+      path: { type: String ,},
       public_id: { type: String },
   },
   video: {
