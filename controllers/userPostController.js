@@ -78,8 +78,8 @@ exports.createPost = [
         coverPhoto: coverPhotoURL,
         video: videoURL,
         location,
-        category: Array.isArray(category) ? category : [category],
-        subCategory: Array.isArray(subCategory) ? subCategory : [subCategory],
+        category: Array.isArray(category) ? category : [],
+        subCategory: Array.isArray(subCategory) ? subCategory : [],
         likes: [],
         comments: [],
         shared: [],
@@ -162,38 +162,19 @@ exports.updatePost = [
       const post = await Post.findById(postId);
       if (!post) return res.status(404).json({ message: "Post not found" });
 
-      const mediaURLs = req.files["media"]
-        ? req.files["media"].map((file) => ({
-            path: file.path,
-            public_id: file.filename,
-          }))
-        : post.media;
 
-      const coverPhotoURL = req.files["coverPhoto"]
-        ? {
-            path: req.files["coverPhoto"][0].path,
-            public_id: req.files["coverPhoto"][0].filename,
-          }
-        : post.coverPhoto;
-
-      const videoURL = req.files["video"]
-        ? {
-            path: req.files["video"][0].path,
-            public_id: req.files["video"][0].filename,
-          }
-        : post.video;
+  
 
       const updatedPost = await Post.findByIdAndUpdate(
-        req.params.id,
+        postId,
         {
+        
           title,
           description,
-          media: mediaURLs,
-          coverPhoto: coverPhotoURL,
-          video: videoURL,
+        
           location,
-          category: Array.isArray(category) ? category : [category],
-          subCategory: Array.isArray(subCategory) ? subCategory : [subCategory],
+          category: Array.isArray(category) ? category : [],
+          subCategory: Array.isArray(subCategory) ? subCategory : [],
           isBlog,
         },
         { new: true }
@@ -243,7 +224,7 @@ exports.deletePost = async (req, res) => {
       });
     }
 
-    const deletedPost = await Post.findByIdAndDelete(req.params.id);
+    const deletedPost = await Post.findByIdAndDelete(req.params.postId);
     if (deletedPost) {
       res.status(200).json({ message: "deleted successfully", success: true });
     } else {
