@@ -50,17 +50,17 @@ exports.createPost = [
           }))
         : [];
       const coverPhotoURL = req.files["coverPhoto"]
-        && {
+        ? {
             path: req.files["coverPhoto"][0].path,
             public_id: req.files["coverPhoto"][0].filename,
           }
-     
+        : null;
       const videoURL = req.files["video"]
-      && {
+        ? {
             path: req.files["video"][0].path,
             public_id: req.files["video"][0].filename,
           }
-       
+        : null;
 
       let postType = "";
 
@@ -159,7 +159,7 @@ exports.updatePost = [
         isBlog,
       } = req.body;
 
-      const post = await Post.findById(postId);
+      const post = await Post.findById(req.params.postId);
       if (!post) return res.status(404).json({ message: "Post not found" });
 
 
