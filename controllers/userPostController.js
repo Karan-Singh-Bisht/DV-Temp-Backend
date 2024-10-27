@@ -140,59 +140,44 @@ exports.getPosts = async (req, res) => {
   }
 };
 
-// Update user post
-exports.updatePost = [
-  uploadPostMedia.fields([
-    { name: "media", maxCount: 5 },
-    { name: "coverPhoto", maxCount: 1 },
-    { name: "video", maxCount: 1 },
-  ]),
-  async (req, res) => {
-    try {
-      const {
+exports.updatePost = async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      location,
+      category,
+      subCategory,
+      postId,
+      isBlog,
+    } = req.body;
+
+
+console.log(req.body);
+
+    const updatedPost = await Post.findByIdAndUpdate(
+      postId,
+      {
         title,
         description,
         location,
-        category,
-        subCategory,
-        postId,
+        category: Array.isArray(category) ? category : [],
+        subCategory: Array.isArray(subCategory) ? subCategory : [],
         isBlog,
-      } = req.body;
+      },
+      { new: true }
+    );
 
-      const post = await Post.findById(req.params.postId);
-      if (!post) return res.status(404).json({ message: "Post not found" });
-
-
-  
-
-      const updatedPost = await Post.findByIdAndUpdate(
-        postId,
-        {
-        
-          title,
-          description,
-        
-          location,
-          category: Array.isArray(category) ? category : [],
-          subCategory: Array.isArray(subCategory) ? subCategory : [],
-          isBlog,
-        },
-        { new: true }
-      );
-
-      if (updatedPost) {
-        res
-          .status(200)
-          .json({ message: "Post updated successfully", data: updatedPost });
-      } else {
-        res.status(404).json({ message: "Post updated fail" });
-      }
-    } catch (error) {
-      console.error("Error updating post:", error);
-      res.status(500).json({ error: "Internal server error" });
+    if (updatedPost) {
+      res.status(200).json({ message: "Post updated successfully", data: updatedPost });
+    } else {
+      res.status(404).json({ message: "Post not found bb" });
     }
-  },
-];
+  } catch (error) {
+    console.error("Error updating post:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 // Delete post
 exports.deletePost = async (req, res) => {
