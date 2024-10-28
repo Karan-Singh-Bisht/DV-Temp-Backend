@@ -121,7 +121,7 @@ const getPosts = async (req, res) => {
     const allPagePosts = await PostModel.find({
       pageId,
       isArchive: false,
-    }).sort({ isPinned: -1, pinCreatedAt: -1 });
+    }).sort({ pinned: -1, pinnedAt: -1 ,createdAt:-1 });
 
     if (allPagePosts) {
       return res.status(200).json({

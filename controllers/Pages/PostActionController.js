@@ -81,18 +81,7 @@ if(deletedData){
       res.status(500).json({ error: "Internal  Server error" });  // Return a response in case of error
     }
   };
-  
-const  PinAction =async(req,res)=>{
-  try {
 
-    
-    
-  } catch (error) {
-    console.log(error.message)
-    res.status(500).json({ message: "Server error" });  // Return a response in case of error
-
-  }
-}
 const setToPin = async (req, res) => {
   try {
     const postId = req.params.postId; // Assuming postId is passed in the request params
@@ -102,8 +91,8 @@ const setToPin = async (req, res) => {
       [
         {
           $set: {
-            isPinned: { $eq: [false, "$isPinned"] }, 
-            pinCreatedAt: new Date()
+            pinned: { $eq: [false, "$pinned"] }, 
+            pinnedAt: new Date()
           }
         }
       ],

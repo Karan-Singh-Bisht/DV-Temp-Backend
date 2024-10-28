@@ -161,8 +161,8 @@ console.log(req.body);
         title,
         description,
         location,
-        category: Array.isArray(category) ? category : [],
-        subCategory: Array.isArray(subCategory) ? subCategory : [],
+        category: Array.isArray(category) && category ,
+        subCategory: Array.isArray(subCategory) && subCategory ,
         isBlog,
       },
       { new: true }
@@ -270,13 +270,14 @@ exports.getPostsByUserId = async (req, res) => {
       user: userId,
       isBlocked: false,
       isArchived: false,
-    }).populate("user", "name username profileImg");
+    }).sort({ pinned: 1, pinnedAt: -1, createdAt: -1 })
+    .populate("user", "name username profileImg")
 
     if (!posts.length) {
       return res
         .status(404)
         .json({ message: "No posts found for this user" })
-        .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
+        
     }
 
     res.status(200).json({ data: posts, message: "Successful" });
@@ -382,7 +383,7 @@ exports.togglePinPost = async (req, res) => {
 
     if (post.pinned) {
       post.pinned = false;
-      post.pinnedAt = null;
+      
     } else {
       if (pinnedCount >= 3) {
         return res
