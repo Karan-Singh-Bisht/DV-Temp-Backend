@@ -129,6 +129,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
 
        
         result.push({
+          userId: user._id,
           name: user.name,
           username: user.username,
           profileImg: user.profileImg,
@@ -143,6 +144,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
       } else {
         
         result.push({
+          userId: contact._id,
           name: contact.name,
           phoneNumber: contact.phoneNumber,
           email: contact.email,
