@@ -178,6 +178,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
         
         if (friendship) {
           result.push({
+            userId: user._id,
             name: user.name,
             username: user.username,
             profileImg: user.profileImg,
