@@ -1,6 +1,7 @@
 const Post = require("../models/userPostSchema");
 const UserSavePosts = require("../models/userSavePosts");
 const User = require("../models/User");
+const Friendship = require("../models/friendshipSchema");
 
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
@@ -103,6 +104,25 @@ exports.createPost = [
   },
 ];
 
+// exports.getPostById = async (req, res) => {
+//   try {
+//     const post = await Post.findById(req.params.postId).populate(
+//       "user",
+//       "name username profileImg"
+//     );
+
+//     if (!post) {
+//       return res.status(404).json({ message: "Post not found" });
+//     } else {
+//       res.status(200).json({ data: post, message: "successfull" });
+//     }
+//   } catch (error) {
+//     console.error("Error fetching post:", error);
+//     res.status(500).json({ error: "An error occurred while fetching posts" });
+//   }
+// };
+
+
 exports.getPostById = async (req, res) => {
   try {
     const post = await Post.findById(req.params.postId).populate(
@@ -112,14 +132,34 @@ exports.getPostById = async (req, res) => {
 
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
-    } else {
-      res.status(200).json({ data: post, message: "successfull" });
     }
+
+    const friendship = await Friendship.findOne({
+      $or: [
+        { requester: req.user._id, recipient: post.user._id },
+        { requester: post.user._id, recipient: req.user._id },
+      ],
+    });
+
+    let friendshipStatus = 'none';
+    if (friendship) {
+      friendshipStatus = friendship.status === 'accepted' ? 'looped' :
+                         friendship.status === 'pending' ? 'requested' : 'none';
+    }
+
+    
+    res.status(200).json({ 
+      data: post, 
+      friendshipStatus, 
+      message: "successful" 
+    });
+
   } catch (error) {
     console.error("Error fetching post:", error);
     res.status(500).json({ error: "An error occurred while fetching posts" });
   }
 };
+
 
 // Get all user posts
 exports.getPosts = async (req, res) => {
@@ -139,6 +179,47 @@ exports.getPosts = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+
+// exports.getPosts = async (req, res) => {
+//   try {
+//     const userId = req.user._id;
+//     const posts = await Post.find({
+//       user: userId,
+//       isBlocked: false,
+//       isArchived: false,
+//     })
+//     .populate("user", "name username profileImg")
+//     .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
+
+    
+//     const postsWithFriendshipStatus = await Promise.all(posts.map(async (post) => {
+//       const friendship = await Friendship.findOne({
+//         $or: [
+//           { requester: req.user._id, recipient: post.user._id },
+//           { requester: post.user._id, recipient: req.user._id },
+//         ],
+//       });
+
+//       let friendshipStatus = 'none';
+//       if (friendship) {
+//         friendshipStatus = friendship.status === 'accepted' ? 'looped' :
+//                            friendship.status === 'pending' ? 'requested' : 'none';
+//       }
+
+//       return {
+//         ...post.toObject(),
+//         friendshipStatus,
+//       };
+//     }));
+
+//     res.status(200).json(postsWithFriendshipStatus.length ? postsWithFriendshipStatus : { message: "No posts found" });
+//   } catch (error) {
+//     console.error("Error fetching posts:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
+
 
 exports.updatePost = async (req, res) => {
   try {
@@ -243,6 +324,8 @@ exports.likePost = async (req, res) => {
   }
 };
 
+
+
 // Get all posts from every user
 exports.getAllPosts = async (req, res) => {
   try {
@@ -255,7 +338,25 @@ exports.getAllPosts = async (req, res) => {
       return res.status(404).json({ message: "No posts found" });
     }
 
-    res.status(200).json({ data: posts, message: "Successful" });
+    
+    const postsWithFriendshipStatus = await Promise.all(posts.map(async (post) => {
+      const friendship = await Friendship.findOne({
+        $or: [
+          { requester: req.user._id, recipient: post.user._id },
+          { requester: post.user._id, recipient: req.user._id }
+        ]
+      });
+
+      let friendshipStatus = 'none';
+      if (friendship) {
+        friendshipStatus = friendship.status === 'accepted' ? 'looped' :
+                           friendship.status === 'pending' ? 'requested' : 'none';
+      }
+
+      return { ...post.toObject(), friendshipStatus };
+    }));
+
+    res.status(200).json({ data: postsWithFriendshipStatus, message: "Successful" });
   } catch (error) {
     console.error("Error fetching all posts:", error);
     res.status(500).json({ message: error.message });
@@ -271,21 +372,37 @@ exports.getPostsByUserId = async (req, res) => {
       isBlocked: false,
       isArchived: false,
     }).sort({ pinned: 1, pinnedAt: -1, createdAt: -1 })
-    .populate("user", "name username profileImg")
+      .populate("user", "name username profileImg");
 
     if (!posts.length) {
-      return res
-        .status(404)
-        .json({ message: "No posts found for this user" })
-        
+      return res.status(404).json({ message: "No posts found for this user" });
     }
 
-    res.status(200).json({ data: posts, message: "Successful" });
+    // Determine friendship status for each post's user
+    const postsWithFriendshipStatus = await Promise.all(posts.map(async (post) => {
+      const friendship = await Friendship.findOne({
+        $or: [
+          { requester: req.user._id, recipient: post.user._id },
+          { requester: post.user._id, recipient: req.user._id }
+        ]
+      });
+
+      let friendshipStatus = 'none';
+      if (friendship) {
+        friendshipStatus = friendship.status === 'accepted' ? 'looped' :
+                           friendship.status === 'pending' ? 'requested' : 'none';
+      }
+
+      return { ...post.toObject(), friendshipStatus };
+    }));
+
+    res.status(200).json({ data: postsWithFriendshipStatus, message: "Successful" });
   } catch (error) {
     console.error("Error fetching user posts:", error);
     res.status(500).json({ error: "An error occurred while fetching posts" });
   }
 };
+
 
 // Save or unsave a post
 exports.saveOrUnsavePost = async (req, res) => {
@@ -328,33 +445,78 @@ exports.saveOrUnsavePost = async (req, res) => {
   }
 };
 
+// // Get all saved posts of the user
+// exports.getSavedPosts = async (req, res) => {
+//   try {
+//     const userId = req.user._id;
+
+//     const userSave = await UserSavePosts.findOne({ user: userId }).populate(
+//       "savedPosts"
+//     );
+
+//     if (!userSave || userSave.savedPosts.length === 0) {
+//       return res
+//         .status(404)
+//         .json({ message: "No saved posts found", success: false });
+//     }
+
+//     res
+//       .status(200)
+//       .json({
+//         data: userSave.savedPosts,
+//         success: true,
+//         message: "successfully",
+//       });
+//   } catch (error) {
+//     console.error("Error fetching saved posts:", error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// };
+
+
 // Get all saved posts of the user
 exports.getSavedPosts = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const userSave = await UserSavePosts.findOne({ user: userId }).populate(
-      "savedPosts"
-    );
+    const userSave = await UserSavePosts.findOne({ user: userId }).populate("savedPosts");
 
     if (!userSave || userSave.savedPosts.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No saved posts found", success: false });
+      return res.status(404).json({ message: "No saved posts found", success: false });
     }
 
-    res
-      .status(200)
-      .json({
-        data: userSave.savedPosts,
-        success: true,
-        message: "successfully",
-      });
+    
+    const savedPostsWithFriendshipStatus = await Promise.all(
+      userSave.savedPosts.map(async (post) => {
+        const friendship = await Friendship.findOne({
+          $or: [
+            { requester: req.user._id, recipient: post.user },
+            { requester: post.user, recipient: req.user._id },
+          ],
+        });
+
+        
+        let friendshipStatus = 'none';
+        if (friendship) {
+          friendshipStatus = friendship.status === 'accepted' ? 'looped' :
+                             friendship.status === 'pending' ? 'requested' : 'none';
+        }
+        
+        return { ...post.toObject(), friendshipStatus };
+      })
+    );
+
+    res.status(200).json({
+      data: savedPostsWithFriendshipStatus,
+      success: true,
+      message: "Successfully fetched saved posts",
+    });
   } catch (error) {
     console.error("Error fetching saved posts:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 
 //Functions which have to update the API documentation
 
