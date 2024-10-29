@@ -2,6 +2,7 @@ const User = require("../models/User");
 const { signToken } = require("../utils/jwtUtils");
 const TokenBlacklist = require("../models/TokenBlacklist");
 const Pages = require("../models/Pages/PagesModel");
+const Friendship = require("../models/friendshipSchema");
 
 // Get all users without relationships
 exports.getUsers = async function (req, res) {
@@ -39,17 +40,39 @@ exports.getUsers = async function (req, res) {
   }
 };
 
-// Get user by ID without relationships
+
+
+
 exports.getUserById = async function (req, res) {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const currentUser = await User.findById(req.user._id);
-    const userPages = await Pages.find({ userId: req.user._id },  { pageName: 1, profileImg: 1, profileBackground: 1 });
-   
+    const userPages = await Pages.find(
+      { userId: req.user._id },
+      { pageName: 1, profileImg: 1, profileBackground: 1 }
+    );
+
+    let friendshipStatus = 'none';
 
     if (currentUser) {
+      
+      const friendship = await Friendship.findOne({
+        $or: [
+          { requester: req.user._id, recipient: req.params.id },
+          { requester: req.params.id, recipient: req.user._id }
+        ]
+      });
+
+      if (friendship) {
+        if (friendship.status === 'accepted') {
+          friendshipStatus = 'looped';
+        } else if (friendship.status === 'pending') {
+          friendshipStatus = 'requested';
+        }
+      }
+
       const userResponse = {
         userId: user._id,
         name: user.name,
@@ -65,7 +88,8 @@ exports.getUserById = async function (req, res) {
         updatedAt: user.updatedAt,
         bgColor: user.bgColor,
         isPrivate: user.isPrivate,
-        pages: userPages
+        pages: userPages,
+        friendshipStatus
       };
 
       res.json(userResponse);
@@ -74,7 +98,6 @@ exports.getUserById = async function (req, res) {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 
 // // Search users by name without relationships

@@ -253,9 +253,11 @@ exports.handleFriendRequestOrUnfriend = async (req, res) => {
           user: requesterId,
           phoneNumber: recipient.phoneNumber
       });
-      if (!contactExists) {
-          return res.status(400).json({ error: 'User must be in your contacts to send a request.' });
-      }
+
+      //note this may be change
+    //   if (!contactExists) {
+    //       return res.status(400).json({ error: 'User must be in your contacts to send a request.' });
+    //   }
 
      
       const existingFriendship = await Friendship.findOne({
