@@ -28,24 +28,43 @@ const getAllpages = async (req, res) => {
   try {
     const allPages = await Pages.find();
     const pageId = req.params.pageId;
+    const userPageId = req.params.userPageId;
 
     // Validate if pageId is a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(pageId)) {
       return res.status(400).json({ success: false, message: "Invalid pageId" });
     }
 
-    const blockedData = await PageActions.findOne({ pageId });
+    const PageActionData = await PageActions.findOne({ pageId: userPageId });
     let filteredPages = allPages;
 
-    if (blockedData) {
+    if (PageActionData) {
       filteredPages = allPages.filter((page) => {
-        return !blockedData.blockedList.includes(page._id.toString());
+        return !PageActionData.blockedList.includes(pageId.toString());
       });
     }
 
-    return res
-      .status(200)
-      .json({ success: true, data: filteredPages, message: "ok done" });
+    // Map the filtered pages to include relationship status for each page
+    const pagesWithRelationshipStatus = filteredPages.map((page) => {
+      let relationshipStatus = 'none'; // Default status
+
+      // Check if the page _id is in followingList or followersList
+      if (PageActionData) {
+        if (PageActionData.followingList.includes(page._id.toString())) {
+          relationshipStatus = 'following';
+        }
+        if (PageActionData.followersList.includes(page._id.toString())) {
+          relationshipStatus = 'follower';
+        }
+      }
+
+      return {
+        ...page.toObject(), // Convert Mongoose document to plain object
+        relationshipStatus, // Add the relationshipStatus to each page
+      };
+    });
+
+    return res.status(200).json({ success: true, data: pagesWithRelationshipStatus, message: "ok done" });
   } catch (error) {
     console.error(error.message);
     return res.status(500).json({ success: false, message: "Server error" });
@@ -208,7 +227,7 @@ const searchPages = async (req, res) => {
 
 const getPage = async (req, res) => {
   try {
-    const { pageId } = req.params;
+    const { pageId,userPageId } = req.params;
 
     const page = await Pages.findById(pageId);
     if (!page) {
@@ -218,11 +237,30 @@ const getPage = async (req, res) => {
       });
     }
 
+    const pageActionData = await PageActions.findOne({pageId:userPageId})
+
+
+    let relationshipStatus = 'none'; // Default status
+
+    // Check if the page _id is in followingList or followersList
+    if (pageActionData) {
+      if (pageActionData.followingList.includes(page._id.toString())) {
+        relationshipStatus = 'following';
+      }
+      if (pageActionData.followersList.includes(page._id.toString())) {
+        relationshipStatus = 'follower';
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message: "Page data fetched successfully",
-      data: page,
+      data: {
+        ...page.toObject(), // Spread the page object
+        relationshipStatus, // Add the relationshipStatus
+      },
     });
+    
   } catch (error) {
     return res.status(500).json({
       success: false,

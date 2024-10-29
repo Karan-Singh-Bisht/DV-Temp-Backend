@@ -51,12 +51,12 @@ router.get('/users/friend-requests/incoming', userAuthMiddleware, getIncomingFri
 
 
 //account creation 
-router.get('/users/getallpages/:pageId',userAuthMiddleware,PagesController.getAllpages)
+router.get('/users/getallpages/:userPageId/:pageId',userAuthMiddleware,PagesController.getAllpages)
 router.post('/users/addnewpage',userAuthMiddleware, PagesController.addNewPage)
 router.patch ('/users/updatepage',userAuthMiddleware, PagesController.updatePage)
 router.get ('/users/togglepagestatus/:pageId',userAuthMiddleware, PagesController.togglePageStatus)
 router.get('/users/searchpages/:search',userAuthMiddleware, PagesController.searchPages)
-router.get ('/users/getpage/:pageId',userAuthMiddleware, PagesController.getPage)
+router.get ('/users/getpage/:userPageId/:pageId',userAuthMiddleware, PagesController.getPage)
 
 
 //Page Action
