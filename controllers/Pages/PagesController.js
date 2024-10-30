@@ -269,6 +269,33 @@ const getPage = async (req, res) => {
   }
 };
 
+
+const getPageSelf = async (req, res) => {
+  try {
+    const { pageId } = req.params;
+
+    const page = await Pages.findById(pageId);
+    if (!page) {
+      return res.status(404).json({
+        success: false,
+        message: "Page not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Page data fetched successfully",
+      data: page
+    });
+    
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllpages,
   addNewPage,
@@ -276,4 +303,5 @@ module.exports = {
   togglePageStatus,
   searchPages,
   getPage,
+  getPageSelf
 };
