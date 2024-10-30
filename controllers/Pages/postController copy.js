@@ -138,20 +138,20 @@ exports.getAllPosts = async (req, res, next) => {
       posts.map(async (post) => {
         const user = post.userId;
 
-        let relationshipStatus = "none";
+        let friendshipStatus = "none";
         const postUserRelationship = await UserRelationship.findOne({
           userId: user._id,
         });
 
         if (currentUserRelationship) {
           if (currentUserRelationship.following.includes(user._id)) {
-            relationshipStatus = "following";
+            friendshipStatus = "following";
           }
           if (currentUserRelationship.followers.includes(user._id)) {
-            relationshipStatus = "follower";
+            friendshipStatus = "follower";
           }
           if (currentUserRelationship.followRequestsSent.includes(user._id)) {
-            relationshipStatus = "requested";
+            friendshipStatus = "requested";
           }
         }
 
@@ -171,7 +171,7 @@ exports.getAllPosts = async (req, res, next) => {
             ...user.toObject(),
             followingCount: user.following ? user.following.length : 0,
             followersCount: user.followers ? user.followers.length : 0,
-            relationshipStatus,
+            friendshipStatus,
           },
           mediaType: mediaType,
           // Check each array to ensure no null values
@@ -211,16 +211,16 @@ exports.getPostById = async (req, res, next) => {
       userId: currentUserId,
     });
 
-    let relationshipStatus = "none";
+    let friendshipStatus = "none";
     if (currentUserRelationship) {
       if (currentUserRelationship.following.includes(user._id)) {
-        relationshipStatus = "following";
+        friendshipStatus = "following";
       }
       if (currentUserRelationship.followers.includes(user._id)) {
-        relationshipStatus = "follower";
+        friendshipStatus = "follower";
       }
       if (currentUserRelationship.followRequestsSent.includes(user._id)) {
-        relationshipStatus = "requested";
+        friendshipStatus = "requested";
       }
     }
 
@@ -237,7 +237,7 @@ exports.getPostById = async (req, res, next) => {
         ...user.toObject(),
         followingCount: user.following ? user.following.length : 0,
         followersCount: user.followers ? user.followers.length : 0,
-        relationshipStatus,
+        friendshipStatus,
       },
       mediaType,
       category: cleanArray(post.category),
