@@ -210,8 +210,8 @@ const updatePost = async (req, res) => {
         coverPhoto: coverPhotoURL,
         location,
         isArchive,
-        category: Array.isArray(category) ? category : [],
-        subCategory: Array.isArray(subCategory) ? subCategory : [],
+        category: category ? category : [],
+        subCategory: subCategory ? subCategory : [],
         isBlog,
       },
       { new: true } // This returns the updated document
