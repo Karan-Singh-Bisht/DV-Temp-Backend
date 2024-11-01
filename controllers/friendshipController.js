@@ -152,34 +152,42 @@ exports.checkFriendshipStatus = async (req, res) => {
 
 // List all friends of the current user
 exports.listFriends = async (req, res) => {
-  const userId = req.user._id;
-
-  try {
-      const friendships = await Friendship.find({
-          $or: [
-              { requester: userId, status: 'accepted' },
-              { recipient: userId, status: 'accepted' }
-          ]
-      }).populate('requester recipient', 'name username profileImg');
-
-      const friends = friendships.map(friendship => {
-          const friend = friendship.requester._id.toString() === userId.toString()
-              ? friendship.recipient
-              : friendship.requester;
-          return {
-              id: friend._id,
-              requesterId: friendship.requester._id,
-              name: friend.name,
-              username: friend.username,
-              profileImg: friend.profileImg,
-          };
-      });
-
-      res.status(200).json(friends);
-  } catch (error) {
-      res.status(500).json({ error: 'Failed to retrieve friends list.' });
-  }
-};
+    
+    const userId = req.user._id;
+    
+    console.log(userId);
+  
+    try {
+        const friendships = await Friendship.find({
+            $or: [
+                { requester: userId, status: 'accepted' },
+                { recipient: userId, status: 'accepted' }
+            ]
+        }).populate('requester recipient', 'name username profileImg');
+  
+        const friends = friendships.map(friendship => {
+            const friend = friendship.requester._id.equals(userId)
+                ? friendship.recipient
+                : friendship.requester;
+  
+            return {
+                id: friend._id,
+                requesterId: friendship.requester._id,
+                name: friend.name,
+                username: friend.username,
+                profileImg: friend.profileImg,
+            };
+        });
+  
+        res.status(200).json({ data: friends,
+            message:"data fecth"
+         });
+    } catch (error) {
+        console.error("Error retrieving friends list:", error.message);
+        res.status(500).json({ error: 'Failed to retrieve friends list.' });
+    }
+  };
+  
 
 
 // Unfriend a user

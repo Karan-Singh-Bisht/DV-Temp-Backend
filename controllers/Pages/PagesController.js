@@ -262,7 +262,7 @@ const getPage = async (req, res) => {
       message: "Page data fetched successfully",
       data: {
         ...page.toObject(), // Spread the page object
-        relationshipStatus, // Add the relationshipStatus
+        friendshipStatus:  relationshipStatus, // Add the relationshipStatus
       },
     });
   } catch (error) {
