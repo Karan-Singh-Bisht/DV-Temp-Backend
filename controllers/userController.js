@@ -10,8 +10,18 @@ exports.getUsers = async function (req, res) {
     const users = await User.find();
     console.log("Users are here: " + users);
 
+   
+    if (!req.user || !req.user.id) {
+      return res.status(400).json({ message: "User ID is missing in the request." });
+    }
+
     const currentUser = await User.findById(req.user.id);
-    const blockedUsers = currentUser
+    if (!currentUser) {
+      return res.status(404).json({ message: "Current user not found." });
+    }
+
+   
+    const blockedUsers = currentUser.blockedUsers
       ? currentUser.blockedUsers.map((id) => id.toString())
       : [];
 
@@ -39,6 +49,7 @@ exports.getUsers = async function (req, res) {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 
 
