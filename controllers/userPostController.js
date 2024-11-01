@@ -329,6 +329,8 @@ exports.likePost = async (req, res) => {
 // Get all posts from every user
 exports.getAllPosts = async (req, res) => {
   try {
+    
+    
     const posts = await Post.find({
       isBlocked: false,
       isArchived: false,
@@ -338,12 +340,12 @@ exports.getAllPosts = async (req, res) => {
       return res.status(404).json({ message: "No posts found" });
     }
 
-    
+
     const postsWithFriendshipStatus = await Promise.all(posts.map(async (post) => {
       const friendship = await Friendship.findOne({
         $or: [
-          { requester: req.user._id, recipient: post.user._id },
-          { requester: post.user._id, recipient: req.user._id }
+          { requester: req.user.id, recipient: post.id },
+          { requester: post.id, recipient: req.user.id }
         ]
       });
 

@@ -22,7 +22,7 @@ const PageActions = require("../../models/Pages/PageActionsModel");
 //   }
 // };
 
-const mongoose = require('mongoose'); // Make sure to import mongoose
+const mongoose = require("mongoose"); // Make sure to import mongoose
 
 const getAllpages = async (req, res) => {
   try {
@@ -32,7 +32,9 @@ const getAllpages = async (req, res) => {
 
     // Validate if pageId is a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(pageId)) {
-      return res.status(400).json({ success: false, message: "Invalid pageId" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid pageId" });
     }
 
     const PageActionData = await PageActions.findOne({ pageId: userPageId });
@@ -46,15 +48,15 @@ const getAllpages = async (req, res) => {
 
     // Map the filtered pages to include relationship status for each page
     const pagesWithRelationshipStatus = filteredPages.map((page) => {
-      let relationshipStatus = 'none'; // Default status
+      let relationshipStatus = "none"; // Default status
 
       // Check if the page _id is in followingList or followersList
       if (PageActionData) {
         if (PageActionData.followingList.includes(page._id.toString())) {
-          relationshipStatus = 'following';
+          relationshipStatus = "following";
         }
         if (PageActionData.followersList.includes(page._id.toString())) {
-          relationshipStatus = 'follower';
+          relationshipStatus = "follower";
         }
       }
 
@@ -64,13 +66,18 @@ const getAllpages = async (req, res) => {
       };
     });
 
-    return res.status(200).json({ success: true, data: pagesWithRelationshipStatus, message: "ok done" });
+    return res
+      .status(200)
+      .json({
+        success: true,
+        data: pagesWithRelationshipStatus,
+        message: "ok done",
+      });
   } catch (error) {
     console.error(error.message);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
 
 const addNewPage = async (req, res) => {
   try {
@@ -183,7 +190,7 @@ const togglePageStatus = async (req, res) => {
         { isActive: !page.isActive },
         { new: true }
       );
-      console.log(isUpdatedPage)
+      console.log(isUpdatedPage);
       if (isUpdatedPage) {
         let boo = isUpdatedPage.isActive ? "Activation" : "Deactivation";
         res
@@ -197,7 +204,6 @@ const togglePageStatus = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 const searchPages = async (req, res) => {
   try {
@@ -227,7 +233,7 @@ const searchPages = async (req, res) => {
 
 const getPage = async (req, res) => {
   try {
-    const { pageId,userPageId } = req.params;
+    const { pageId, userPageId } = req.params;
 
     const page = await Pages.findById(pageId);
     if (!page) {
@@ -237,18 +243,17 @@ const getPage = async (req, res) => {
       });
     }
 
-    const pageActionData = await PageActions.findOne({pageId:userPageId})
+    const pageActionData = await PageActions.findOne({ pageId: userPageId });
 
-
-    let relationshipStatus = 'none'; // Default status
+    let relationshipStatus = "none"; // Default status
 
     // Check if the page _id is in followingList or followersList
     if (pageActionData) {
       if (pageActionData.followingList.includes(page._id.toString())) {
-        relationshipStatus = 'following';
+        relationshipStatus = "following";
       }
       if (pageActionData.followersList.includes(page._id.toString())) {
-        relationshipStatus = 'follower';
+        relationshipStatus = "follower";
       }
     }
 
@@ -260,7 +265,6 @@ const getPage = async (req, res) => {
         relationshipStatus, // Add the relationshipStatus
       },
     });
-    
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -268,7 +272,6 @@ const getPage = async (req, res) => {
     });
   }
 };
-
 
 const getPageSelf = async (req, res) => {
   try {
@@ -285,9 +288,8 @@ const getPageSelf = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Page data fetched successfully",
-      data: page
+      data: page,
     });
-    
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -303,5 +305,5 @@ module.exports = {
   togglePageStatus,
   searchPages,
   getPage,
-  getPageSelf
+  getPageSelf,
 };
