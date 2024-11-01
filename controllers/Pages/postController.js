@@ -39,11 +39,15 @@ const createPost = async (req, res) => {
     // Validate required fields
     let postType = "";
 
+   if(!isBlog){
     if (mediaURLs.length) {
       postType = "image";
     } else if (videoURL) {
       postType = "video";
     }
+   }else{
+    postType='blog'
+   }
 
     // Create new post
     const newPost = await PostModel.create({
