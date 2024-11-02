@@ -65,12 +65,16 @@ exports.createPost = [
 
       let postType = "";
 
+     if(isBlog){
       if (mediaURLs.length) {
         postType = "image";
       } else if (videoURL) {
         postType = "video";
       }
 
+     }else{
+      postType='blog'
+     }
       const newPost = await Post.create({
         user: req.user._id,
         title,
