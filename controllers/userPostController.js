@@ -73,7 +73,7 @@ exports.createPost = [
       }
 
      }else{
-      postType='isBlog'
+      postType='blog'
      }
       const newPost = await Post.create({
         user: req.user._id,

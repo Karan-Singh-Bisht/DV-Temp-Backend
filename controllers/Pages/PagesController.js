@@ -62,7 +62,7 @@ const getAllpages = async (req, res) => {
 
       return {
         ...page.toObject(), // Convert Mongoose document to plain object
-        relationshipStatus, // Add the relationshipStatus to each page
+       friendshipStatus: relationshipStatus, // Add the relationshipStatus to each page
       };
     });
 
@@ -205,22 +205,45 @@ const togglePageStatus = async (req, res) => {
   }
 };
 
+
 const searchPages = async (req, res) => {
   try {
     const search = req.params.search;
     const pages = await Pages.find({
       pageName: { $regex: new RegExp(search, "i") },
     });
-
+    
     if (pages.length > 0) {
-      const blockedData = await PageActions.findOne({ userId: req.user._id });
+      const pageActionData = await PageActions.findOne({ userId: req.user._id });
       let filteredPages = pages;
-      if (blockedData) {
+      
+      if (pageActionData) {
+        // Filter out blocked pages
         filteredPages = pages.filter((page) => {
-          return !blockedData.blockedList.includes(page._id.toString());
+          return !pageActionData.blockedList.includes(page._id.toString());
         });
       }
-      return res.status(200).json({ success: true, data: filteredPages });
+
+      // Map each page to include friendship status
+      const pagesWithRelationshipStatus = filteredPages.map((page) => {
+        let friendshipStatus = "none";
+
+        if (pageActionData) {
+          // Check for friendship status only if pageActionData exists
+          if (pageActionData.followingList.includes(page._id.toString())) {
+            friendshipStatus = "following";
+          } else if (pageActionData.followersList.includes(page._id.toString())) {
+            friendshipStatus = "follower";
+          }
+        }
+
+        return {
+          ...page.toObject(),
+          friendshipStatus,
+        };
+      });
+
+      return res.status(200).json({ success: true, data: pagesWithRelationshipStatus });
     } else {
       return res
         .status(404)
@@ -230,6 +253,9 @@ const searchPages = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
+
 
 const getPage = async (req, res) => {
   try {
