@@ -18,8 +18,8 @@ router.get('/user/getposts/:userId', userAuthMiddleware, postController.getPosts
 
 
 // Save/Unsave a post
-router.post('/savepost/:saveId', userAuthMiddleware, postController.saveOrUnsavePost);
-router.post('/allsavedpost', userAuthMiddleware, postController.getSavedPosts);
+router.get('/savepost/:saveId', userAuthMiddleware, postController.saveOrUnsavePost);
+router.get('/allsavedpost', userAuthMiddleware, postController.getSavedPosts);
 router.patch('/pinpost/:postId', userAuthMiddleware, postController.togglePinPost);
 
 

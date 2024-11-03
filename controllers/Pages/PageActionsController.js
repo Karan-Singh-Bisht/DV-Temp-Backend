@@ -141,7 +141,7 @@ const getAllFollowers = async (req, res) => {
     const allFollowers = await PageActions.findOne(
       { pageId },
       { followersList: 1 }
-    );
+    ).populate('followersList')
 
     if (allFollowers) {
       res.status(200).json({
@@ -165,7 +165,7 @@ const getAllFollowing = async (req, res) => {
     const allFollowing = await PageActions.findOne(
       { pageId },
       { followingList: 1 }
-    );
+    ).populate('followingList')
 
     if (allFollowing) {
       res.status(200).json({
@@ -195,7 +195,7 @@ const followActions = async (req, res) => {
     const isFollowed = await PageActions.findOne({
       pageId,
       followingList: { $in: [followId] },
-    });
+    })
 
     if (isFollowed) {
       // Unfollow logic: remove followId from followingList and pageId from followersList

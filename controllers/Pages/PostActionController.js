@@ -52,7 +52,8 @@ if(deletedData){
       const pageId = req.params.pageId;
       
       // Find the document based on postId
-      const allData = await PostSave.findOne({ pageId });
+      const allData = await PostSave.findOne({ pageId }).populate('savedPosts');
+
   
       if (allData) {
         res.status(200).json({data:allData,success:true});
@@ -82,33 +83,56 @@ if(deletedData){
     }
   };
 
-const setToPin = async (req, res) => {
-  try {
-    const postId = req.params.postId; // Assuming postId is passed in the request params
-
-    const setToPin = await PostModel.findByIdAndUpdate(
-      postId,
-      [
-        {
-          $set: {
-            pinned: { $eq: [false, "$pinned"] }, 
-            pinnedAt: new Date()
-          }
+  const setToPin = async (req, res) => {
+    try {
+      const postId = req.params.postId; // Assuming postId is passed in the request params
+  
+      // Find the post by ID
+      const post = await PostModel.findById(postId);
+      if (!post) {
+        return res.status(404).json({ success: false, message: "Post not found" });
+      }
+  
+      // Count the number of pinned posts
+      const pinnedCount = await PostModel.countDocuments({ pinned: true });
+  
+      // Toggle the pinned status
+      if (post.pinned) {
+        post.pinned = false;
+        // Remove the pinnedAt timestamp when unpinning
+      } else {
+        // Ensure no more than 3 posts are pinned
+        if (pinnedCount >= 3) {
+          return res.status(400).json({ success: false, error: "You can only pin up to 3 posts" });
         }
-      ],
-      { new: true }
-    );
-
-    if (setToPin) {
-      res.json({ success: true, message:"success" });
-    } else {
-      res.status(404).json({ success: false, message: "Post not found" });
+        post.pinned = true;
+        post.pinnedAt = new Date(); // Set the timestamp when pinning
+      }
+  
+      // Save the updated post
+      await post.save();
+  
+      res.json({ success: true, message: "Success", post });
+    } catch (error) {
+      console.log(error.message);
+      res.status(500).json({ success: false, error: "Internal Server error" });
     }
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ success: false, error: "Internal  Server error" });
-  }
-};
+  };
+  
+  // Example of fetching posts with pinned posts at the top
+  const getPosts = async (req, res) => {
+    try {
+      const posts = await PostModel.find()
+        .sort({ pinned: -1, pinnedAt: -1 }) // Sort pinned posts at the top and by recent pinned date
+        .exec();
+  
+      res.json({ success: true, posts });
+    } catch (error) {
+      console.log(error.message);
+      res.status(500).json({ success: false, error: "Internal Server error" });
+    }
+  };
+  
 
 const archivePost = async (req, res) => {
   const postId = req.params.postId;

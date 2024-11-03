@@ -26,7 +26,7 @@ const mongoose = require("mongoose"); // Make sure to import mongoose
 
 const getAllpages = async (req, res) => {
   try {
-    const allPages = await Pages.find();
+    const allPages = await Pages.find().populate("pages", "pageName userName profileImg")
     const pageId = req.params.pageId;
     const userPageId = req.params.userPageId;
 
@@ -208,52 +208,43 @@ const togglePageStatus = async (req, res) => {
 
 const searchPages = async (req, res) => {
   try {
-    const search = req.params.search;
+    const { search, pageId } = req.params;
+  
     const pages = await Pages.find({
       pageName: { $regex: new RegExp(search, "i") },
-    });
-    
-    if (pages.length > 0) {
-      const pageActionData = await PageActions.findOne({ userId: req.user._id });
-      let filteredPages = pages;
-      
-      if (pageActionData) {
-        // Filter out blocked pages
-        filteredPages = pages.filter((page) => {
-          return !pageActionData.blockedList.includes(page._id.toString());
-        });
-      }
+    })
 
-      // Map each page to include friendship status
-      const pagesWithRelationshipStatus = filteredPages.map((page) => {
-        let friendshipStatus = "none";
-
-        if (pageActionData) {
-          // Check for friendship status only if pageActionData exists
-          if (pageActionData.followingList.includes(page._id.toString())) {
-            friendshipStatus = "following";
-          } else if (pageActionData.followersList.includes(page._id.toString())) {
-            friendshipStatus = "follower";
-          }
-        }
-
-        return {
-          ...page.toObject(),
-          friendshipStatus,
-        };
-      });
-
-      return res.status(200).json({ success: true, data: pagesWithRelationshipStatus });
-    } else {
-      return res
-        .status(404)
-        .json({ success: false, message: "Pages not found" });
+    if (pages.length === 0) {
+      return res.status(404).json({ success: false, message: "Pages not found" });
     }
+console.log(req.user._id)
+    const pageActionData = await PageActions.findOne({ pageId: pageId });
+    let filteredPages = pages;
+    console.log(pageActionData)
+    if (pageActionData) {
+      // Filter out blocked pages
+      filteredPages = pages.filter((page) => !pageActionData.blockedList.includes(page._id.toString()));
+    }
+
+    // Map each page to include friendship status
+    const pagesWithRelationshipStatus = filteredPages.map((page) => {
+      let friendshipStatus = "none";
+      if (pageActionData) {
+        if (pageActionData.followingList.includes(page._id.toString())) {
+          friendshipStatus = "following";
+        } else if (pageActionData.followersList.includes(page._id.toString())) {
+          friendshipStatus = "follower";
+        }
+      }
+      return { ...page.toObject(), friendshipStatus };
+    });
+
+    return res.status(200).json({ success: true, data: pagesWithRelationshipStatus });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error("Error in searchPages:", error); // Log the error for debugging
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
 
 
 

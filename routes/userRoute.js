@@ -55,7 +55,7 @@ router.get('/users/getallpages/:userPageId/:pageId',userAuthMiddleware,PagesCont
 router.post('/users/addnewpage',userAuthMiddleware, PagesController.addNewPage)
 router.patch ('/users/updatepage',userAuthMiddleware, PagesController.updatePage)
 router.get ('/users/togglepagestatus/:pageId',userAuthMiddleware, PagesController.togglePageStatus)
-router.get('/users/searchpages/:search',userAuthMiddleware, PagesController.searchPages)
+router.get('/users/searchpages/:search/:pageId',userAuthMiddleware, PagesController.searchPages)
 router.get ('/users/getpage/:userPageId/:pageId',userAuthMiddleware, PagesController.getPage)
 router.get ('/users/getpageself/:pageId',userAuthMiddleware, PagesController.getPageSelf)
 
