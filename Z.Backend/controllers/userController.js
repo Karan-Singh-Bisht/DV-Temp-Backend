@@ -1,10 +1,10 @@
-const User = require('../models/User');
-const UserRelationship = require('../models/userRelationship');
-const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('../config/cloudinaryConfig');
-const { signToken } = require('../utils/jwtUtils');
-const TokenBlacklist = require('../models/TokenBlacklist');
+const User = require("../models/User");
+const UserRelationship = require("../models/userRelationship");
+const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("../config/cloudinaryConfig");
+const { signToken } = require("../utils/jwtUtils");
+const TokenBlacklist = require("../models/TokenBlacklist");
 
 // const { populateTrie } = require('../services/trie');
 // let trie = null;
@@ -12,14 +12,12 @@ const TokenBlacklist = require('../models/TokenBlacklist');
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'profile_images',
-    allowed_formats: ['jpg', 'jpeg', 'png'],
+    folder: "profile_images",
+    allowed_formats: ["jpg", "jpeg", "png"],
   },
 });
 
 const uploadProfileImg = multer({ storage });
-
-
 
 // controllers/userController.js
 exports.getUsers = async function (req, res) {
@@ -27,13 +25,14 @@ exports.getUsers = async function (req, res) {
     const users = await User.find();
     console.log("Users are here: " + users);
 
-    
     const currentUser = await User.findById(req.user.id);
-    const blockedUsers = currentUser ? currentUser.blockedUsers.map(id => id.toString()) : [];
+    const blockedUsers = currentUser
+      ? currentUser.blockedUsers.map((id) => id.toString())
+      : [];
 
     const userResponses = users
-      .filter(user => !blockedUsers.includes(user._id.toString()))
-      .map(user => ({
+      .filter((user) => !blockedUsers.includes(user._id.toString()))
+      .map((user) => ({
         userId: user._id,
         isUser: user.isUser,
         isCreator: user.isCreator,
@@ -49,7 +48,7 @@ exports.getUsers = async function (req, res) {
         website: user.website,
         profileImg: user.profileImg,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        updatedAt: user.updatedAt,
       }));
 
     res.json(userResponses);
@@ -58,35 +57,35 @@ exports.getUsers = async function (req, res) {
   }
 };
 
-
-
 exports.getUserById = async function (req, res) {
   try {
     const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    
     const currentUser = await User.findById(req.user.id);
-    const isBlocked = currentUser && currentUser.blockedUsers.includes(user._id.toString());
+    const isBlocked =
+      currentUser && currentUser.blockedUsers.includes(user._id.toString());
 
-    if (isBlocked) return res.status(403).json({ message: 'User is blocked' });
+    if (isBlocked) return res.status(403).json({ message: "User is blocked" });
 
     const relationship = await UserRelationship.findOne({ userId: user._id })
-      .populate('following', 'username name profileImg')
-      .populate('followers', 'username name profileImg');
+      .populate("following", "username name profileImg")
+      .populate("followers", "username name profileImg");
 
-    const currentUserRelationship = await UserRelationship.findOne({ userId: req.user.id });
+    const currentUserRelationship = await UserRelationship.findOne({
+      userId: req.user.id,
+    });
 
-    let relationshipStatus = 'none';
+    let relationshipStatus = "none";
     if (currentUserRelationship) {
       if (currentUserRelationship.following.includes(user._id)) {
-        relationshipStatus = 'following';
+        relationshipStatus = "following";
       }
       if (currentUserRelationship.followers.includes(user._id)) {
-        relationshipStatus = 'follower';
+        relationshipStatus = "follower";
       }
       if (currentUserRelationship.followRequestsSent.includes(user._id)) {
-        relationshipStatus = 'requested';
+        relationshipStatus = "requested";
       }
     }
 
@@ -109,7 +108,7 @@ exports.getUserById = async function (req, res) {
       following: relationship ? relationship.following : [],
       relationshipStatus,
       createdAt: user.createdAt,
-      updatedAt: user.updatedAt
+      updatedAt: user.updatedAt,
     };
 
     res.json(userResponse);
@@ -118,45 +117,52 @@ exports.getUserById = async function (req, res) {
   }
 };
 
-
-
 exports.searchUsersByName = async function (req, res) {
   const searchTerm = req.query.name;
   if (!searchTerm) {
-    return res.status(400).json({ message: 'Name query parameter is required' });
+    return res
+      .status(400)
+      .json({ message: "Name query parameter is required" });
   }
 
   try {
     const users = await User.find({
       $or: [
-        { name: { $regex: `^${searchTerm}`, $options: 'i' } }, 
-        { username: { $regex: `^${searchTerm}`, $options: 'i' } } 
-      ]
+        { name: { $regex: `^${searchTerm}`, $options: "i" } },
+        { username: { $regex: `^${searchTerm}`, $options: "i" } },
+      ],
     });
 
     const currentUser = await User.findById(req.user.id);
-    const blockedUsers = currentUser ? currentUser.blockedUsers.map(id => id.toString()) : [];
+    const blockedUsers = currentUser
+      ? currentUser.blockedUsers.map((id) => id.toString())
+      : [];
 
-    const filteredUsers = users
-      .filter(user => !blockedUsers.includes(user._id.toString()) && user._id.toString() !== req.user.id);
+    const filteredUsers = users.filter(
+      (user) =>
+        !blockedUsers.includes(user._id.toString()) &&
+        user._id.toString() !== req.user.id
+    );
 
     if (filteredUsers.length === 0) {
-      return res.status(404).json({ message: 'No users found' });
+      return res.status(404).json({ message: "No users found" });
     }
 
-    const currentUserRelationship = await UserRelationship.findOne({ userId: req.user.id });
+    const currentUserRelationship = await UserRelationship.findOne({
+      userId: req.user.id,
+    });
 
-    const userResponses = filteredUsers.map(user => {
-      let relationshipStatus = 'none';
+    const userResponses = filteredUsers.map((user) => {
+      let relationshipStatus = "none";
       if (currentUserRelationship) {
         if (currentUserRelationship.following.includes(user._id)) {
-          relationshipStatus = 'following';
+          relationshipStatus = "following";
         }
         if (currentUserRelationship.followers.includes(user._id)) {
-          relationshipStatus = 'follower';
+          relationshipStatus = "follower";
         }
         if (currentUserRelationship.followRequestsSent.includes(user._id)) {
-          relationshipStatus = 'requested';
+          relationshipStatus = "requested";
         }
       }
 
@@ -177,7 +183,7 @@ exports.searchUsersByName = async function (req, res) {
         profileImg: user.profileImg,
         relationshipStatus,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        updatedAt: user.updatedAt,
       };
     });
 
@@ -187,30 +193,25 @@ exports.searchUsersByName = async function (req, res) {
   }
 };
 
-
-
-
 //logout
 exports.signoutUser = async (req, res) => {
   try {
-    const token = req.headers.authorization.split(' ')[1]; 
+    const token = req.headers.authorization.split(" ")[1];
     await TokenBlacklist.create({ token });
 
-    res.status(200).json({ message: 'Successfully signed out' });
+    res.status(200).json({ message: "Successfully signed out" });
   } catch (err) {
-    console.error('Error signing out:', err);
-    res.status(500).json({ message: 'Error signing out' });
+    console.error("Error signing out:", err);
+    res.status(500).json({ message: "Error signing out" });
   }
 };
 
-
-
 exports.loginUser = async function (req, res) {
   console.log("da mone working");
-  
+
   const { phoneNumber } = req.body;
 
-  console.log('Incoming request to loginUser:', req.body);
+  console.log("Incoming request to loginUser:", req.body);
 
   try {
     let user = await User.findOne({ phoneNumber });
@@ -236,22 +237,18 @@ exports.loginUser = async function (req, res) {
         website: user.website,
         profileImg: user.profileImg,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        updatedAt: user.updatedAt,
       };
-    return res.status(200).send(userResponse);
+      return res.status(200).send(userResponse);
     } else {
-      console.log('User not found');
+      console.log("User not found");
       return res.status(404).json({ userExists: false, phoneNumber });
     }
   } catch (err) {
-    console.error('Error in loginUser:', err.message);
+    console.error("Error in loginUser:", err.message);
     return res.status(500).json({ message: err.message });
   }
 };
-
-
-
-
 
 exports.signupUser = async function (req, res) {
   console.log("da mone working sign up");
@@ -268,16 +265,18 @@ exports.signupUser = async function (req, res) {
     profileImg,
     isUser = false,
     isCreator = false,
-    isVerified = false
+    isVerified = false,
   } = req.body;
 
-  console.log('Incoming request to signupUser:', req.body);
+  console.log("Incoming request to signupUser:", req.body);
 
   try {
     let existingUser = await User.findOne({ phoneNumber });
 
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists. Please log in.' });
+      return res
+        .status(400)
+        .json({ message: "User already exists. Please log in." });
     }
 
     const user = new User({
@@ -293,7 +292,7 @@ exports.signupUser = async function (req, res) {
       profession,
       bio,
       website,
-      profileImg
+      profileImg,
     });
 
     await user.save();
@@ -319,18 +318,15 @@ exports.signupUser = async function (req, res) {
       website: user.website,
       profileImg: user.profileImg,
       createdAt: user.createdAt,
-      updatedAt: user.updatedAt
+      updatedAt: user.updatedAt,
     };
 
     return res.status(201).send(userResponse);
   } catch (err) {
-    console.error('Error in signupUser:', err.message);
+    console.error("Error in signupUser:", err.message);
     return res.status(500).json({ message: err.message });
   }
 };
-
-
-
 
 // // Update user by ID
 // exports.updateUser = async function (req, res) {
@@ -363,21 +359,28 @@ exports.signupUser = async function (req, res) {
 //   }
 // };
 
-
-
-
 // Update user by ID (Excluding phoneNumber, username, mailAddress from update)
 exports.updateUser = async function (req, res) {
   try {
-    const { name, gender, dob, profession, bio, website, profileImg } = req.body;
+    const { name, gender, dob, profession, bio, website, profileImg } =
+      req.body;
 
     const user = await User.findByIdAndUpdate(
-      req.user.id, 
-      { name, gender, dob, profession, bio, website, profileImg, updatedAt: Date.now() },
+      req.user.id,
+      {
+        name,
+        gender,
+        dob,
+        profession,
+        bio,
+        website,
+        profileImg,
+        updatedAt: Date.now(),
+      },
       { new: true }
     );
 
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const userResponse = {
       userId: user._id,
@@ -395,16 +398,15 @@ exports.updateUser = async function (req, res) {
       website: user.website,
       profileImg: user.profileImg,
       createdAt: user.createdAt,
-      updatedAt: user.updatedAt
+      updatedAt: user.updatedAt,
     };
-console.log("ethalle response: " +userResponse);
+    console.log("ethalle response: " + userResponse);
 
     res.json(userResponse);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
-
 
 // // Delete user
 // exports.deleteUser = async function (req, res) {
@@ -417,91 +419,92 @@ console.log("ethalle response: " +userResponse);
 //   }
 // };
 
-
-
 // Delete current user (Authenticated User)
 exports.deleteUser = async function (req, res) {
   try {
     const user = await User.findByIdAndDelete(req.user.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    res.json({ message: 'User account deleted successfully' });
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json({ message: "User account deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-
-
 // Get Relationship Status
-exports.getRelationshipStatus = async function(req, res) {
+exports.getRelationshipStatus = async function (req, res) {
   try {
-      const user = await User.findById(req.user.id);
-      const targetUser = await User.findById(req.params.id);
+    const user = await User.findById(req.user.id);
+    const targetUser = await User.findById(req.params.id);
 
-      if (!user || !targetUser) {
-          return res.status(404).json({ msg: 'User or Target User not found' });
-      }
+    if (!user || !targetUser) {
+      return res.status(404).json({ msg: "User or Target User not found" });
+    }
 
-      const userRelationship = await UserRelationship.findOne({ userId: user._id });
-      const targetUserRelationship = await UserRelationship.findOne({ userId: targetUser._id });
+    const userRelationship = await UserRelationship.findOne({
+      userId: user._id,
+    });
+    const targetUserRelationship = await UserRelationship.findOne({
+      userId: targetUser._id,
+    });
 
-      if (!userRelationship || !targetUserRelationship) {
-          return res.status(404).json({ msg: 'Relationship data not found' });
-      }
+    if (!userRelationship || !targetUserRelationship) {
+      return res.status(404).json({ msg: "Relationship data not found" });
+    }
 
-      
-      const status = {
-          isFollowing: userRelationship.following.includes(targetUser._id),
-          isFollowedBy: targetUserRelationship.following.includes(user._id),
-          hasSentRequest: userRelationship.followRequestsSent.includes(targetUser._id),
-          hasReceivedRequest: targetUserRelationship.followRequestsReceived.includes(user._id)
-      };
+    const status = {
+      isFollowing: userRelationship.following.includes(targetUser._id),
+      isFollowedBy: targetUserRelationship.following.includes(user._id),
+      hasSentRequest: userRelationship.followRequestsSent.includes(
+        targetUser._id
+      ),
+      hasReceivedRequest:
+        targetUserRelationship.followRequestsReceived.includes(user._id),
+    };
 
-      res.status(200).json({ status });
+    res.status(200).json({ status });
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ msg: 'Server error', error: error.message });
+    console.error(error);
+    res.status(500).json({ msg: "Server error", error: error.message });
   }
 };
 
-
-
 // Get followers and following for a user
-exports.getUserRelations = async function(req, res) {
+exports.getUserRelations = async function (req, res) {
   try {
     const userId = req.params.id;
 
     const userRelationship = await UserRelationship.findOne({ userId });
 
     if (!userRelationship) {
-      return res.status(404).json({ message: 'User relationships not found' });
+      return res.status(404).json({ message: "User relationships not found" });
     }
 
-    const followers = await User.find({ _id: { $in: userRelationship.followers } });
-    const following = await User.find({ _id: { $in: userRelationship.following } });
+    const followers = await User.find({
+      _id: { $in: userRelationship.followers },
+    });
+    const following = await User.find({
+      _id: { $in: userRelationship.following },
+    });
 
     res.status(200).json({
-      followers: followers.map(user => ({
+      followers: followers.map((user) => ({
         userId: user._id,
         name: user.name,
         username: user.username,
-        profileImg: user.profileImg
+        profileImg: user.profileImg,
       })),
-      following: following.map(user => ({
+      following: following.map((user) => ({
         userId: user._id,
         name: user.name,
         username: user.username,
-        profileImg: user.profileImg
-      }))
+        profileImg: user.profileImg,
+      })),
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 };
-
-
-
 
 // exports.getUserNotifications = async function (req, res) {
 //   try {
@@ -538,7 +541,7 @@ exports.getUserRelations = async function(req, res) {
 //         username: user.username,
 //         profileImg: user.profileImg,
 //         message: `${user.username} has sent you a follow request.`,
-//         createdAt: new Date(), 
+//         createdAt: new Date(),
 //         followed: false,
 //       });
 //     });
@@ -556,14 +559,14 @@ exports.getUserRelations = async function(req, res) {
 //           username: user.username,
 //           profileImg: user.profileImg,
 //           message: `${user.username} has accepted your follow request.`,
-//           createdAt: new Date(), 
+//           createdAt: new Date(),
 //           followed: user.isCreator,
 //         });
 //       }
 //     });
 
 //     notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
+
 //     console.log('Notifications:', notifications);
 
 //     res.status(200).json({ notifications });
@@ -572,8 +575,6 @@ exports.getUserRelations = async function(req, res) {
 //     res.status(500).json({ message: 'Server error' });
 //   }
 // };
-
-
 
 exports.getUserNotifications = async function (req, res) {
   try {
@@ -584,23 +585,23 @@ exports.getUserNotifications = async function (req, res) {
     const blockedUsers = userRelationship ? userRelationship.blocked : [];
 
     if (!userRelationship) {
-      return res.status(404).json({ message: 'User relationships not found' });
+      return res.status(404).json({ message: "User relationships not found" });
     }
 
     const followRequestsReceived = await User.find({
       _id: { $in: userRelationship.followRequestsReceived },
-    }).select('name username profileImg isCreator');
+    }).select("name username profileImg isCreator");
 
     const followers = await User.find({
       _id: { $in: userRelationship.followers },
-    }).select('name username profileImg isCreator');
+    }).select("name username profileImg isCreator");
 
     const notifications = [];
 
     followRequestsReceived.forEach((user) => {
       if (!blockedUsers.includes(user._id.toString())) {
         notifications.push({
-          type: 'follow_request_received',
+          type: "follow_request_received",
           userId: user._id,
           name: user.name,
           username: user.username,
@@ -615,11 +616,14 @@ exports.getUserNotifications = async function (req, res) {
 
     followers.forEach((user) => {
       if (!blockedUsers.includes(user._id.toString())) {
-        const isAcceptedRequest = !userRelationship.followRequestsReceived.includes(user._id.toString());
+        const isAcceptedRequest =
+          !userRelationship.followRequestsReceived.includes(
+            user._id.toString()
+          );
 
         if (isAcceptedRequest) {
           notifications.push({
-            type: 'follow_request_accepted',
+            type: "follow_request_accepted",
             userId: user._id,
             name: user.name,
             username: user.username,
@@ -634,18 +638,15 @@ exports.getUserNotifications = async function (req, res) {
     });
 
     notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    console.log('Notifications:', notifications);
+
+    console.log("Notifications:", notifications);
 
     res.status(200).json({ notifications });
   } catch (error) {
-    console.error('Error fetching notifications:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error fetching notifications:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
-
-
-
 
 // Block a user
 exports.blockUser = async function (req, res) {
@@ -653,59 +654,52 @@ exports.blockUser = async function (req, res) {
     const userIdToBlock = await User.findById(req.params.id);
     //const userIdToBlock = req.params.id;
     const currentUserId = req.user.id;
-    console.log("block chyanna user evana "+req.body);
-    console.log("eth njaana "+req.user.id);
-    
-    
+    console.log("block chyanna user evana " + req.body);
+    console.log("eth njaana " + req.user.id);
 
     if (userIdToBlock === currentUserId) {
-      return res.status(400).json({ message: 'You cannot block yourself.' });
+      return res.status(400).json({ message: "You cannot block yourself." });
     }
 
     const currentUser = await User.findById(currentUserId);
 
     if (!currentUser) {
-      return res.status(404).json({ message: 'Current user not found.' });
+      return res.status(404).json({ message: "Current user not found." });
     }
 
     if (!currentUser.blockedUsers.includes(userIdToBlock)) {
       currentUser.blockedUsers.push(userIdToBlock);
       await currentUser.save();
-      return res.status(200).json({ message: 'User blocked successfully.' });
+      return res.status(200).json({ message: "User blocked successfully." });
     }
 
-    res.status(400).json({ message: 'User is already blocked.' });
+    res.status(400).json({ message: "User is already blocked." });
   } catch (err) {
-    console.error('Error blocking user:', err.message);
-    res.status(500).json({ message: 'Error blocking user' });
+    console.error("Error blocking user:", err.message);
+    res.status(500).json({ message: "Error blocking user" });
   }
 };
-
-
 
 // Get blocked users
 exports.getBlockedUsers = async function (req, res) {
   try {
     const currentUserId = req.user.id;
-    const currentUser = await User.findById(currentUserId).populate('blockedUsers', 'username name profileImg');
-    console.log("Evanmare alle ni block akkye "+currentUser);
-    
+    const currentUser = await User.findById(currentUserId).populate(
+      "blockedUsers",
+      "username name profileImg"
+    );
+    console.log("Evanmare alle ni block akkye " + currentUser);
 
     if (!currentUser || currentUser.blockedUsers.length === 0) {
-      return res.status(404).json({ message: 'No blocked users found.' });
+      return res.status(404).json({ message: "No blocked users found." });
     }
 
     res.status(200).json(currentUser.blockedUsers);
   } catch (err) {
-    console.error('Error getting blocked users:', err.message);
-    res.status(500).json({ message: 'Error getting blocked users' });
+    console.error("Error getting blocked users:", err.message);
+    res.status(500).json({ message: "Error getting blocked users" });
   }
 };
-
-
-
-
-
 
 // Unblock a user
 exports.unblockUser = async function (req, res) {
@@ -717,18 +711,18 @@ exports.unblockUser = async function (req, res) {
     const currentUser = await User.findById(currentUserId);
 
     if (!currentUser || !currentUser.blockedUsers.includes(userIdToUnblock)) {
-      return res.status(404).json({ message: 'User is not blocked.' });
+      return res.status(404).json({ message: "User is not blocked." });
     }
 
     currentUser.blockedUsers = currentUser.blockedUsers.filter(
-      (blockedUserId) => blockedUserId && blockedUserId.toString() !== userIdToUnblock
+      (blockedUserId) =>
+        blockedUserId && blockedUserId.toString() !== userIdToUnblock
     );
 
     await currentUser.save();
-    res.status(200).json({ message: 'User unblocked successfully.' });
+    res.status(200).json({ message: "User unblocked successfully." });
   } catch (err) {
-    console.error('Error unblocking user:', err.message);
-    res.status(500).json({ message: 'Error unblocking user' });
+    console.error("Error unblocking user:", err.message);
+    res.status(500).json({ message: "Error unblocking user" });
   }
 };
-
