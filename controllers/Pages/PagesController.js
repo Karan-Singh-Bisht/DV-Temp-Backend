@@ -146,7 +146,7 @@ const updatePage = async (req, res) => {
       "Website",
       "isCreator",
       "profileBackground",
-      " profileImg",
+      "profileImg",
       "isPrivate",
     ];
 

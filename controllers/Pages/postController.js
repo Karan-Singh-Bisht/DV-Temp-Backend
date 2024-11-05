@@ -8,10 +8,12 @@ const createPost = async (req, res) => {
     const {
       title,
       pageId,
-      description,    
+      description,
+      location,
       category,
       subCategory,
       isBlog,
+      coPartner
     } = req.body;
 
     const mediaURLs = req.files["media"]
@@ -27,6 +29,13 @@ const createPost = async (req, res) => {
           public_id: req.files["coverPhoto"][0].filename,
         }
       : null;
+      const musicURL = req.files["music"]
+      ? {
+          path: req.files["music"][0].path,
+          public_id: req.files["music"][0].filename,
+        }
+      : null;
+
 
     const videoURL = req.files["video"]
       ? {
@@ -34,19 +43,24 @@ const createPost = async (req, res) => {
           public_id: req.files["video"][0].filename,
         }
       : null;
+      const cadURL = req.files["cad"]
+      ? {
+          path: req.files["cad"][0].path,
+          public_id: req.files["cad"][0].filename,
+        }
+      : null;
 
-    // Validate required fields
+    // Determine postType based on isBlog and media presence
     let postType = "";
-
-   if(!isBlog){
-    if (mediaURLs.length) {
-      postType = "image";
+    if (isBlog === "true" || isBlog === true) {
+      postType = "blog";
     } else if (videoURL) {
       postType = "video";
+    } else if (mediaURLs.length > 0) {
+      postType = "image";
+    } else {
+      postType = "unknown"; // or any other default you want
     }
-   }else{
-    postType='blog'
-   }
 
     // Create new post
     const newPost = await PostModel.create({
@@ -56,11 +70,12 @@ const createPost = async (req, res) => {
       media: mediaURLs,
       coverPhoto: coverPhotoURL,
       video: videoURL,
-      // cad:"",
+      cad:cadURL,
+      location,
       category: category ? category : [],
       subCategory: subCategory ? subCategory : [],
-      coPartner:"",
-      // music:"",      
+      coPartner,
+      music:musicURL,
       likes: [],
       comments: [],
       shared: [],
@@ -70,16 +85,6 @@ const createPost = async (req, res) => {
       mediatype: postType,
     });
 
-    // // Fetch the associated user by pageId
-    // const user = await Pages.findById(pageId).select(
-    //   "name username following followers profession"
-    // );
-
-    // if (!user) {
-    //   return res.status(404).json({ error: "User not found" });
-    // }
-
-    // Respond with the post and user data
     if (!newPost) {
       return res.status(400).json({ message: "Page creation failed" });
     } else {
@@ -89,11 +94,11 @@ const createPost = async (req, res) => {
       });
     }
   } catch (error) {
-    // Log the error and send a response
     console.error("Error creating post:", error.message);
     res.status(500).json({ error: error.message });
   }
 };
+
 
 const getPostById = async (req, res) => {
   try {

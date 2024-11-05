@@ -33,7 +33,16 @@ const postSchema = new Schema(
     video: {
       type: mediaSchema,
     },
+    music: {
+      type: mediaSchema,
+    },
+    cad: {
+      type: mediaSchema,
+    },
     location: {
+      type: String,
+    },
+    coPartner: {
       type: String,
     },
     mediatype: {
@@ -82,7 +91,7 @@ const postSchema = new Schema(
     
     isBlog: {
       type: Boolean,
-      // required: [true, 'isBlog field is required'],
+      required:true
     },
   },
   { timestamps: true }
