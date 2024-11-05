@@ -58,10 +58,12 @@ const createPost = async (req, res) => {
       postType = "video";
     } else if (mediaURLs.length > 0) {
       postType = "image";
-    } else {
+    } else if (cadURL) {
+      postType = "cad";
+    }else {
       postType = "unknown"; // or any other default you want
     }
-
+console.log(cadURL)
     // Create new post
     const newPost = await PostModel.create({
       pageId,
@@ -94,7 +96,7 @@ const createPost = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Error creating post:", error.message);
+    console.error("Error creating post:",error);
     res.status(500).json({ error: error.message });
   }
 };

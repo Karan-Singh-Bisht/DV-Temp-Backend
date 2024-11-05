@@ -26,7 +26,10 @@ const mongoose = require("mongoose"); // Make sure to import mongoose
 
 const getAllpages = async (req, res) => {
   try {
-    const allPages = await Pages.find().populate("pages", "pageName userName profileImg")
+    const allPages = await Pages.find().populate(
+      "pages",
+      "pageName userName profileImg"
+    );
     const pageId = req.params.pageId;
     const userPageId = req.params.userPageId;
 
@@ -62,17 +65,15 @@ const getAllpages = async (req, res) => {
 
       return {
         ...page.toObject(), // Convert Mongoose document to plain object
-       friendshipStatus: relationshipStatus, // Add the relationshipStatus to each page
+        friendshipStatus: relationshipStatus, // Add the relationshipStatus to each page
       };
     });
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        data: pagesWithRelationshipStatus,
-        message: "ok done",
-      });
+    return res.status(200).json({
+      success: true,
+      data: pagesWithRelationshipStatus,
+      message: "ok done",
+    });
   } catch (error) {
     console.error(error.message);
     return res.status(500).json({ success: false, message: "Server error" });
@@ -147,6 +148,7 @@ const updatePage = async (req, res) => {
       "isCreator",
       "profileBackground",
       "profileImg",
+      "coPartner",
       "isPrivate",
     ];
 
@@ -157,14 +159,14 @@ const updatePage = async (req, res) => {
       }
       return acc;
     }, {});
-    const updatedPage = await Pages.findOneAndUpdate (
+    const updatedPage = await Pages.findOneAndUpdate(
       { _id: req.body.pageId, userId: req.user._id },
       updateData,
       {
         new: true, // Return the updated document
       }
     );
-console.log(updatedPage)
+    console.log(updatedPage);
     if (!updatedPage) {
       return res.status(404).json({ message: "Page  not found" });
     }
@@ -205,25 +207,28 @@ const togglePageStatus = async (req, res) => {
   }
 };
 
-
 const searchPages = async (req, res) => {
   try {
     const { search, pageId } = req.params;
-  
+
     const pages = await Pages.find({
       pageName: { $regex: new RegExp(search, "i") },
-    })
+    });
 
     if (pages.length === 0) {
-      return res.status(404).json({ success: false, message: "Pages not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Pages not found" });
     }
-console.log(req.user._id)
+    console.log(req.user._id);
     const pageActionData = await PageActions.findOne({ pageId: pageId });
     let filteredPages = pages;
-    console.log(pageActionData)
+    console.log(pageActionData);
     if (pageActionData) {
       // Filter out blocked pages
-      filteredPages = pages.filter((page) => !pageActionData.blockedList.includes(page._id.toString()));
+      filteredPages = pages.filter(
+        (page) => !pageActionData.blockedList.includes(page._id.toString())
+      );
     }
 
     // Map each page to include friendship status
@@ -239,14 +244,14 @@ console.log(req.user._id)
       return { ...page.toObject(), friendshipStatus };
     });
 
-    return res.status(200).json({ success: true, data: pagesWithRelationshipStatus });
+    return res
+      .status(200)
+      .json({ success: true, data: pagesWithRelationshipStatus });
   } catch (error) {
     console.error("Error in searchPages:", error); // Log the error for debugging
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
-
 
 const getPage = async (req, res) => {
   try {
@@ -279,7 +284,7 @@ const getPage = async (req, res) => {
       message: "Page data fetched successfully",
       data: {
         ...page.toObject(), // Spread the page object
-        friendshipStatus:  relationshipStatus, // Add the relationshipStatus
+        friendshipStatus: relationshipStatus, // Add the relationshipStatus
       },
     });
   } catch (error) {
