@@ -157,14 +157,14 @@ const updatePage = async (req, res) => {
       }
       return acc;
     }, {});
-    const updatedPage = await Pages.updateOne(
+    const updatedPage = await Pages.findOneAndUpdate (
       { _id: req.body.pageId, userId: req.user._id },
       updateData,
       {
         new: true, // Return the updated document
       }
     );
-
+console.log(updatedPage)
     if (!updatedPage) {
       return res.status(404).json({ message: "Page  not found" });
     }
