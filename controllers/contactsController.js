@@ -63,24 +63,63 @@ exports.syncContacts = async (req, res) => {
 
 
 
-//retrieve n display all contacts
-exports.getContacts = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const contacts = await Contact.find({ user: userId });
-    // res.status(200).json(contacts);
+// //retrieve n display all contacts
+// exports.getContacts = async (req, res) => {
+//   try {
+//     const userId = req.user._id;
+//     const contacts = await Contact.find({ user: userId });
+//     // res.status(200).json(contacts);
 
-    return res.status(200).json({
-      message: 'Contacts retrieved successfully.',
-      data: contacts
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch contacts.' });
+//     return res.status(200).json({
+//       message: 'Contacts retrieved successfully.',
+//       data: contacts
+//     });
+//   } catch (error) {
+//     res.status(500).json({ error: 'Failed to fetch contacts.' });
+//   }
+// };
+
+
+// Function to normalize phone numbers
+const normalizePhoneNumber = (phoneNumber) => {
+  if (phoneNumber.startsWith('+91')) {
+    phoneNumber = phoneNumber.slice(3);
   }
+  return phoneNumber.replace(/[^0-9]/g, '');
 };
 
 
+// Retrieve contacts that are not associated with any existing user in the User collection
+exports.getContacts = async (req, res) => {
+  try {
+    const userId = req.user._id;
 
+    
+    const contacts = await Contact.find({ user: userId });
+
+    
+    const contactPhoneNumbers = contacts.map(contact => normalizePhoneNumber(contact.phoneNumber));
+
+   
+    const existingUsers = await User.find({
+      phoneNumber: { $in: contactPhoneNumbers.map(normalizePhoneNumber) }
+    });
+
+    
+    const existingUserPhoneNumbers = new Set(existingUsers.map(user => normalizePhoneNumber(user.phoneNumber)));
+
+    
+    const filteredContacts = contacts.filter(contact => !existingUserPhoneNumbers.has(normalizePhoneNumber(contact.phoneNumber)));
+
+    return res.status(200).json({
+      message: 'Contacts retrieved successfully.',
+      data: filteredContacts
+    });
+  } catch (error) {
+    console.error("Error fetching contacts:", error);
+    res.status(500).json({ error: 'Failed to fetch contacts.' });
+  }
+};
 
 
 // Combined Search by name, username, or phone number
