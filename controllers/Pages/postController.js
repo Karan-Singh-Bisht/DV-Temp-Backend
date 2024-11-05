@@ -58,7 +58,9 @@ const createPost = async (req, res) => {
       postType = "video";
     } else if (mediaURLs.length > 0) {
       postType = "image";
-    } else {
+    } else if (cadURL) {
+      postType = "cad";
+    }else {
       postType = "unknown"; // or any other default you want
     }
 console.log(cadURL)
