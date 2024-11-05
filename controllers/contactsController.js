@@ -66,8 +66,14 @@ exports.syncContacts = async (req, res) => {
 //retrieve n display all contacts
 exports.getContacts = async (req, res) => {
   try {
-    const contacts = await Contact.find();
-    res.status(200).json(contacts);
+    const userId = req.user._id;
+    const contacts = await Contact.find({ user: userId });
+    // res.status(200).json(contacts);
+
+    return res.status(200).json({
+      message: 'Contacts retrieved successfully.',
+      data: contacts
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch contacts.' });
   }
