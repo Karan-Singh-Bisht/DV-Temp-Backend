@@ -244,145 +244,145 @@ exports.getIncomingFriendRequests = async (req, res) => {
 
 
 
-// // Handle both sending friend request and unfriending
-// exports.handleFriendRequestOrUnfriend = async (req, res) => {
-//   const { recipientId } = req.params;
-//   const requesterId = req.user._id;
-
-//   try {
-     
-//       const recipient = await User.findById(recipientId);
-//       if (!recipient) {
-//           return res.status(404).json({ error: 'User not found.' });
-//       }
-
-     
-//       const contactExists = await Contact.findOne({
-//           user: requesterId,
-//           phoneNumber: recipient.phoneNumber
-//       });
-
-//       //note this may be change
-//     //   if (!contactExists) {
-//     //       return res.status(400).json({ error: 'User must be in your contacts to send a request.' });
-//     //   }
-
-     
-//       const existingFriendship = await Friendship.findOne({
-//           $or: [
-//               { requester: requesterId, recipient: recipientId },
-//               { requester: recipientId, recipient: requesterId }
-//           ]
-//       });
-
-//     //evde onn nottam vecho..
-//       if (existingFriendship) {
-//           if (existingFriendship.status === 'pending') {
-//               return res.status(400).json({ error: 'Friend request already sent and is pending.' });
-//           } else if (existingFriendship.status === 'accepted') {
-             
-//               await Friendship.findOneAndDelete({
-//                   $or: [
-//                       { requester: requesterId, recipient: recipientId, status: 'accepted' },
-//                       { requester: recipientId, recipient: requesterId, status: 'accepted' }
-//                   ]
-//               });
-
-//               return res.status(200).json({ message: 'Friendship removed.' });
-//           } else if (existingFriendship.status === 'declined') {
-             
-//               existingFriendship.status = 'pending';
-//               existingFriendship.updatedAt = Date.now();
-//               await existingFriendship.save();
-//               return res.status(200).json({ message: 'Friend request re-sent.' });
-//           }
-//       }
-
-      
-//       const newFriendship = new Friendship({
-//           requester: requesterId,
-//           recipient: recipientId,
-//           status: 'pending'
-//       });
-
-     
-//       await newFriendship.save();
-//       res.status(200).json({ message: 'Friend request sent successfully.' });
-//   } catch (error) {
-//       res.status(500).json({ error: 'Failed to send friend request or unfriend user.' });
-//   }
-// };
-
-
-
-
 // Handle both sending friend request and unfriending
 exports.handleFriendRequestOrUnfriend = async (req, res) => {
-    const { recipientId } = req.params;
-    const requesterId = req.user._id;
+  const { recipientId } = req.params;
+  const requesterId = req.user._id;
+
+  try {
+     
+      const recipient = await User.findById(recipientId);
+      if (!recipient) {
+          return res.status(404).json({ error: 'User not found.' });
+      }
+
+     
+      const contactExists = await Contact.findOne({
+          user: requesterId,
+          phoneNumber: recipient.phoneNumber
+      });
+
+      //note this may be change
+    //   if (!contactExists) {
+    //       return res.status(400).json({ error: 'User must be in your contacts to send a request.' });
+    //   }
+
+     
+      const existingFriendship = await Friendship.findOne({
+          $or: [
+              { requester: requesterId, recipient: recipientId },
+              { requester: recipientId, recipient: requesterId }
+          ]
+      });
+
+    //evde onn nottam vecho..
+      if (existingFriendship) {
+          if (existingFriendship.status === 'pending') {
+              return res.status(400).json({ error: 'Friend request already sent and is pending.' });
+          } else if (existingFriendship.status === 'accepted') {
+             
+              await Friendship.findOneAndDelete({
+                  $or: [
+                      { requester: requesterId, recipient: recipientId, status: 'accepted' },
+                      { requester: recipientId, recipient: requesterId, status: 'accepted' }
+                  ]
+              });
+
+              return res.status(200).json({ message: 'Friendship removed.' });
+          } else if (existingFriendship.status === 'declined') {
+             
+              existingFriendship.status = 'pending';
+              existingFriendship.updatedAt = Date.now();
+              await existingFriendship.save();
+              return res.status(200).json({ message: 'Friend request re-sent.' });
+          }
+      }
+
+      
+      const newFriendship = new Friendship({
+          requester: requesterId,
+          recipient: recipientId,
+          status: 'pending'
+      });
+
+     
+      await newFriendship.save();
+      res.status(200).json({ message: 'Friend request sent successfully.' });
+  } catch (error) {
+      res.status(500).json({ error: 'Failed to send friend request or unfriend user.' });
+  }
+};
+
+
+
+
+// // Handle both sending friend request and unfriending
+// exports.handleFriendRequestOrUnfriend = async (req, res) => {
+//     const { recipientId } = req.params;
+//     const requesterId = req.user._id;
   
-    try {
+//     try {
        
-        const recipient = await User.findById(recipientId);
-        if (!recipient) {
-            return res.status(404).json({ error: 'User not found.' });
-        }
+//         const recipient = await User.findById(recipientId);
+//         if (!recipient) {
+//             return res.status(404).json({ error: 'User not found.' });
+//         }
   
        
-        const contactExists = await Contact.findOne({
-            user: requesterId,
-            phoneNumber: recipient.phoneNumber
-        });
+//         const contactExists = await Contact.findOne({
+//             user: requesterId,
+//             phoneNumber: recipient.phoneNumber
+//         });
   
-        //note this may be change
-      //   if (!contactExists) {
-      //       return res.status(400).json({ error: 'User must be in your contacts to send a request.' });
-      //   }
+//         //note this may be change
+//       //   if (!contactExists) {
+//       //       return res.status(400).json({ error: 'User must be in your contacts to send a request.' });
+//       //   }
   
        
-        const existingFriendship = await Friendship.findOne({
-            $or: [
-                { requester: requesterId, recipient: recipientId },
-                { requester: recipientId, recipient: requesterId }
-            ]
-        });
+//         const existingFriendship = await Friendship.findOne({
+//             $or: [
+//                 { requester: requesterId, recipient: recipientId },
+//                 { requester: recipientId, recipient: requesterId }
+//             ]
+//         });
   
-      //evde onn nottam vecho..
-        if (existingFriendship) {
-            if (existingFriendship.status === 'pending') {
-                return res.status(400).json({ error: 'Friend request already sent and is pending.' });
-            } else if (existingFriendship.status === 'accepted' || existingFriendship.status === 'pending') {
+//       //evde onn nottam vecho..
+//         if (existingFriendship) {
+//             // if (existingFriendship.status === 'pending') {
+//             //     return res.status(400).json({ error: 'Friend request already sent and is pending.' });
+//             if (existingFriendship.status === 'accepted' || existingFriendship.status === 'pending') {
                
-                await Friendship.findOneAndDelete({
-                    $or: [
-                        { requester: requesterId, recipient: recipientId, status: 'accepted' },
-                        { requester: recipientId, recipient: requesterId, status: 'accepted' }
-                    ]
-                });
+//                 await Friendship.findOneAndDelete({
+//                     $or: [
+//                         { requester: requesterId, recipient: recipientId, status: 'accepted' },
+//                         { requester: recipientId, recipient: requesterId, status: 'accepted' }
+//                     ]
+//                 });
   
-                return res.status(200).json({ message: 'Friendship  or Frienship request has been removed.' });
-            } else if (existingFriendship.status === 'declined') {
+//                 return res.status(200).json({ message: 'Friendship  or Frienship request has been removed.' });
+//             } else (existingFriendship.status === 'declined') {
                
-                existingFriendship.status = 'pending';
-                existingFriendship.updatedAt = Date.now();
-                await existingFriendship.save();
-                return res.status(200).json({ message: 'Friend request re-sent.' });
-            }
-        }
+//                 existingFriendship.status = 'pending';
+//                 existingFriendship.updatedAt = Date.now();
+//                 await existingFriendship.save();
+//                 return res.status(200).json({ message: 'Friend request re-sent.' });
+//             }
+//         }
   
         
-        const newFriendship = new Friendship({
-            requester: requesterId,
-            recipient: recipientId,
-            status: 'pending'
-        });
+//         const newFriendship = new Friendship({
+//             requester: requesterId,
+//             recipient: recipientId,
+//             status: 'pending'
+//         });
   
        
-        await newFriendship.save();
-        res.status(200).json({ message: 'Friend request sent successfully.' });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to send friend request or unfriend user.' });
-    }
-  };
+//         await newFriendship.save();
+//         res.status(200).json({ message: 'Friend request sent successfully.' });
+//     } catch (error) {
+//         res.status(500).json({ error: 'Failed to send friend request or unfriend user.' });
+//     }
+//   };
   
   
