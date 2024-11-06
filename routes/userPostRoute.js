@@ -9,11 +9,10 @@ router.get('/user/getposts', userAuthMiddleware, postController.getPosts);
 router.get('/getpostbyid/:postId', userAuthMiddleware, postController.getPostById);
 router.patch('/updatepost', userAuthMiddleware, postController.updatePost);
 router.delete('/deletepost/:postId', userAuthMiddleware, postController.deletePost);
-router.post('/like/:id', userAuthMiddleware, postController.likePost);
+router.post('/like/:postId', userAuthMiddleware, postController.likePost);
 
 
 router.get('/getallpost', userAuthMiddleware, postController.getAllPosts);
-
 router.get('/user/getposts/:userId', userAuthMiddleware, postController.getPostsByUserId);
 
 
@@ -26,6 +25,6 @@ router.patch('/pinpost/:postId', userAuthMiddleware, postController.togglePinPos
 // Archive or unarchive post
 router.patch('/archivepost/:postId',userAuthMiddleware, postController.archivePost);
 router.get('/allarchivedpost',userAuthMiddleware, postController.getArchivedPosts);
-router.get('/archived/:id',userAuthMiddleware, postController.getArchivedPostById);
+router.get('/archived/:postId',userAuthMiddleware, postController.getArchivedPostById);
 
 module.exports = router;

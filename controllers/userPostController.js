@@ -310,7 +310,7 @@ exports.deletePost = async (req, res) => {
 // Like or unlike a post
 exports.likePost = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const post = await Post.findById(req.params.postId);
     if (!post) return res.status(404).json({ message: "Post not found" });
 
     const userId = req.user._id;
@@ -683,8 +683,8 @@ exports.getArchivedPosts = async (req, res, next) => {
 };
 
 exports.getArchivedPostById = async (req, res, next) => {
-  const { id: postId } = req.params;
-  const userId = req.user.id;
+  const { postId: postId } = req.params;
+  const userId = req.user.postId;
 
   try {
     const post = await Post.findOne({
