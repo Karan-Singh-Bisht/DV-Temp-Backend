@@ -711,19 +711,14 @@ exports.createRepost = async (req, res) => {
   try {
     const { postId } = req.params;
     const userId = req.user._id;
-
-   
     const originalPost = await Post.findById(postId);
     if (!originalPost) {
       return res.status(404).json({ message: "Original post not found" });
     }
-
-   
     const newRepost = await Repost.create({
       user: userId,
       originalPost: postId,
     });
-
     res.status(201).json({ message: "Post reposted successfully", data: newRepost });
   } catch (error) {
     console.error("Error creating repost:", error);
