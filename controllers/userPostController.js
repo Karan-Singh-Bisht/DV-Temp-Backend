@@ -2,6 +2,7 @@ const Post = require("../models/userPostSchema");
 const UserSavePosts = require("../models/userSavePosts");
 const User = require("../models/User");
 const Friendship = require("../models/friendshipSchema");
+const Repost = require("../models/repostSchema")
 
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
@@ -330,10 +331,52 @@ exports.likePost = async (req, res) => {
 
 
 
-// Get all posts from every user
+// // Get all posts from every user
+// exports.getAllPosts = async (req, res) => {
+//   try {
+    
+    
+//     const posts = await Post.find({
+//       isBlocked: false,
+//       isArchived: false,
+//     }).populate("user", "name username profileImg");
+
+//     if (!posts.length) {
+//       return res.status(404).json({ message: "No posts found" });
+//     }
+
+
+//     const postsWithFriendshipStatus = await Promise.all(posts.map(async (post) => {
+//       const friendship = await Friendship.findOne({
+//         $or: [
+//           { requester: req.user.id, recipient: post.id },
+//           { requester: post.id, recipient: req.user.id }
+//         ]
+//       });
+
+//       let friendshipStatus = 'none';
+//       if (friendship) {
+//         friendshipStatus = friendship.status === 'accepted' ? 'looped' :
+//                            friendship.status === 'pending' ? 'requested' : 'none';
+//       }
+
+//       return { ...post.toObject(), friendshipStatus,};
+//     }));
+
+//     res.status(200).json({ data: postsWithFriendshipStatus, message: "Successful" });
+    
+//   } catch (error) {
+//     console.error("Error fetching all posts:", error);
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+
+
+
+// Get all posts
 exports.getAllPosts = async (req, res) => {
   try {
-    
     
     const posts = await Post.find({
       isBlocked: false,
@@ -344,15 +387,20 @@ exports.getAllPosts = async (req, res) => {
       return res.status(404).json({ message: "No posts found" });
     }
 
-
+    
     const postsWithFriendshipStatus = await Promise.all(posts.map(async (post) => {
+      if (!post.user) {
+        return null; 
+      }
+
       const friendship = await Friendship.findOne({
         $or: [
-          { requester: req.user.id, recipient: post.id },
-          { requester: post.id, recipient: req.user.id }
+          { requester: req.user.id, recipient: post.user._id },
+          { requester: post.user._id, recipient: req.user.id }
         ]
       });
 
+      
       let friendshipStatus = 'none';
       if (friendship) {
         friendshipStatus = friendship.status === 'accepted' ? 'looped' :
@@ -362,12 +410,19 @@ exports.getAllPosts = async (req, res) => {
       return { ...post.toObject(), friendshipStatus };
     }));
 
-    res.status(200).json({ data: postsWithFriendshipStatus, message: "Successful" });
+    
+    const acceptedFriendPosts = postsWithFriendshipStatus
+      .filter(post => post && post.friendshipStatus === 'looped');
+
+    res.status(200).json({ data: acceptedFriendPosts, message: "Successful" });
   } catch (error) {
     console.error("Error fetching all posts:", error);
     res.status(500).json({ message: error.message });
   }
 };
+
+
+
 
 // Get all posts of a specific user by user ID
 exports.getPostsByUserId = async (req, res) => {
@@ -672,6 +727,42 @@ exports.createRepost = async (req, res) => {
     res.status(201).json({ message: "Post reposted successfully", data: newRepost });
   } catch (error) {
     console.error("Error creating repost:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+exports.getUserReposts = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const reposts = await Repost.find({ user: userId })
+      .populate({
+        path: "originalPost",
+        populate: { path: "user", select: "name username profileImg" },
+      })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(reposts.length ? reposts : { message: "No reposts found" });
+  } catch (error) {
+    console.error("Error fetching reposts:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+
+exports.getRepostsByPostId = async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    const reposts = await Repost.find({ originalPost: postId })
+      .populate("user", "name username profileImg")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(reposts.length ? reposts : { message: "No reposts for this post" });
+  } catch (error) {
+    console.error("Error fetching reposts:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

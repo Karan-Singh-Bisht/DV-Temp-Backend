@@ -13,7 +13,7 @@ const mediaSchema = new Schema({
 });
 
 const postSchema = new Schema(
-  {
+  {  
     pageId: {
       type: mongoose.Types.ObjectId,
       ref: "Pages",
