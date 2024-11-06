@@ -6,9 +6,9 @@ const savePost = async (req, res) => {
     try {
       const { pageId, saveId } = req.params;
 
-      const ifPost= await Post.findById(saveId)
+      const ifPost= await PostModel.findById(saveId)
 
-      if(ifPost){
+      if(!ifPost){
        return res.status(404).json({ message: 'Post not availabe' ,success:false});
       }
   

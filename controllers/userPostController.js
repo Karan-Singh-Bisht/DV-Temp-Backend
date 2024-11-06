@@ -542,7 +542,9 @@ exports.getSavedPosts = async (req, res) => {
 
     
 
-    const userSave = await UserSavePosts.findOne({ user: userId }).populate("savedPosts");
+    const userSave = await UserSavePosts.findOne({ user: userId })
+    .populate('user')
+    .populate('savedPosts');
 
     if (!userSave || userSave.savedPosts.length === 0) {
       return res.status(404).json({ message: "No saved posts found", success: false });
