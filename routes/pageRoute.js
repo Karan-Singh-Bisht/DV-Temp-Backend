@@ -24,7 +24,7 @@ router.patch('/page/archivepost/:postId',userAuthMiddleware,PostActionController
 router.get('/page/allarchivedpost/:pageId',userAuthMiddleware,PostActionController.allArchivedPost)
 router.get('/page/pinpost/:postId',userAuthMiddleware,PostActionController.setToPin)
 
-router.patch('/page/like/:postId/:userPageId',userAuthMiddleware,PostActionController.actionLike)
+router.get('/page/like/:postId/:userPageId',userAuthMiddleware,PostActionController.actionLike)
 
 
 module.exports = router;

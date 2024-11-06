@@ -9,7 +9,7 @@ router.get('/user/getposts', userAuthMiddleware, postController.getPosts);
 router.get('/getpostbyid/:postId', userAuthMiddleware, postController.getPostById);
 router.patch('/updatepost', userAuthMiddleware, postController.updatePost);
 router.delete('/deletepost/:postId', userAuthMiddleware, postController.deletePost);
-router.patch('/like/:postId', userAuthMiddleware, postController.likePost);
+router.get('/like/:postId', userAuthMiddleware, postController.likePost);
 
 
 router.get('/getallpost', userAuthMiddleware, postController.getAllPosts);
