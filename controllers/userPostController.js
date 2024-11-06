@@ -2,6 +2,7 @@ const Post = require("../models/userPostSchema");
 const UserSavePosts = require("../models/userSavePosts");
 const User = require("../models/User");
 const Friendship = require("../models/friendshipSchema");
+const Repost = require("../models/repostSchema")
 
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
@@ -670,6 +671,42 @@ exports.createRepost = async (req, res) => {
     res.status(201).json({ message: "Post reposted successfully", data: newRepost });
   } catch (error) {
     console.error("Error creating repost:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+exports.getUserReposts = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const reposts = await Repost.find({ user: userId })
+      .populate({
+        path: "originalPost",
+        populate: { path: "user", select: "name username profileImg" },
+      })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(reposts.length ? reposts : { message: "No reposts found" });
+  } catch (error) {
+    console.error("Error fetching reposts:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+
+exports.getRepostsByPostId = async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    const reposts = await Repost.find({ originalPost: postId })
+      .populate("user", "name username profileImg")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(reposts.length ? reposts : { message: "No reposts for this post" });
+  } catch (error) {
+    console.error("Error fetching reposts:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
