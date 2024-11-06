@@ -47,12 +47,13 @@ if(deletedData){
     }
   };
 
+
+
   const allSavedPost = async (req, res) => {
     try {
       const pageId = req.params.pageId;
       
-      // Find the document based on postId
-      const allData = await PostSave.findOne({ pageId }).populate('savedPosts');
+      const allData = await PostSave.findOne({ pageId })
 
   
       if (allData) {
@@ -65,6 +66,8 @@ if(deletedData){
       res.status(500).json({ error: 'Internal Server Error' });
     }
   };
+
+
 
   const allArchivedPost = async (req, res) => {
     try {
