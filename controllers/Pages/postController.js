@@ -105,7 +105,7 @@ console.log(cadURL)
 const getPostById = async (req, res) => {
   try {
     const id = req.params.postId;
-    const post = await PostModel.findById(id);
+    const post = await PostModel.findById(id).populate("pageId", "pageName userName profileImg");
     if (post) {
       return res.status(200).json({
         data: post,
@@ -133,7 +133,7 @@ const getPosts = async (req, res) => {
     const allPagePosts = await PostModel.find({
       pageId,
       isArchive: false,
-    }).sort({ pinned: -1, pinnedAt: -1 ,createdAt:-1 })
+    }).sort({ pinned: -1, pinnedAt: -1 ,createdAt:-1 }).populate("pageId", "pageName userName profileImg");
 
     if (allPagePosts) {
       return res.status(200).json({
@@ -158,7 +158,7 @@ const getPosts = async (req, res) => {
 
 const getAllPosts = async (req, res) => {
   try {
-    const allPagePosts = await PostModel.find({ isArchive: false });
+    const allPagePosts = await PostModel.find({ isArchive: false }).populate("pageId", "pageName userName profileImg");
     if (allPagePosts) {
       return res.status(200).json({
         data: allPagePosts,
@@ -223,7 +223,7 @@ const updatePost = async (req, res) => {
         isBlog,
       },
       { new: true } // This returns the updated document
-    );
+    ).populate("pageId", "pageName userName profileImg");
     if (updatePost) {
       res.status(200).json({
         data: updatedPost,

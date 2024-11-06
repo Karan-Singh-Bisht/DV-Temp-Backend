@@ -485,6 +485,8 @@ exports.getSavedPosts = async (req, res) => {
   try {
     const userId = req.user._id;
 
+    
+
     const userSave = await UserSavePosts.findOne({ user: userId }).populate("savedPosts");
 
     if (!userSave || userSave.savedPosts.length === 0) {

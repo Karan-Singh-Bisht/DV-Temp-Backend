@@ -5,6 +5,12 @@ const PostSave= require('../../models/Pages/PostSaveModel')
 const savePost = async (req, res) => {
     try {
       const { pageId, saveId } = req.params;
+
+      const ifPost= await Post.findById(saveId)
+
+      if(ifPost){
+       return res.status(404).json({ message: 'Post not availabe' ,success:false});
+      }
   
       // Check if the saveId is already in savedPosts
       const isSaved = await PostSave.findOne({
@@ -50,11 +56,11 @@ if(deletedData){
   const allSavedPost = async (req, res) => {
     try {
       const pageId = req.params.pageId;
-      
-      // Find the document based on postId
-      const allData = await PostSave.findOne({ pageId }).populate('savedPosts');
 
-  
+      // Find the document based on postId
+      const allData = await PostSave.findOne({ pageId })
+
+
       if (allData) {
         res.status(200).json({data:allData,success:true});
       } else {
@@ -69,7 +75,7 @@ if(deletedData){
   const allArchivedPost = async (req, res) => {
     try {
       const { pageId } = req.params;  // Destructure pageId from req.params
-      const allArchivedData = await PostModel.find({ pageId, isArchive: true });
+      const allArchivedData = await PostModel.find({ pageId, isArchive: true }).populate("pageId", "pageName userName profileImg");
       if (allArchivedData) {
         
       return  res.status(200).json({success:true,data:allArchivedData,message:"Fetch successfully"});  // Send the response with archived data
