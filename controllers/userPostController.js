@@ -432,7 +432,7 @@ exports.getPostsByUserId = async (req, res) => {
       user: userId,
       isBlocked: false,
       isArchived: false,
-    }).sort({ pinned: 1, pinnedAt: -1, createdAt: -1 })
+    }).sort({ pinned: -1, pinnedAt: -1, createdAt: -1 })
       .populate("user", "name username profileImg");
 
     if (!posts.length) {
