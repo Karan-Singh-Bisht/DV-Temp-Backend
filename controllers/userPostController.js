@@ -3,6 +3,7 @@ const UserSavePosts = require("../models/userSavePosts");
 const User = require("../models/User");
 const Friendship = require("../models/friendshipSchema");
 const Repost = require("../models/repostSchema")
+const Rewrite = require("../models/rewriteSchema");
 
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
@@ -760,6 +761,98 @@ exports.getRepostsByPostId = async (req, res) => {
     res.status(200).json(reposts.length ? reposts : { message: "No reposts for this post" });
   } catch (error) {
     console.error("Error fetching reposts:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+
+
+
+
+
+// Function to create a tweet (retweet)
+exports.createRewrite = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { comment } = req.body;
+
+    const originalPost = await Post.findById(postId);
+    if (!originalPost) {
+      return res.status(404).json({ message: "Original post not found" });
+    }
+
+    // Check if user has already retweeted the post
+    const existingRewrite = await Rewrite.findOne({
+      user: req.user._id,
+      originalPost: postId,
+    });
+
+    if (existingRewrite) {
+      return res.status(400).json({ message: "Already retweeted this post" });
+    }
+
+    // Create a new rewrite entry
+    const newRewrite = await Rewrite.create({
+      user: req.user._id,
+      originalPost: postId,
+      comment,
+    });
+
+    // Increment sharedCount in original post
+    originalPost.sharedCount += 1;
+    await originalPost.save();
+
+    res.status(201).json({
+      message: "Post retweeted successfully",
+      data: newRewrite,
+    });
+  } catch (error) {
+    console.error("Error creating retweet:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Function to get retweets of a post
+exports.getRewrites = async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    const retweets = await Rewrite.find({ originalPost: postId })
+      .populate("user", "name username profileImg")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(retweets.length ? retweets : { message: "No retweets found" });
+  } catch (error) {
+    console.error("Error fetching retweets:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Function to remove a retweet
+exports.deleteRewrite = async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    const rewrite = await Rewrite.findOneAndDelete({
+      user: req.user._id,
+      originalPost: postId,
+    });
+
+    if (!rewrite) {
+      return res.status(404).json({ message: "Retweet not found" });
+    }
+
+    // Decrement sharedCount in original post
+    const originalPost = await Post.findById(postId);
+    if (originalPost) {
+      originalPost.sharedCount -= 1;
+      await originalPost.save();
+    }
+
+    res.status(200).json({ message: "Retweet removed successfully" });
+  } catch (error) {
+    console.error("Error removing retweet:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

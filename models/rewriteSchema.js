@@ -1,11 +1,27 @@
-const mongoose = require('mongoose');
+// models/rewriteSchema.js
+const mongoose = require("mongoose");
 
-const tweetSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  text: { type: String, required: true, maxlength: 280 },
-  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  retweets: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  createdAt: { type: Date, default: Date.now }
-});
+const rewriteSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    originalPost: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "userPost",
+      required: true,
+    },
+    comment: {
+      type: String, 
+    },
+    retweetedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { timestamps: true }
+);
 
-module.exports = mongoose.model('Tweet', tweetSchema);
+module.exports = mongoose.model("Rewrite", rewriteSchema);
