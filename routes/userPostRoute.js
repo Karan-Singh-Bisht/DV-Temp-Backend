@@ -23,7 +23,7 @@ router.get('/pinpost/:postId', userAuthMiddleware, postController.togglePinPost)
 
 
 // Archive or unarchive post
-router.patch('/archivepost/:postId',userAuthMiddleware, postController.archivePost);
+router.get('/archivepost/:postId',userAuthMiddleware, postController.archivePost);
 router.get('/allarchivedpost',userAuthMiddleware, postController.getArchivedPosts);
 router.get('/archived/:postId',userAuthMiddleware, postController.getArchivedPostById);
 

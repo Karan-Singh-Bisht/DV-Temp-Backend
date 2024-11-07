@@ -20,7 +20,7 @@ router.delete("/page/deletepost/:postId",userAuthMiddleware, postController.dele
 
 router.get('/page/savepost/:pageId/:saveId',userAuthMiddleware,PostActionController.savePost)
 router.get('/page/allsavedpost/:pageId',userAuthMiddleware,PostActionController.allSavedPost)
-router.patch('/page/archivepost/:postId',userAuthMiddleware,PostActionController.archivePost)
+router.get('/page/archivepost/:postId',userAuthMiddleware,PostActionController.archivePost)
 router.get('/page/allarchivedpost/:pageId',userAuthMiddleware,PostActionController.allArchivedPost)
 router.get('/page/pinpost/:postId',userAuthMiddleware,PostActionController.setToPin)
 
