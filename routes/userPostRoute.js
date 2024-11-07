@@ -19,7 +19,7 @@ router.get('/user/getposts/:userId', userAuthMiddleware, postController.getPosts
 // Save/Unsave a post
 router.get('/savepost/:saveId', userAuthMiddleware, postController.saveOrUnsavePost);
 router.get('/allsavedpost', userAuthMiddleware, postController.getSavedPosts);
-router.patch('/pinpost/:postId', userAuthMiddleware, postController.togglePinPost);
+router.get('/pinpost/:postId', userAuthMiddleware, postController.togglePinPost);
 
 
 // Archive or unarchive post
