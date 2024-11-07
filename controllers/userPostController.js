@@ -540,17 +540,14 @@ exports.getSavedPosts = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    
-
     const userSave = await UserSavePosts.findOne({ user: userId })
-    .populate('user')
-    .populate('savedPosts');
+      .populate('savedPosts')
+      .populate("user", "name username profileImg");
 
     if (!userSave || userSave.savedPosts.length === 0) {
       return res.status(404).json({ message: "No saved posts found", success: false });
     }
 
-    
     const savedPostsWithFriendshipStatus = await Promise.all(
       userSave.savedPosts.map(async (post) => {
         const friendship = await Friendship.findOne({
@@ -560,7 +557,6 @@ exports.getSavedPosts = async (req, res) => {
           ],
         });
 
-        
         let friendshipStatus = 'none';
         if (friendship) {
           friendshipStatus = friendship.status === 'accepted' ? 'looped' :
@@ -572,7 +568,8 @@ exports.getSavedPosts = async (req, res) => {
     );
 
     res.status(200).json({
-      data: savedPostsWithFriendshipStatus,
+      data:{savedPost: savedPostsWithFriendshipStatus,user: userSave.user},
+      
       success: true,
       message: "Successfully fetched saved posts",
     });
@@ -581,7 +578,6 @@ exports.getSavedPosts = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 
 //Functions which have to update the API documentation
 
