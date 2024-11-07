@@ -60,7 +60,7 @@ if(deletedData){
       const pageId = req.params.pageId;
     
       // Find the document based on postId
-      const allData = await PostSave.findOne({ pageId }).populate('savedPosts')
+      const allData = await PostSave.findOne({ pageId }).populate('pageId')
 
 
       if (allData) {
