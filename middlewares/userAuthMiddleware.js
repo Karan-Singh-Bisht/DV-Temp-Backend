@@ -13,7 +13,7 @@ const userAuthMiddleware = async (req, res, next) => {
       req.headers.authorization.startsWith("Bearer")
     ) {
       token = req.headers.authorization.split(" ")[1];
-      console.log("Extracted Token:", token);
+     
 
       // Check if token is blacklisted
       const blacklistedToken = await TokenBlacklist.findOne({ token });
@@ -22,7 +22,7 @@ const userAuthMiddleware = async (req, res, next) => {
       }
 
       const decoded = verifyToken(token);
-      console.log("Decoded Token:", decoded);
+    
       if (!decoded.id) {
         throw createHttpError(401, "Token payload is missing required fields");
       }

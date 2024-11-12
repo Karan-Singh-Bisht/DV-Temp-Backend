@@ -541,9 +541,15 @@ exports.getSavedPosts = async (req, res) => {
     const userId = req.user._id;
 
     const userSave = await UserSavePosts.findOne({ user: userId })
-      .populate('savedPosts')
-      .populate("user", "name username profileImg");
-
+    .populate({
+      path: 'savedPosts', // First populate savedPosts
+      populate: {
+        path: 'user', // Then populate the user field within each post in savedPosts
+        select: 'name username profileImg' // Select the fields you need
+      }
+    })
+    .populate("user", "name username profileImg"); // Also populate the main user reference
+  
     if (!userSave || userSave.savedPosts.length === 0) {
       return res.status(404).json({ message: "No saved posts found", success: false });
     }
@@ -568,7 +574,7 @@ exports.getSavedPosts = async (req, res) => {
     );
 
     res.status(200).json({
-      data:{savedPost: savedPostsWithFriendshipStatus,user: userSave.user},
+      data: savedPostsWithFriendshipStatus,
       
       success: true,
       message: "Successfully fetched saved posts",

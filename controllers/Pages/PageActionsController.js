@@ -3,7 +3,7 @@ const PageActions = require("../../models/Pages/PageActionsModel");
 const { find } = require("../../models/User");
 
 
-const updateUserBlockEntry = async (req, res) => {
+const updatePageBlockEntry = async (req, res) => {
   const { pageId, blockpageId } = req.params;
 
   try {
@@ -20,6 +20,8 @@ const updateUserBlockEntry = async (req, res) => {
         { $pull: { blockedList: blockpageId } }
       );
 
+  
+
       if (unblockEntry) {
         return res
           .status(200)
@@ -31,14 +33,29 @@ const updateUserBlockEntry = async (req, res) => {
       }
     }
 
-    // If not blocked, add the blockpageId to the blockedList (block)
-    const updatedBlockEntry = await PageActions.findOneAndUpdate(
-      { pageId },
-      { $push: { blockedList: blockpageId } },
-      { new: true, upsert: true } // Create a new entry if it doesn't exist
-    );
+    const [updatedBlockEntry,updatedFollowinglist] = await Promise.all([
+      PageActions.findOneAndUpdate(
+        { pageId },
+        {
+          $push: { blockedList: blockpageId },
+          $pull: { followingList: blockpageId, followersList: blockpageId }
+        },
+        { new: true, upsert: true } // Create a new entry if it doesn't exist
+      ),
+      PageActions.findOneAndUpdate(
+        { pageId:blockpageId },
+        {
+          $pull: { followersList: pageId, followingList: pageId }
+        },
+        { new: true, upsert: true } // Create a new entry if it doesn't exist
+      )
+    ])
 
-    if (updatedBlockEntry) {
+    // If not blocked, add the blockpageId to the blockedList (block)
+ 
+
+
+    if (updatedBlockEntry&& updatedFollowinglist) {
       return res
         .status(200)
         .json({ success: true, message: "Page blocked successfully." });
@@ -186,7 +203,6 @@ const getAllFollowing = async (req, res) => {
 
 
 
-
 const followActions = async (req, res) => {
   try {
     const { pageId, followId } = req.params;
@@ -195,7 +211,7 @@ const followActions = async (req, res) => {
     const isFollowed = await PageActions.findOne({
       pageId,
       followingList: { $in: [followId] },
-    })
+    });
 
     if (isFollowed) {
       // Unfollow logic: remove followId from followingList and pageId from followersList
@@ -209,8 +225,10 @@ const followActions = async (req, res) => {
         { $pull: { followersList: pageId } }
       );
 
-      if (pageActionUpdate && unfollowedPageActionUpdate) {
+      if (pageActionUpdate.modifiedCount > 0 && unfollowedPageActionUpdate.modifiedCount > 0) {
         return res.status(200).json({ success: true, message: "Unfollowed successfully" });
+      } else {
+        return res.status(400).json({ success: false, message: "Failed to unfollow" });
       }
     } else {
       // Follow logic: add followId to followingList and pageId to followersList
@@ -225,14 +243,14 @@ const followActions = async (req, res) => {
         { $push: { followersList: pageId } },
         { new: true, upsert: true }
       );
+console.log(addToFollowers);
 
       if (updatedPageActions && addToFollowers) {
-        return res.status(200).json({ success: true, message: "Followed successfully" });
+        return res.status(200).json({ success: true, message: "page Followed successfully" });
+      } else {
+        return res.status(400).json({ success: false, message: "Failed to follow" });
       }
     }
-
-    // If something goes wrong
-    return res.status(500).json({ success: false, message: "Something went wrong" });
 
   } catch (error) {
     // Handle any errors
@@ -244,7 +262,7 @@ const followActions = async (req, res) => {
 
 
 module.exports = {
-  updateUserBlockEntry,
+  updatePageBlockEntry,
   // addToFollowing,
   // unFollowing,
   getAllFollowers,

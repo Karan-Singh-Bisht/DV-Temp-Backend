@@ -47,7 +47,7 @@ router.post('/users/friend/request/decline/:userId', userAuthMiddleware, decline
 router.get('/users/friend/status/:userId', userAuthMiddleware, checkFriendshipStatus);
 router.post('/users/friends', userAuthMiddleware, listFriends);
 router.get('/users/friend-requests/incoming', userAuthMiddleware, getIncomingFriendRequests);
-
+router.get('/users/blocktoggle/:pageId/:blockpageId', userAuthMiddleware)
 
 
 
@@ -64,7 +64,7 @@ router.get ('/users/getpageself/:pageId',userAuthMiddleware, PagesController.get
 //Page Action
 
 //page blocking
-router.get('/users/blockpage/:pageId/:blockpageId', userAuthMiddleware,PageActionsController.updateUserBlockEntry)
+router.get('/users/blocktoggle/:pageId/:blockpageId', userAuthMiddleware,PageActionsController.updatePageBlockEntry)
 
 // page following
 // router.get('/users/followpage/:pageId/:followingId',userAuthMiddleware,PageActionsController.addToFollowing)

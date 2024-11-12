@@ -386,3 +386,75 @@ exports.handleFriendRequestOrUnfriend = async (req, res) => {
 //   };
   
   
+exports.updateUserBlockEntry = async (req, res) => {
+    const {  blockpageId } = req.params;
+  
+    try {
+        const userId= req.user._id
+      // Check if blockpageId is already in the blockedList
+      const isBlocked = await PageActions.findOne({
+        pageId,
+        blockedList: { $in: [blockpageId] },
+      });
+  
+      if (isBlocked) {
+        // If the page is already blocked, remove it from the blockedList (unblock)
+        const unblockEntry = await PageActions.updateOne(
+          { userId },
+          { $pull: { blockedList: blockpageId } }
+        );
+  
+    
+  
+        if (unblockEntry) {
+          return res
+            .status(200)
+            .json({ success: true, message: "Page unblocked successfully." });
+        } else {
+          return res
+            .status(400)
+            .json({ success: false, message: "Failed to unblock page." });
+        }
+      }
+  
+      const [updatedBlockEntry,updatedFollowinglist] = await Promise.all([
+        PageActions.findOneAndUpdate(
+          { userId },
+          {
+            $push: { blockedList: blockpageId },
+            $pull: { followingList: blockpageId, followersList: blockpageId }
+          },
+          { new: true, upsert: true } // Create a new entry if it doesn't exist
+        ),
+        PageActions.findOneAndUpdate(
+          { pageId:blockpageId },
+          {
+            $pull: { followersList: userId, followingList: userId }
+          },
+          { new: true, upsert: true } // Create a new entry if it doesn't exist
+        )
+      ])
+  
+      // If not blocked, add the blockpageId to the blockedList (block)
+   
+  
+  
+      if (updatedBlockEntry&& updatedFollowinglist) {
+        return res
+          .status(200)
+          .json({ success: true, message: "Page blocked successfully." });
+      }
+  
+      // If something goes wrong
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to block page." });
+  
+    } catch (error) {
+      console.error("Error updating block entry:", error);
+      return res.status(500).json({
+        success: false,
+        message: "An error occurred while blocking/unblocking the page.",
+      });
+    }
+  };

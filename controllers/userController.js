@@ -10,9 +10,10 @@ exports.getUsers = async function (req, res) {
     const users = await User.find();
     console.log("Users are here: " + users);
 
-   
     if (!req.user || !req.user.id) {
-      return res.status(400).json({ message: "User ID is missing in the request." });
+      return res
+        .status(400)
+        .json({ message: "User ID is missing in the request." });
     }
 
     const currentUser = await User.findById(req.user.id);
@@ -20,7 +21,6 @@ exports.getUsers = async function (req, res) {
       return res.status(404).json({ message: "Current user not found." });
     }
 
-   
     const blockedUsers = currentUser.blockedUsers
       ? currentUser.blockedUsers.map((id) => id.toString())
       : [];
@@ -50,10 +50,6 @@ exports.getUsers = async function (req, res) {
   }
 };
 
-
-
-
-
 exports.getUserById = async function (req, res) {
   try {
     const user = await User.findById(req.params.id);
@@ -65,22 +61,21 @@ exports.getUserById = async function (req, res) {
       { pageName: 1, profileImg: 1, profileBackground: 1 }
     );
 
-    let friendshipStatus = 'none';
+    let friendshipStatus = "none";
 
     if (currentUser) {
-      
       const friendship = await Friendship.findOne({
         $or: [
           { requester: req.user._id, recipient: req.params.id },
-          { requester: req.params.id, recipient: req.user._id }
-        ]
+          { requester: req.params.id, recipient: req.user._id },
+        ],
       });
 
       if (friendship) {
-        if (friendship.status === 'accepted') {
-          friendshipStatus = 'looped';
-        } else if (friendship.status === 'pending') {
-          friendshipStatus = 'requested';
+        if (friendship.status === "accepted") {
+          friendshipStatus = "looped";
+        } else if (friendship.status === "pending") {
+          friendshipStatus = "requested";
         }
       }
 
@@ -100,7 +95,7 @@ exports.getUserById = async function (req, res) {
         bgColor: user.bgColor,
         isPrivate: user.isPrivate,
         pages: userPages,
-        friendshipStatus
+        friendshipStatus,
       };
 
       res.json(userResponse);
@@ -109,7 +104,6 @@ exports.getUserById = async function (req, res) {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 // // Search users by name without relationships
 // exports.searchUsersByName = async function (req, res) {
@@ -165,9 +159,6 @@ exports.getUserById = async function (req, res) {
 //     res.status(500).json({ message: err.message });
 //   }
 // };
-
-
-
 
 //logout
 exports.signoutUser = async (req, res) => {
@@ -291,7 +282,8 @@ exports.loginUser = async function (req, res) {
 
 exports.updateUser = async function (req, res) {
   try {
-    const { name, gender, dob, bio, profileImg, link, bgColor,isPrivate } = req.body;
+    const { name, gender, dob, bio, profileImg, link, bgColor, isPrivate } =
+      req.body;
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
