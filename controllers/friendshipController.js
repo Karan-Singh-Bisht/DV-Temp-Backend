@@ -163,8 +163,9 @@ exports.listFriends = async (req, res) => {
                 { requester: userId, status: 'accepted' },
                 { recipient: userId, status: 'accepted' }
             ]
-        }).populate('requester recipient', 'name username profileImg');
+        }).populate('requester recipient', ' name username profileImg');
   
+        console.log(friendships)
         const friends = friendships.map(friendship => {
             const friend = friendship.requester._id.equals(userId)
                 ? friendship.recipient

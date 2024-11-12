@@ -45,7 +45,7 @@ router.post('/users/friend/request/decline/:userId', userAuthMiddleware, decline
 
 // Additional routes remain the same
 router.get('/users/friend/status/:userId', userAuthMiddleware, checkFriendshipStatus);
-router.get('/users/friends', userAuthMiddleware, listFriends);
+router.post('/users/friends', userAuthMiddleware, listFriends);
 router.get('/users/friend-requests/incoming', userAuthMiddleware, getIncomingFriendRequests);
 router.get('/users/blocktoggle/:blockpageId', userAuthMiddleware,updateUserBlockEntry)
 
