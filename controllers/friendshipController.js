@@ -392,10 +392,9 @@ exports.updateUserBlockEntry = async (req, res) => {
     try {
         const userId= req.user._id
       // Check if blockpageId is already in the blockedList
-      const isBlocked = await PageActions.findOne({
-        pageId,
-        blockedList: { $in: [blockpageId] },
-      });
+      const isBlocked = await Friendship.findOne({
+        requester:pageId,recipient:blockpageId},{
+        status: 'blocked '});
   
       if (isBlocked) {
         // If the page is already blocked, remove it from the blockedList (unblock)

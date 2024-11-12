@@ -65,18 +65,20 @@ exports.createPost = [
           }
         : null;
 
-      let postType = "";
+   
+          
+        let postType = "";
+        if (isBlog === "true" ||isBlog === 'true' || isBlog === true) {
+          postType = "blog";
+        } else if (videoURL) {
+          postType = "video";
+        } else if (mediaURLs.length > 0) {
+          postType = "image";
+        }else {
+          postType = "unknown"; // or any other default you want
+        }
 
-     if(isBlog){
-      if (mediaURLs.length) {
-        postType = "image";
-      } else if (videoURL) {
-        postType = "video";
-      }
 
-     }else{
-      postType='blog'
-     }
       const newPost = await Post.create({
         user: req.user._id,
         title,
@@ -104,7 +106,7 @@ exports.createPost = [
         res.status(400).json({ message: "Page creation failed" });
       }
     } catch (error) {
-      console.error("Error creating post:", error);
+      console.error("Error creating post:", error.message);
       res.status(500).json({ error: "Internal server error" });
     }
   },

@@ -10,7 +10,7 @@ const {
   signoutUser,
 } = require('../controllers/userController');
 
-const { sendFriendRequest, acceptFriendRequest, declineFriendRequest, checkFriendshipStatus, listFriends,unfriendUser, getIncomingFriendRequests, handleFriendRequestOrUnfriend } = require('../controllers/friendshipController');
+const { sendFriendRequest, acceptFriendRequest, declineFriendRequest, checkFriendshipStatus, listFriends,unfriendUser, getIncomingFriendRequests, handleFriendRequestOrUnfriend,updateUserBlockEntry } = require('../controllers/friendshipController');
 const PagesController= require('../controllers/Pages/PagesController')
 const PageActionsController= require('../controllers/Pages/PageActionsController')
 
@@ -47,7 +47,7 @@ router.post('/users/friend/request/decline/:userId', userAuthMiddleware, decline
 router.get('/users/friend/status/:userId', userAuthMiddleware, checkFriendshipStatus);
 router.post('/users/friends', userAuthMiddleware, listFriends);
 router.get('/users/friend-requests/incoming', userAuthMiddleware, getIncomingFriendRequests);
-router.get('/users/blocktoggle/:pageId/:blockpageId', userAuthMiddleware)
+router.get('/users/blocktoggle/:pageId/:blockpageId', userAuthMiddleware,updateUserBlockEntry)
 
 
 
