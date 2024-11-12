@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, //just defining the relation between user and page..not for any field
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, 
   isCreator: { type: Boolean, default: false },
   pageName: { type: String, required: true },
   pageImg: { type: String},
