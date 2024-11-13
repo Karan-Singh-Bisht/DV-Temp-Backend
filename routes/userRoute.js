@@ -47,7 +47,7 @@ router.post('/users/friend/request/decline/:userId', userAuthMiddleware, decline
 router.get('/users/friend/status/:userId', userAuthMiddleware, checkFriendshipStatus);
 router.post('/users/friends', userAuthMiddleware, listFriends);
 router.get('/users/friend-requests/incoming', userAuthMiddleware, getIncomingFriendRequests);
-router.get('/users/blocktoggle/:blockpageId', userAuthMiddleware,updateUserBlockEntry)
+router.get('/users/accountblocktoggle/:blockpageId', userAuthMiddleware,updateUserBlockEntry)
 
 
 

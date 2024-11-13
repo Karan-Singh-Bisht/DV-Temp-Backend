@@ -7,26 +7,47 @@ const Friendship = require("../models/friendshipSchema");
 // Get all users without relationships
 exports.getUsers = async function (req, res) {
   try {
-    const users = await User.find();
-    console.log("Users are here: " + users);
-
+    // Check if the user ID is available in the request
     if (!req.user || !req.user.id) {
-      return res
-        .status(400)
-        .json({ message: "User ID is missing in the request." });
+      return res.status(400).json({ message: "User ID is missing in the request." });
     }
 
-    const currentUser = await User.findById(req.user.id);
+    const userId = req.user.id;
+
+    // Fetch the current user details
+    const currentUser = await User.findById(userId);
     if (!currentUser) {
       return res.status(404).json({ message: "Current user not found." });
     }
 
-    const blockedUsers = currentUser.blockedUsers
-      ? currentUser.blockedUsers.map((id) => id.toString())
-      : [];
+    // Fetch all users
+    const users = await User.find();
 
+    // Use aggregation to get only the blocked user IDs
+    const blockedUserIds = await Friendship.aggregate([
+      {
+        $match: {
+          $or: [{ requester: userId }, { recipient: userId }],
+          status: 'blocked'
+        }
+      },
+      {
+        $project: {
+          blockedUserId: {
+            $cond: {
+              if: { $eq: ["$requester", userId] },
+              then: "$recipient",
+              else: "$requester"
+            }
+          }
+        }
+      }
+    ]).then(results => results.map(result => result.blockedUserId.toString()));
+    console.log(blockedUserIds)
+
+    // Filter out blocked users from the list of users
     const userResponses = users
-      .filter((user) => !blockedUsers.includes(user._id.toString()))
+      .filter((user) => !blockedUserIds.includes(user._id.toString()))
       .map((user) => ({
         userId: user._id,
         name: user.name,
@@ -44,11 +65,14 @@ exports.getUsers = async function (req, res) {
         isPrivate: user.isPrivate,
       }));
 
+    // Send the response
     res.json(userResponses);
   } catch (err) {
+    // Send error response
     res.status(500).json({ message: err.message });
   }
 };
+
 
 exports.getUserById = async function (req, res) {
   try {
