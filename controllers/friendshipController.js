@@ -395,8 +395,8 @@ exports.updateUserBlockEntry = async (req, res) => {
       // Check if blockpageId is already in the blockedList
       const isBlocked = await Friendship.findOneAndDelete({
         $or: [
-          { requester: pageId, recipient: blockpageId, status: 'blocked' },
-          { requester: blockpageId, recipient: pageId, status: 'blocked' }
+          { requester: userId, recipient: blockpageId, status: 'blocked' },
+          { requester: blockpageId, recipient: userId, status: 'blocked' }
         ]});
       
   
@@ -416,8 +416,8 @@ exports.updateUserBlockEntry = async (req, res) => {
   
         const addtoBlock = await Friendship.findOneAndUpdate({
             $or: [
-              { requester: pageId, recipient: blockpageId },
-              { requester: blockpageId, recipient: pageId }
+              { requester: userId, recipient: blockpageId },
+              { requester: blockpageId, recipient: userId }
             ]},{ status: 'blocked'});
           
   
@@ -437,7 +437,7 @@ exports.updateUserBlockEntry = async (req, res) => {
         .json({ success: false, message: "Failed to block page." });
   
     } catch (error) {
-      console.error("Error updating block entry:", error);
+      console.error("Error updating block entry:", error.message);
       return res.status(500).json({
         success: false,
         message: "An error occurred while blocking/unblocking the page.",
