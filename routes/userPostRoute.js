@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const postController = require('../controllers/userPostController');
 const userAuthMiddleware = require('../middlewares/userAuthMiddleware');
-
+const reportController= require('../controllers/reportController')
 // Routes for managing posts
 router.post('/createpost', userAuthMiddleware, postController.createPost);
 router.get('/user/getposts', userAuthMiddleware, postController.getPosts);
@@ -26,5 +26,10 @@ router.get('/pinpost/:postId', userAuthMiddleware, postController.togglePinPost)
 router.get('/archivepost/:postId',userAuthMiddleware, postController.archivePost);
 router.get('/allarchivedpost',userAuthMiddleware, postController.getArchivedPosts);
 router.get('/archived/:postId',userAuthMiddleware, postController.getArchivedPostById);
+
+
+
+// report post
+router.post('/reportuserpost',userAuthMiddleware,reportController.reportPost)
 
 module.exports = router;

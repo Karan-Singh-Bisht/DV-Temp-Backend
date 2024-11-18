@@ -13,6 +13,7 @@ const createPost = async (req, res) => {
       category,
       subCategory,
       isBlog,
+     
       coPartner
     } = req.body;
 
@@ -63,7 +64,7 @@ const createPost = async (req, res) => {
     }else {
       postType = "unknown"; // or any other default you want
     }
-console.log(cadURL)
+
     // Create new post
     const newPost = await PostModel.create({
       pageId,
@@ -85,6 +86,97 @@ console.log(cadURL)
       sensitive: false,
       isBlog,
       mediatype: postType,
+    });
+
+    if (!newPost) {
+      return res.status(400).json({ message: "Page creation failed" });
+    } else {
+      res.status(201).json({
+        data: newPost,
+        message: "Created",
+      });
+    }
+  } catch (error) {
+    console.error("Error creating post:",error);
+    res.status(500).json({ error: error.message });
+  }
+};
+const createCadPost = async (req, res) => {
+  try {
+    const {
+      title,
+      pageId,
+      description,
+      location,
+      category,
+      subCategory,
+      isBlog,
+      coPartner
+    } = req.body;
+
+    const mediaURLs = req.files["media"]
+      ? req.files["media"].map((file) => ({
+          path: file.path,
+          public_id: file.filename,
+        }))
+      : [];
+
+    const coverPhotoURL = req.files["coverPhoto"]
+      ? {
+          path: req.files["coverPhoto"][0].path,
+          public_id: req.files["coverPhoto"][0].filename,
+        }
+      : null;
+      const musicURL = req.files["music"]
+      ? {
+          path: req.files["music"][0].path,
+          public_id: req.files["music"][0].filename,
+        }
+      : null;
+
+
+    const videoURL = req.files["video"]
+      ? {
+          path: req.files["video"][0].path,
+          public_id: req.files["video"][0].filename,
+        }
+      : null;
+      const cadURL = req.files["cad"]
+      ? {
+          path: req.files["cad"][0].path,
+          public_id: req.files["cad"][0].filename,
+        }
+      : null;
+
+    // Determine postType based on isBlog and media presence
+
+    let createData = null;
+if (mediaURLs.length > 0) {
+  createData = mediaURLs;
+} else if (videoURL) {
+  createData = videoURL;
+} else {
+  createData = cadURL;
+}
+    // Create new post
+    const newPost = await PostModel.create({
+      pageId,
+      title,
+      description,
+      coverPhoto: coverPhotoURL,
+      cad:createData,
+      location,
+      category: category ? category : [],
+      subCategory: subCategory ? subCategory : [],
+      coPartner,
+      music:musicURL,
+      likes: [],
+      comments: [],
+      shared: [],
+      isBlocked: false,
+      sensitive: false,
+      isBlog,
+      mediatype: 'cad',
     });
 
     if (!newPost) {
@@ -307,4 +399,5 @@ module.exports = {
   getAllPosts,
   updatePost,
   deletePost,
+  createCadPost
 };

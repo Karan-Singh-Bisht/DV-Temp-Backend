@@ -1,4 +1,5 @@
 const postController = require("../controllers/Pages/postController");
+const pageController = require("../controllers/Pages/PagesController");
 const PostActionController= require('../controllers/Pages/PostActionController')
 const express = require("express");
 const router = express.Router();
@@ -8,6 +9,7 @@ const userAuthMiddleware = require('../middlewares/userAuthMiddleware');
 const multer = require("../middlewares/multer");
 
 router.post("/page/createpost", multer,userAuthMiddleware, postController.createPost);
+router.post("/page/createcadpost", multer,userAuthMiddleware, postController.createCadPost);
 router.get("/page/getposts/:pageId",userAuthMiddleware, postController.getPosts);
 router.get("/page/getpostbyid/:postId",userAuthMiddleware, postController.getPostById);
 router.get("/page/getallpost", userAuthMiddleware,postController.getAllPosts);
@@ -27,4 +29,10 @@ router.get('/page/pinpost/:postId',userAuthMiddleware,PostActionController.setTo
 router.get('/page/like/:postId/:userPageId',userAuthMiddleware,PostActionController.actionLike)
 
 
+
+
+//report pagepost
+router.post('/page/reportpagepost',userAuthMiddleware,pageController.reportpagePost)
+//report page
+router.post('/page/reportpage',userAuthMiddleware,pageController.reportpage)
 module.exports = router;

@@ -9,6 +9,7 @@ const {
   //searchUsersByName,
   signoutUser,
 } = require('../controllers/userController');
+const reportController= require('../controllers/reportController')
 
 const { sendFriendRequest, acceptFriendRequest, declineFriendRequest, checkFriendshipStatus, listFriends,unfriendUser, getIncomingFriendRequests, handleFriendRequestOrUnfriend,updateUserBlockEntry } = require('../controllers/friendshipController');
 const PagesController= require('../controllers/Pages/PagesController')
@@ -61,7 +62,7 @@ router.get ('/users/getpage/:userPageId/:pageId',userAuthMiddleware, PagesContro
 router.get ('/users/getpageself/:pageId',userAuthMiddleware, PagesController.getPageSelf)
 
 
-//Page Action
+//Page 
 
 //page blocking
 router.get('/users/blocktoggle/:pageId/:blockpageId', userAuthMiddleware,PageActionsController.updatePageBlockEntry)
@@ -71,6 +72,13 @@ router.get('/users/blocktoggle/:pageId/:blockpageId', userAuthMiddleware,PageAct
 router.get('/users/getallfollower/:pageId',userAuthMiddleware,PageActionsController.getAllFollowers)
 router.get('/users/getallfollowing/:pageId',userAuthMiddleware,PageActionsController.getAllFollowing)
 router.get('/users/followpageaction/:pageId/:followId',userAuthMiddleware,PageActionsController.followActions)
+
+
+
+
+// report post
+router.post('/users/reportuserpost',userAuthMiddleware,reportController.reportPost)
+
 
 
 module.exports = router;

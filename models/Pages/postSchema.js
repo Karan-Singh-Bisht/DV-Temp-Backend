@@ -36,9 +36,7 @@ const postSchema = new Schema(
     music: {
       type: mediaSchema,
     },
-    cad: {
-      type: mediaSchema,
-    },
+    cad: [mediaSchema],
     location: {
       type: String,
     },

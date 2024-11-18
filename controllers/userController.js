@@ -360,3 +360,39 @@ exports.deleteUser = async function (req, res) {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.reportUser = async (req, res) => {
+  try {
+    const { reason, reporterUserId, details } = req.body;
+
+    const userId= req.user._id
+   
+    const isuser = await Pages.findById(userId);
+    if (!isuser) {
+      return res.status(404).json({ message: " No User found" });
+    }
+
+    // Create a new report
+    const addReport = new ReportUser({
+      reason,
+      userId:reporterUserId ,
+      details,
+      reportedBy: userId,
+    });
+
+    // Save the report to the database
+    const savedReport = await addReport.save();
+
+    if (!savedReport) {
+      return res.status(400).json({ message: "Failed to submit report" });
+    }
+
+    // Block the user if the report is saved successfully
+    if (savedReport) {
+      return res.status(200).json({ message: "Report submitted successfully" });
+    }
+  } catch (error) {
+    console.error("Error in reporting post:", error.message);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};

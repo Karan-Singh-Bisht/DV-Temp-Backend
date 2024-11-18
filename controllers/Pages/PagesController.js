@@ -1,6 +1,8 @@
 const User = require("../../models/User");
 const Pages = require("../../models/Pages/PagesModel");
 const PageActions = require("../../models/Pages/PageActionsModel");
+const ReportPagePost = require("../../models/Pages/repostPagepostSchema");
+const ReportPage = require("../../models/Pages/repostPageSchema");
 
 // const getAllpages = async (req, res) => {
 //   try {
@@ -23,6 +25,7 @@ const PageActions = require("../../models/Pages/PageActionsModel");
 // };
 
 const mongoose = require("mongoose"); // Make sure to import mongoose
+const postSchema = require("../../models/Pages/postSchema");
 
 const getAllpages = async (req, res) => {
   try {
@@ -320,6 +323,79 @@ const getPageSelf = async (req, res) => {
   }
 };
 
+const reportpagePost = async (req, res) => {
+  try {
+    const { reason, postId, pageId, details } = req.body;
+   
+    // Verify if the post exists
+  
+    const isPost = await postSchema.findById(postId);
+    if (!isPost) {
+      return res.status(404).json({ message: " No post found" });
+    }
+
+    // Create a new report
+    const addReport = new ReportPagePost({
+      reason,
+      postId,
+      details,
+      reportedBy: pageId,
+    });
+
+    // Save the report to the database
+    const savedReport = await addReport.save();
+
+    if (!savedReport) {
+      return res.status(400).json({ message: "Failed to submit report" });
+    }
+
+    // Block the user if the report is saved successfully
+    if (savedReport) {
+      return res.status(200).json({ message: "Report submitted successfully" });
+    }
+  } catch (error) {
+    console.error("Error in reporting post:", error.message);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+
+const reportpage = async (req, res) => {
+  try {
+    const { reason, reporterId, pageId, details } = req.body;
+    console.log(req.body);
+
+   
+    const isPage = await Pages.findById(pageId);
+    if (!isPage) {
+      return res.status(404).json({ message: " No page found" });
+    }
+
+    // Create a new report
+    const addReport = new ReportPage({
+      reason,
+      pageId,
+      details,
+      reportedBy: reporterId,
+    });
+
+    // Save the report to the database
+    const savedReport = await addReport.save();
+
+    if (!savedReport) {
+      return res.status(400).json({ message: "Failed to submit report" });
+    }
+
+    // Block the user if the report is saved successfully
+    if (savedReport) {
+      return res.status(200).json({ message: "Report submitted successfully" });
+    }
+  } catch (error) {
+    console.error("Error in reporting post:", error.message);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
 module.exports = {
   getAllpages,
   addNewPage,
@@ -328,4 +404,6 @@ module.exports = {
   searchPages,
   getPage,
   getPageSelf,
+  reportpagePost,
+  reportpage
 };
