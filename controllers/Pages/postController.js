@@ -149,15 +149,22 @@ const createCadPost = async (req, res) => {
       : null;
 
     // Determine postType based on isBlog and media presence
+    let createData = [];
 
-    let createData = null;
-if (mediaURLs.length > 0) {
-  createData = mediaURLs;
-} else if (videoURL) {
-  createData = videoURL;
-} else {
-  createData = cadURL;
-}
+    // Add cadURL first, if it exists
+    if (cadURL) {
+      createData = [...createData, cadURL];
+    }
+    // Add mediaURLs if it has items
+    if (mediaURLs.length > 0) {
+      createData = [...createData, ...mediaURLs];
+    }
+    // Add videoURL if it exists
+    if (videoURL) {
+      createData = [...createData, videoURL];
+    }
+
+    
     // Create new post
     const newPost = await PostModel.create({
       pageId,
