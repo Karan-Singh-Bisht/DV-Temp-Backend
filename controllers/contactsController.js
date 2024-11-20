@@ -147,7 +147,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
     const result = [];
     const normalizedSearchTerm = normalizePhoneNumber(searchTerm);
 
-    // Search Contacts Collection first
+    
     const contacts = await Contact.find({
       user: userId,
       $or: [
@@ -156,7 +156,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
       ]
     });
 
-    // Process contacts data
+    
     for (const contact of contacts) {
       const normalizedContactPhone = normalizePhoneNumber(contact.phoneNumber);
       const user = await User.findOne({ phoneNumber: normalizedContactPhone });
@@ -164,7 +164,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
       let status = 'contacts';
 
       if (user) {
-        // Check if there's an existing friendship
+       
         const friendship = await Friendship.findOne({
           $or: [
             { requester: userId, recipient: user._id, status: 'accepted' },
@@ -174,7 +174,6 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
 
         status = friendship ? 'looped' : 'devian';
 
-        // Add the user to the result array
         result.push({
           userId: user._id,
           name: user.name,
@@ -186,20 +185,20 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
           mailAddress: user.mailAddress,
           bio: user.bio,
           link: user.link,
-          status: status
+          friendshipStatus: status
         });
       } else {
-        // If no user exists for this contact, just return the contact
+        
         result.push({
           name: contact.name,
           phoneNumber: contact.phoneNumber,
           email: contact.email,
-          status: 'contacts'
+          friendshipStatus: 'contacts'
         });
       }
     }
 
-    // Search User Collection for matching users by name, username, or phone number
+
     const users = await User.find({
       $or: [
         { username: { $regex: `^${searchTerm}`, $options: 'i' } },
@@ -208,13 +207,13 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
       ]
     });
 
-    // Process users data
+   
     for (const user of users) {
       const isInContacts = result.some(item => item.phoneNumber === user.phoneNumber);
 
-      // If user is not already in the contacts, proceed
+      
       if (!isInContacts) {
-        // Check if there's an existing friendship
+        
         const friendship = await Friendship.findOne({
           $or: [
             { requester: userId, recipient: user._id, status: 'accepted' },
@@ -234,7 +233,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
             mailAddress: user.mailAddress,
             bio: user.bio,
             link: user.link,
-            status: 'looped'
+            friendshipStatus: 'looped'
           });
         } else {
           // If not a friend, just add as 'devian'
@@ -249,7 +248,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
             mailAddress: user.mailAddress,
             bio: user.bio,
             link: user.link,
-            status: 'devian'
+            friendshipStatus: 'devian'
           });
         }
       }
