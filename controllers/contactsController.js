@@ -122,6 +122,7 @@ exports.getContacts = async (req, res) => {
 };
 
 
+
 // Combined Search by name, username, or phone number
 exports.searchByNameOrPhoneNumber = async (req, res) => {
   const searchTerm = req.query.search;
@@ -142,6 +143,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
     const result = [];
     const normalizedSearchTerm = normalizePhoneNumber(searchTerm);
 
+    
     const contacts = await Contact.find({
       user: userId,
       $or: [
@@ -150,28 +152,28 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
       ]
     });
 
+    
     for (const contact of contacts) {
       const normalizedContactPhone = normalizePhoneNumber(contact.phoneNumber);
       const user = await User.findOne({ phoneNumber: normalizedContactPhone });
 
+     
       let status = 'contacts';
 
       if (user) {
+       
         const friendship = await Friendship.findOne({
           $or: [
-            { requester: userId, recipient: user._id },
-            { requester: user._id, recipient: userId }
+            { requester: userId, recipient: user._id, status: 'accepted' },
+            { requester: user._id, recipient: userId, status: 'accepted' }
           ]
         });
 
-        if (friendship) {
-          status = friendship.status === 'accepted' ? 'looped' : friendship.status === 'pending' ? 'requested' : 'none';
-        } else {
-          status = 'none';
-        }
+       
+        status = friendship ? 'looped' : 'devian';
 
+       
         result.push({
-          userId: user._id,
           name: user.name,
           username: user.username,
           profileImg: user.profileImg,
@@ -181,19 +183,20 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
           mailAddress: user.mailAddress,
           bio: user.bio,
           link: user.link,
-          friendshipStatus: status
+          status: status
         });
       } else {
+        
         result.push({
-          userId: contact._id,
           name: contact.name,
           phoneNumber: contact.phoneNumber,
           email: contact.email,
-          friendshipStatus: 'contacts'
+          status: 'contacts'
         });
       }
     }
 
+   
     const users = await User.find({
       $or: [
         { username: { $regex: `^${searchTerm}`, $options: 'i' } },
@@ -202,38 +205,38 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
       ]
     });
 
+   
     for (const user of users) {
       const isInContacts = result.some(item => item.phoneNumber === user.phoneNumber);
 
+      
       if (!isInContacts) {
         const friendship = await Friendship.findOne({
           $or: [
-            { requester: userId, recipient: user._id },
-            { requester: user._id, recipient: userId }
+            { requester: userId, recipient: user._id, status: 'accepted' },
+            { requester: user._id, recipient: userId, status: 'accepted' }
           ]
         });
 
-        let status = 'none';
+        
         if (friendship) {
-          status = friendship.status === 'accepted' ? 'looped' : friendship.status === 'pending' ? 'requested' : 'none';
+          result.push({
+            name: user.name,
+            username: user.username,
+            profileImg: user.profileImg,
+            gender: user.gender,
+            dob: user.dob,
+            phoneNumber: user.phoneNumber,
+            mailAddress: user.mailAddress,
+            bio: user.bio,
+            link: user.link,
+            status: 'looped'
+          });
         }
-
-        result.push({
-          userId: user._id,
-          name: user.name,
-          username: user.username,
-          profileImg: user.profileImg,
-          gender: user.gender,
-          dob: user.dob,
-          phoneNumber: user.phoneNumber,
-          mailAddress: user.mailAddress,
-          bio: user.bio,
-          link: user.link,
-          friendshipStatus: status
-        });
       }
     }
 
+    
     const filteredResult = result.filter(
       item =>
         item.name.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
@@ -241,6 +244,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
         item.phoneNumber === normalizedSearchTerm
     );
 
+   
     if (filteredResult.length === 0) {
       return res.status(404).json({ message: 'No matching users or contacts found.' });
     }
@@ -254,7 +258,6 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
     return res.status(500).json({ error: 'Failed to search by name, username, or phone number.' });
   }
 };
-
 
 
 
@@ -278,11 +281,10 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
 //     const result = [];
 //     const normalizedSearchTerm = normalizePhoneNumber(searchTerm);
 
-    
 //     const contacts = await Contact.find({
 //       user: userId,
 //       $or: [
-//         { name: { $regex: `^${searchTerm}`, $options: 'i' } }, 
+//         { name: { $regex: `^${searchTerm}`, $options: 'i' } },
 //         { phoneNumber: { $regex: `^${normalizedSearchTerm}`, $options: 'i' } }
 //       ]
 //     });
@@ -290,24 +292,25 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
 //     for (const contact of contacts) {
 //       const normalizedContactPhone = normalizePhoneNumber(contact.phoneNumber);
 //       const user = await User.findOne({ phoneNumber: normalizedContactPhone });
+
 //       let status = 'contacts';
 
 //       if (user) {
-//         status = 'devian';
-
-       
 //         const friendship = await Friendship.findOne({
 //           $or: [
-//             { requester: userId, recipient: user._id, status: 'accepted' },
-//             { requester: user._id, recipient: userId, status: 'accepted' }
+//             { requester: userId, recipient: user._id },
+//             { requester: user._id, recipient: userId }
 //           ]
 //         });
 
 //         if (friendship) {
-//           status = 'looped';
+//           status = friendship.status === 'accepted' ? 'looped' : friendship.status === 'pending' ? 'requested' : 'none';
+//         } else {
+//           status = 'none';
 //         }
 
 //         result.push({
+//           userId: user._id,
 //           name: user.name,
 //           username: user.username,
 //           profileImg: user.profileImg,
@@ -317,44 +320,45 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
 //           mailAddress: user.mailAddress,
 //           bio: user.bio,
 //           link: user.link,
-//           status: status
+//           friendshipStatus: status
 //         });
 //       } else {
 //         result.push({
+//           userId: contact._id,
 //           name: contact.name,
 //           phoneNumber: contact.phoneNumber,
 //           email: contact.email,
-//           status: 'contacts'
+//           friendshipStatus: 'contacts'
 //         });
 //       }
 //     }
 
-    
 //     const users = await User.find({
 //       $or: [
 //         { username: { $regex: `^${searchTerm}`, $options: 'i' } },
-//         { name: { $regex: `^${searchTerm}`, $options: 'i' } }, 
-//         { phoneNumber: { $regex: `^${normalizedSearchTerm}$`, $options: 'i' } } 
+//         { name: { $regex: `^${searchTerm}`, $options: 'i' } },
+//         { phoneNumber: { $regex: `^${normalizedSearchTerm}$`, $options: 'i' } }
 //       ]
 //     });
 
 //     for (const user of users) {
 //       const isInContacts = result.some(item => item.phoneNumber === user.phoneNumber);
-//       let status = 'contacts';
 
 //       if (!isInContacts) {
 //         const friendship = await Friendship.findOne({
 //           $or: [
-//             { requester: userId, recipient: user._id, status: 'accepted' },
-//             { requester: user._id, recipient: userId, status: 'accepted' }
+//             { requester: userId, recipient: user._id },
+//             { requester: user._id, recipient: userId }
 //           ]
 //         });
 
+//         let status = 'none';
 //         if (friendship) {
-//           status = 'looped';
+//           status = friendship.status === 'accepted' ? 'looped' : friendship.status === 'pending' ? 'requested' : 'none';
 //         }
 
 //         result.push({
+//           userId: user._id,
 //           name: user.name,
 //           username: user.username,
 //           profileImg: user.profileImg,
@@ -364,15 +368,14 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
 //           mailAddress: user.mailAddress,
 //           bio: user.bio,
 //           link: user.link,
-//           status: status
+//           friendshipStatus: status
 //         });
 //       }
 //     }
 
-    
 //     const filteredResult = result.filter(
-//       item => 
-//         item.name.toLowerCase().startsWith(searchTerm.toLowerCase()) || 
+//       item =>
+//         item.name.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
 //         (item.username && item.username.toLowerCase().startsWith(searchTerm.toLowerCase())) ||
 //         item.phoneNumber === normalizedSearchTerm
 //     );
