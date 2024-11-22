@@ -101,6 +101,8 @@ const createPost = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
 const createCadPost = async (req, res) => {
   try {
     const {
@@ -147,24 +149,19 @@ const createCadPost = async (req, res) => {
           public_id: req.files["cad"][0].filename,
         }
       : null;
+console.log(cadURL);
 
     // Determine postType based on isBlog and media presence
     let createData = [];
-
-    // Add cadURL first, if it exists
     if (cadURL) {
-      createData = [...createData, cadURL];
+      createData.push(cadURL); // Add cad file
     }
-    // Add mediaURLs if it has items
     if (mediaURLs.length > 0) {
-      createData = [...createData, ...mediaURLs];
+      createData.push(...mediaURLs); // Add media files
     }
-    // Add videoURL if it exists
     if (videoURL) {
-      createData = [...createData, videoURL];
+      createData.push(videoURL); // Add video
     }
-
-    
     // Create new post
     const newPost = await PostModel.create({
       pageId,

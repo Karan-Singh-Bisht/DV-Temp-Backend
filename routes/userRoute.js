@@ -11,7 +11,7 @@ const {
 } = require('../controllers/userController');
 const reportController= require('../controllers/reportController')
 
-const { sendFriendRequest, acceptFriendRequest, declineFriendRequest, checkFriendshipStatus, listFriends,unfriendUser, getIncomingFriendRequests, handleFriendRequestOrUnfriend,updateUserBlockEntry } = require('../controllers/friendshipController');
+const { sendFriendRequest, acceptFriendRequest, declineFriendRequest, checkFriendshipStatus, listFriends,unfriendUser, getIncomingFriendRequests, handleFriendRequestOrUnfriend,updateUserBlockEntry,accountBlockedList } = require('../controllers/friendshipController');
 const PagesController= require('../controllers/Pages/PagesController')
 const PageActionsController= require('../controllers/Pages/PageActionsController')
 
@@ -49,6 +49,8 @@ router.get('/users/friend/status/:userId', userAuthMiddleware, checkFriendshipSt
 router.post('/users/friends', userAuthMiddleware, listFriends);
 router.get('/users/friend-requests/incoming', userAuthMiddleware, getIncomingFriendRequests);
 router.get('/users/accountblocktoggle/:blockpageId', userAuthMiddleware,updateUserBlockEntry)
+router.post('/users/blockedlistuser', userAuthMiddleware,accountBlockedList)
+
 
 
 
@@ -66,6 +68,7 @@ router.get ('/users/getpageself/:pageId',userAuthMiddleware, PagesController.get
 
 //page blocking
 router.get('/users/blocktoggle/:pageId/:blockpageId', userAuthMiddleware,PageActionsController.updatePageBlockEntry)
+router.get('/users/blockedlist/:pageId/', userAuthMiddleware,PageActionsController.pageBlockedList)
 
 // page following
 // router.get('/users/followpage/:pageId/:followingId',userAuthMiddleware,PageActionsController.addToFollowing)
@@ -74,10 +77,10 @@ router.get('/users/getallfollowing/:pageId',userAuthMiddleware,PageActionsContro
 router.get('/users/followpageaction/:pageId/:followId',userAuthMiddleware,PageActionsController.followActions)
 
 
-
-
 // report post
 router.post('/users/reportuserpost',userAuthMiddleware,reportController.reportPost)
+// report user
+router.post('/users/reportuser',userAuthMiddleware,reportController.reportUser)
 
 
 

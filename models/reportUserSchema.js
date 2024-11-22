@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const reportSchema = new mongoose.Schema(
+const ReportUserSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -19,4 +19,4 @@ const reportSchema = new mongoose.Schema(
   { TimeRanges: true }
 );
 
-module.exports = mongoose.model("Report", reportSchema);
+module.exports = mongoose.model("ReportUser", ReportUserSchema);

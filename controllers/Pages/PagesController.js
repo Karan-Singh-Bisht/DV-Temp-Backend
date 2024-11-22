@@ -2,7 +2,9 @@ const User = require("../../models/User");
 const Pages = require("../../models/Pages/PagesModel");
 const PageActions = require("../../models/Pages/PageActionsModel");
 const ReportPagePost = require("../../models/Pages/repostPagepostSchema");
-const ReportPage = require("../../models/Pages/repostPageSchema");
+const ReportPage = require("../../models/Pages/reportPageSchema");
+
+
 
 // const getAllpages = async (req, res) => {
 //   try {
@@ -44,6 +46,8 @@ const getAllpages = async (req, res) => {
     }
 
     const PageActionData = await PageActions.findOne({ pageId: userPageId });
+
+    
     let filteredPages = allPages;
 
     if (PageActionData) {
@@ -214,47 +218,84 @@ const searchPages = async (req, res) => {
   try {
     const { search, pageId } = req.params;
 
+    // Find pages matching the search query
     const pages = await Pages.find({
       pageName: { $regex: new RegExp(search, "i") },
     });
 
-    if (pages.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Pages not found" });
+    if (!pages.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No pages found for the given search query.",
+      });
     }
-    console.log(req.user._id);
-    const pageActionData = await PageActions.findOne({ pageId: pageId });
-    let filteredPages = pages;
-    console.log(pageActionData);
+
+    // Convert `pageId` to ObjectId
+    const pageIdObject = new mongoose.Types.ObjectId(pageId);
+
+    // Fetch the PageActions and reported data
+    const [pageActionData, reportedData] = await Promise.all([
+      PageActions.findOne({ pageId }),
+      ReportPage.aggregate([
+        { $match: { reportedBy: pageIdObject } },
+        {
+          $group: {
+            _id: null,
+            pageIds: { $push: "$pageId" },
+          },
+        },
+        { $project: { _id: 0, pageIds: 1 } },
+      ]),
+    ]);
+    // Extract reported page IDs
+    const reportedPageIds = reportedData.length > 0 ? reportedData[0].pageIds : [];
+    
+    // Filter out reported pages
+    
+    let filteredPages = pages.filter(
+      (page) => !reportedPageIds.some((reportedId) => reportedId.toString()===page._id.toString())
+    );
+    
+
+    // Filter out blocked pages if `pageActionData` exists
     if (pageActionData) {
-      // Filter out blocked pages
-      filteredPages = pages.filter(
-        (page) => !pageActionData.blockedList.includes(page._id.toString())
+      const { blockedList } = pageActionData;
+      filteredPages = filteredPages.filter(
+        (page) => !blockedList.includes(page._id.toString())
       );
     }
 
-    // Map each page to include friendship status
+    // Add friendship status to filtered pages
     const pagesWithRelationshipStatus = filteredPages.map((page) => {
       let friendshipStatus = "none";
+
       if (pageActionData) {
-        if (pageActionData.followingList.includes(page._id.toString())) {
+        const { followingList, followersList } = pageActionData;
+
+        if (followingList.includes(page._id.toString())) {
           friendshipStatus = "following";
-        } else if (pageActionData.followersList.includes(page._id.toString())) {
+        } else if (followersList.includes(page._id.toString())) {
           friendshipStatus = "follower";
         }
       }
+
       return { ...page.toObject(), friendshipStatus };
     });
 
-    return res
-      .status(200)
-      .json({ success: true, data: pagesWithRelationshipStatus });
+    // Send response with filtered pages and their relationship statuses
+    return res.status(200).json({
+      success: true,
+      data: pagesWithRelationshipStatus,
+    });
   } catch (error) {
-    console.error("Error in searchPages:", error); // Log the error for debugging
-    return res.status(500).json({ success: false, message: "Server error" });
+    console.error("Error in searchPages:", error); // Log for debugging
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while processing the request.",
+    });
   }
 };
+
 
 const getPage = async (req, res) => {
   try {
@@ -326,9 +367,9 @@ const getPageSelf = async (req, res) => {
 const reportpagePost = async (req, res) => {
   try {
     const { reason, postId, pageId, details } = req.body;
-   
+
     // Verify if the post exists
-  
+
     const isPost = await postSchema.findById(postId);
     if (!isPost) {
       return res.status(404).json({ message: " No post found" });
@@ -359,13 +400,11 @@ const reportpagePost = async (req, res) => {
   }
 };
 
-
 const reportpage = async (req, res) => {
   try {
     const { reason, reporterId, pageId, details } = req.body;
     console.log(req.body);
 
-   
     const isPage = await Pages.findById(pageId);
     if (!isPage) {
       return res.status(404).json({ message: " No page found" });
@@ -405,5 +444,5 @@ module.exports = {
   getPage,
   getPageSelf,
   reportpagePost,
-  reportpage
+  reportpage,
 };

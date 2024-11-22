@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const Friendship = require('../models/friendshipSchema');
 const Contact = require('../models/Contacts');
-
+const mongoose = require('mongoose');
 
 // Send a friend request
 exports.sendFriendRequest = async (req, res) => {
@@ -442,5 +442,73 @@ exports.updateUserBlockEntry = async (req, res) => {
         success: false,
         message: "An error occurred while blocking/unblocking the page.",
       });
+    }
+  };
+
+  exports.accountBlockedList=  async (req, res) => {
+    try {
+    const userId= req.user._id
+console.log(userId)
+      // Find the document and populate the blocked list
+      const blockedUsers = await Friendship.aggregate([
+        // Step 1: Match the blocked relationships
+        {
+          $match: {
+            $or: [{ requester: userId }, { recipient: userId }],
+            status: "blocked",
+          },
+        },
+        // Step 2: Determine the blocked user's ID
+        {
+          $project: {
+            blockedUserId: {
+              $cond: {
+                if: { $eq: ["$requester", userId] },
+                then: "$recipient",
+                else: "$requester",
+              },
+            },
+          },
+        },
+        // Step 3: Convert blockedUserId to ObjectId
+        {
+          $addFields: {
+            blockedUserId: { $toObjectId: "$blockedUserId" },
+          },
+        },
+        // Step 4: Lookup user details
+        {
+          $lookup: {
+            from: "users", // The name of the User collection
+            localField: "blockedUserId", // The field in the current collection
+            foreignField: "_id", // The field in the User collection
+            as: "blockedUserData", // The field to store the joined data
+          },
+        },
+        // Step 5: Unwind the array created by the lookup
+        {
+          $unwind: "$blockedUserData",
+        },
+        // Step 6: Project the final fields
+        {
+          $project: {
+            _id: 0, // Exclude the Friendship ID
+            blockedUserId: 1, // Include the blocked user ID
+            username: "$blockedUserData.username",
+            name: "$blockedUserData.name",
+            profileImg: "$blockedUserData.profileImg",
+          },
+        },
+      ]);
+      
+      
+      if (!blockedUsers) {
+        return res.status(404).json({ message: "Page not found or no blocked list available." });
+      }
+  
+      res.status(200).json({message:'successfully fetched blocked list available.', blockedUsers });
+    } catch (error) {
+      console.error("Error fetching blocked list:", error.message);
+      res.status(500).json({ error: "An error occurred while fetching the blocked list." });
     }
   };

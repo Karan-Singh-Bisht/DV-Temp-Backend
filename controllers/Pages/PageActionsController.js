@@ -259,6 +259,27 @@ console.log(addToFollowers);
   }
 };
 
+const pageBlockedList = async (req, res) => {
+  try {
+    const { pageId } = req.params;
+
+    // Find the document and populate the blocked list
+    const blockList = await PageActions.findOne(
+      { pageId }, 
+      { blockedList: 1 } // Select only the blockedList field
+    ).populate( "blockedList", "pageName userName profileImg"  );
+
+    if (!blockList) {
+      return res.status(404).json({ message: "Page not found or no blocked list available." });
+    }
+
+    res.status(200).json({   blockList });
+  } catch (error) {
+    console.error("Error fetching blocked list:", error.message);
+    res.status(500).json({ error: "An error occurred while fetching the blocked list." });
+  }
+};
+
 
 
 module.exports = {
@@ -267,5 +288,6 @@ module.exports = {
   // unFollowing,
   getAllFollowers,
   getAllFollowing,
-  followActions
+  followActions,
+  pageBlockedList
 };
