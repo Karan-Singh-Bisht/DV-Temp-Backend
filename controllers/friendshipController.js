@@ -172,7 +172,7 @@ exports.listFriends = async (req, res) => {
                 : friendship.requester;
   
             return {
-                id: friend._id,
+                _id: friend._id,
                 requesterId: friendship.requester._id,
                 name: friend.name,
                 username: friend.username,
@@ -492,8 +492,7 @@ console.log(userId)
         // Step 6: Project the final fields
         {
           $project: {
-            _id: 0, // Exclude the Friendship ID
-            blockedUserId: 1, // Include the blocked user ID
+            _id:  "$blockedUserData._id", // Exclude the Friendship ID // Include the blocked user ID
             username: "$blockedUserData.username",
             name: "$blockedUserData.name",
             profileImg: "$blockedUserData.profileImg",
