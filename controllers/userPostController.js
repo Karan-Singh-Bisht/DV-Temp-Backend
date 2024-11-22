@@ -682,7 +682,8 @@ exports.getArchivedPosts = async (req, res, next) => {
         .json({ success: true, message: "fail to fetch archived data" });
     }
 
-    res.status(200).json(archivedPosts);
+    //res.status(200).json(archivedPosts);
+    res.status(200).json({ data: archivedPosts, message: "Archieved post Fetched successfully" });
   } catch (error) {
     console.error("Error fetching archived posts:", error);
     res.status(500).json({ message: "Internal Server Error" });
