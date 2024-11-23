@@ -5,91 +5,43 @@ const Friendship = require('../models/friendshipSchema')
 
   
 
-// // Sync contacts (not deleting the existing contacts)
-// exports.syncContacts = async (req, res) => {
-//   const { contacts } = req.body;
-//   const userId = req.user._id; 
-
-//   if (!contacts || !Array.isArray(contacts)) {
-//     return res.status(400).json({ error: 'Invalid input: contacts must be an array.' });
-//   }
-
-//   try {
-//     const contactPromises = contacts.map(async (contact) => {
-//       if (!contact.name || !contact.phoneNumber) {
-//         throw new Error('Contact must have a name and phone number');
-//       }
-
-     
-//       const existingContact = await Contact.findOne({
-//         user: userId,
-//         phoneNumber: contact.phoneNumber
-//       });
-
-    
-//       if (existingContact) {
-//         console.log(`Contact ${contact.name} already exists for this user. Skipping...`);
-//         return null; 
-//       }
-
-    
-//       return new Contact({
-//         user: userId,
-//         name: contact.name,
-//         phoneNumber: contact.phoneNumber,
-//         email: contact.email || null
-//       }).save();
-//     });
-
-  
-//     await Promise.all(contactPromises);
-
-//     res.status(200).json({ message: 'Contacts synced successfully!' });
-//   } catch (error) {
-//     console.error('Error syncing contacts:', error);
-
-//     if (error instanceof mongoose.Error.ValidationError) {
-//       return res.status(400).json({ error: 'Validation error: ' + error.message });
-//     }
-
-//     if (error.message.includes('Contact must have a name and phone number')) {
-//       return res.status(400).json({ error: error.message });
-//     }
-
-//     res.status(500).json({ error: 'Failed to sync contacts.' });
-//   }
-// };
-
-
-// Sync contacts (deleting the existing contacts)
+// Sync contacts (not deleting the existing contacts)
 exports.syncContacts = async (req, res) => {
   const { contacts } = req.body;
-  const userId = req.user._id;
+  const userId = req.user._id; 
 
   if (!contacts || !Array.isArray(contacts)) {
     return res.status(400).json({ error: 'Invalid input: contacts must be an array.' });
   }
 
   try {
-   
-    await Contact.deleteMany({ user: userId });
-    console.log(`Existing contacts for user ${userId} deleted.`);
-
-    const contactPromises = contacts.map((contact) => {
+    const contactPromises = contacts.map(async (contact) => {
       if (!contact.name || !contact.phoneNumber) {
         throw new Error('Contact must have a name and phone number');
       }
 
      
+      const existingContact = await Contact.findOne({
+        user: userId,
+        phoneNumber: contact.phoneNumber
+      });
+
+    
+      if (existingContact) {
+        console.log(`Contact ${contact.name} already exists for this user. Skipping...`);
+        return null; 
+      }
+
+    
       return new Contact({
         user: userId,
         name: contact.name,
         phoneNumber: contact.phoneNumber,
-        email: contact.email || null,
+        email: contact.email || null
       }).save();
     });
 
-   
+  
     await Promise.all(contactPromises);
 
     res.status(200).json({ message: 'Contacts synced successfully!' });
@@ -107,6 +59,54 @@ exports.syncContacts = async (req, res) => {
     res.status(500).json({ error: 'Failed to sync contacts.' });
   }
 };
+
+
+// // Sync contacts (deleting the existing contacts)
+// exports.syncContacts = async (req, res) => {
+//   const { contacts } = req.body;
+//   const userId = req.user._id;
+
+//   if (!contacts || !Array.isArray(contacts)) {
+//     return res.status(400).json({ error: 'Invalid input: contacts must be an array.' });
+//   }
+
+//   try {
+   
+//     await Contact.deleteMany({ user: userId });
+//     console.log(`Existing contacts for user ${userId} deleted.`);
+
+//     const contactPromises = contacts.map((contact) => {
+//       if (!contact.name || !contact.phoneNumber) {
+//         throw new Error('Contact must have a name and phone number');
+//       }
+
+     
+//       return new Contact({
+//         user: userId,
+//         name: contact.name,
+//         phoneNumber: contact.phoneNumber,
+//         email: contact.email || null,
+//       }).save();
+//     });
+
+   
+//     await Promise.all(contactPromises);
+
+//     res.status(200).json({ message: 'Contacts synced successfully!' });
+//   } catch (error) {
+//     console.error('Error syncing contacts:', error);
+
+//     if (error instanceof mongoose.Error.ValidationError) {
+//       return res.status(400).json({ error: 'Validation error: ' + error.message });
+//     }
+
+//     if (error.message.includes('Contact must have a name and phone number')) {
+//       return res.status(400).json({ error: error.message });
+//     }
+
+//     res.status(500).json({ error: 'Failed to sync contacts.' });
+//   }
+// };
 
 
 
