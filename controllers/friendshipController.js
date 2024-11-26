@@ -414,12 +414,24 @@ exports.updateUserBlockEntry = async (req, res) => {
         // }
       
   
-        const addtoBlock = await Friendship.findOneAndUpdate({
+        const addtoBlock = await Friendship.findOneAndUpdate(
+          {
             $or: [
               { requester: userId, recipient: blockpageId },
               { requester: blockpageId, recipient: userId }
-            ]},{ status: 'blocked'});
-          
+            ]
+          },
+          { 
+            requester: userId, 
+            recipient: blockpageId, 
+            status: 'blocked' 
+          },
+          {
+            new: true, // Return the updated document
+            upsert: true // Create a new document if none matches the query
+          }
+        );
+        
   
       // If not blocked, add the blockpageId to the blockedList (block)
    

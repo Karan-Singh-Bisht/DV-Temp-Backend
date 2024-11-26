@@ -96,7 +96,9 @@ exports.getUserById = async function (req, res) {
       });
 
       if (friendship) {
-        if (friendship.status === "accepted") {
+        if(friendship.status==='blocked'){
+          return res.status(404).json({message:'user is blocked'})
+        }else if (friendship.status === "accepted") {
           friendshipStatus = "looped";
         } else if (friendship.status === "pending") {
           friendshipStatus = "requested";

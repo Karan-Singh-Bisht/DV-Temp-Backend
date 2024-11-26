@@ -311,24 +311,24 @@ exports.deletePost = async (req, res) => {
 };
 
 // Like or unlike a post
-exports.likePost = async (req, res) => {
+exports. likePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.postId);
-    if (!post) return res.status(404).json({ message: "Post not found" });
+    if (!post) return res.status(404).json({ message: "Post not found" ,success:false });
 
     const userId = req.user._id;
     if (post.likes.includes(userId)) {
       post.likes = post.likes.filter((like) => !like.equals(userId));
       await post.save();
-      return res.status(200).json({ message: "Post unliked", post });
+      return res.status(200).json({ message: "Post unliked", post,success:true });
     } else {
       post.likes.push(userId);
       await post.save();
-      return res.status(200).json({ message: "Post liked", post });
+      return res.status(200).json({ message: "Post liked", post, success:true  });
     }
   } catch (error) {
     console.error("Error liking/unliking post:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({success:false, message: "Error liking/unliking post:"+error.message });
   }
 };
 
