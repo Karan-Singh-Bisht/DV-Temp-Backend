@@ -129,9 +129,6 @@ exports.getContacts = async (req, res) => {
 };
 
 
-
-
-
 exports.searchByNameOrPhoneNumber = async (req, res) => {
   const searchTerm = req.query.search;
   const userId = req.user._id;
@@ -176,9 +173,6 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
         });
 
         if (friendship) {
-          if (friendship.status === 'blocked') {
-            return res.status(403).json({ error: 'User is blocked.' });
-          }
           status = friendship.status === 'accepted' ? 'looped' : 'requested';
         } else {
           status = 'devian';
@@ -230,9 +224,6 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
         let status = 'devian';
 
         if (friendship) {
-          if (friendship.status === 'blocked') {
-            return res.status(403).json({ error: 'User is blocked.' });
-          }
           status = friendship.status === 'accepted' ? 'looped' : 'requested';
         }
 
@@ -273,7 +264,6 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
     return res.status(500).json({ error: 'Failed to search by name, username, or phone number.' });
   }
 };
-
 
 
 
