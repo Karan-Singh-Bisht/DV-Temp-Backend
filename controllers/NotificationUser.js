@@ -66,10 +66,73 @@ const getNotifications = async (req, res) => {
       res.status(500).json({ message: "Server error", error: error.message });
     }
   };
-  
+
+
+  const deleteNotification = async (req, res) => {
+    try {
+        const { id, userId } = req.params;
+
+        // Find the user and remove the specific notification
+        const updatedUser = await NotificationUser.findOneAndUpdate(
+            { userId, "notifications._id": id },
+            { $pull: { notifications: { _id: id } } }, // Remove the notification from the array
+            { new: true } // Return the updated document
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "Notification not found or user does not exist." });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Notification deleted successfully.",
+           
+        });
+    } catch (error) {
+        console.error("Error deleting notification:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error.",
+            error: error.message
+        });
+    }
+};
+
+const updateFriendNotification = async (req, res) => {
+    try {
+        const { id, userId } = req.params;
+
+        // Update the type of the matched notification
+        const updatedNotification = await NotificationUser.findOneAndUpdate(
+            { userId, "notifications._id": id }, // Find by userId and notification ID
+            { $set: { "notifications.$.type": "looped" } }, // Update the specific notification's type
+            { new: true } // Return the updated document
+        );
+
+        if (!updatedNotification) {
+            return res.status(404).json({
+                success: false,
+                message: "Notification not found or user does not exist."
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Notification updated successfully.",
+            data: updatedNotification
+        });
+    } catch (error) {
+        console.error("Error updating notification:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error.",
+            error: error.message
+        });
+    }
+};
 
   
 
   module.exports={
-    getNotifications,createNotification
+    getNotifications,createNotification,deleteNotification,updateFriendNotification
   }
