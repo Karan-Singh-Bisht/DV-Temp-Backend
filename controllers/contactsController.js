@@ -129,10 +129,6 @@ exports.getContacts = async (req, res) => {
 };
 
 
-
-
-
-// Combined Search by name, username, or phone number
 exports.searchByNameOrPhoneNumber = async (req, res) => {
   const searchTerm = req.query.search;
   const userId = req.user._id;
@@ -152,7 +148,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
     const result = [];
     const normalizedSearchTerm = normalizePhoneNumber(searchTerm);
 
-    
+    // Search in Contacts collection
     const contacts = await Contact.find({
       user: userId,
       $or: [
@@ -168,7 +164,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
       let status = 'contacts';
 
       if (user) {
-        
+        // Check friendship status
         const friendship = await Friendship.findOne({
           $or: [
             { requester: userId, recipient: user._id },
@@ -205,7 +201,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
       }
     }
 
-    
+    // Search in Users collection
     const users = await User.find({
       $or: [
         { username: { $regex: `^${searchTerm}`, $options: 'i' } },
@@ -247,7 +243,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
       }
     }
 
-    
+    // Filter results by name search
     const filteredResult = result.filter(
       item =>
         item.name.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
