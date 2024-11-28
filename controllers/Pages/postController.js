@@ -1,4 +1,5 @@
 const PostModel = require("../../models/Pages/postSchema");
+const Media = require('../../models/visioFeed');
 const UserModel = require("../../models/User");
 const createHttpError = require("http-errors");
 const cloudinary = require("../../config/cloudinaryConfig");
@@ -396,6 +397,129 @@ const deletePost = async (req, res) => {
   }
 };
 
+
+
+const getCombinedPosts = async (req, res) => {
+  try {
+    
+    const allPagePosts = await PostModel.find({ isArchive: false })
+      .populate("pageId", "pageName userName profileImg") 
+      .lean();
+
+    const allFeeds = await Media.find({}).lean();
+
+    const normalizedPagePosts = allPagePosts.map((post) => ({
+      type: "pagePost",
+      id: post._id,
+      title: post.title,
+      description: post.description,
+      media: post.media,
+      createdAt: post.createdAt,
+      pageDetails: post.pageId, 
+      isBlog: post.isBlog,
+      location: post.location,
+      category: post.category,
+      subCategory: post.subCategory,
+    }));
+
+    const normalizedFeeds = allFeeds.map((feed) => ({
+      type: "feedPost",
+      id: feed._id,
+      description: feed.description,
+      media: feed.mediaUrl, 
+      createdAt: feed.createdAt,
+      platform: feed.platform,
+      usernameOrName: feed.usernameOrName,
+      location: feed.location,
+      category: feed.categories,
+      subCategory: feed.subCategories,
+    }));
+
+   
+    const combinedPosts = [...normalizedPagePosts, ...normalizedFeeds];
+
+    combinedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    
+    res.status(200).json({
+      data: combinedPosts,
+      message: "Successfully fetched combined posts",
+    });
+  } catch (error) {
+    console.error("Error fetching combined posts:", error);
+    res.status(500).json({ message: "Error fetching combined posts", error: error.message });
+  }
+};
+
+
+// const getCombinedPosts = async (req, res) => {
+//   try {
+   
+//     const allPagePosts = await PostModel.find({ isArchive: false })
+//       .populate("pageId", "pageName userName profileImg") 
+//       .lean();
+
+    
+//     const allFeeds = await Media.find({}).lean();
+//     console.log(allFeeds);
+    
+
+
+//     const normalizedPagePosts = allPagePosts.map((post) => ({
+//       id: post._id,
+//       type: "pagePost",
+//       title: post.title || null,
+//       description: post.description || null,
+//       media: post.media || [],
+//       createdAt: post.createdAt,
+//       updatedAt: post.updatedAt,
+//       location: post.location || null,
+//       category: post.category || [],
+//       subCategory: post.subCategory || [],
+//       pageDetails: post.pageId || null, 
+//       platform: "Devi", 
+//       //usernameOrName: null, 
+//       isBlog: post.isBlog || false,
+//     }));
+
+    
+//     const normalizedFeeds = allFeeds.map((feed) => ({
+//       id: feed._id,
+//       type: "feedPost",
+//       title: null, 
+//       description: feed.description || null,
+//       media: feed.mediaUrl || [],
+//       createdAt: feed.createdAt,
+//       updatedAt: feed.updatedAt,
+//       location: feed.location || null,
+//       category: [feed.categories] || [], 
+//       subCategory: feed.subCategories || [],
+//       pageDetails: null,
+//       platform: feed.platform || null,
+//       usernameOrName: feed.usernameOrName,
+//       isBlog: false, 
+//     }));
+
+    
+//     const combinedPosts = [...normalizedPagePosts, ...normalizedFeeds];
+//     combinedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+//     // Respond with the combined data
+//     res.status(200).json({
+//       data: combinedPosts,
+//       message: "Successfully fetched combined posts",
+//     });
+//   } catch (error) {
+//     console.error("Error fetching combined posts:", error);
+//     res.status(500).json({ message: "Error fetching combined posts", error: error.message });
+//   }
+// };
+
+
+
+
+
+
 module.exports = {
   createPost,
   getPostById,
@@ -403,5 +527,7 @@ module.exports = {
   getAllPosts,
   updatePost,
   deletePost,
-  createCadPost
+  createCadPost,
+  getCombinedPosts
 };
+
