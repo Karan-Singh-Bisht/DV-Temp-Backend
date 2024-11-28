@@ -16,6 +16,8 @@ router.get("/page/getallpost", userAuthMiddleware,postController.getAllPosts);
 router.patch("/page/updatepost", multer,userAuthMiddleware, postController.updatePost);
 router.delete("/page/deletepost/:postId",userAuthMiddleware, postController.deletePost);
 
+router.get("/page/getallvisiofeeds", userAuthMiddleware,postController.getCombinedPosts);
+
 
 
 //savePost
