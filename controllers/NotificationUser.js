@@ -26,7 +26,7 @@ const createNotification = async (receiverId, senderId, type, message) => {
       }
   
       // Save the updated document.
-      const savedNotification = await (await userNotifications.save()).populate("notifications.sender" ,  'name profileImg')
+      const savedNotification = await (await userNotifications.save()).populate("notifications.sender" ,  'name username profileImg')
   
       if (savedNotification) {
         console.log("Notification Created Successfully");
@@ -45,7 +45,7 @@ const getNotifications = async (req, res) => {
       const  userId= req.user._id 
       // Fetch user notifications and sort notifications array by createdAt in descending order
       const notifications = await NotificationUser.findOne({ userId })
-        .populate('notifications.sender', 'name profileImg') // Populate sender details
+        .populate('notifications.sender', 'name username profileImg') // Populate sender details
         .select('notifications') // Select only the notifications field
         .sort({ 'notifications.createdAt': -1 }) // Sort notifications by createdAt in descending order
         .lean(); // Convert to plain JavaScript object
