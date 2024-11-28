@@ -16,6 +16,7 @@ const PagesController= require('../controllers/Pages/PagesController')
 const PageActionsController= require('../controllers/Pages/PageActionsController')
 
 const userAuthMiddleware = require('../middlewares/userAuthMiddleware');
+const notifcations = require('../controllers/NotificationUser');
 
 const router = express.Router();
 
@@ -81,6 +82,8 @@ router.get('/users/followpageaction/:pageId/:followId',userAuthMiddleware,PageAc
 router.post('/users/reportuserpost',userAuthMiddleware,reportController.reportPost)
 // report user
 router.post('/users/reportuser',userAuthMiddleware,reportController.reportUser)
+
+router.post('/users/notifications',userAuthMiddleware,notifcations.getNotifications)
 
 
 
