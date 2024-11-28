@@ -3,7 +3,7 @@ const Friendship = require("../models/friendshipSchema");
 const Contact = require("../models/Contacts");
 const mongoose = require("mongoose");
 const { createNotification } = require("../controllers/NotificationUser");
-
+const NotificationUser= require('../models/NotificationUser')
 // Send a friend request
 exports.sendFriendRequest = async (req, res) => {
   const { recipientId } = req.params;
@@ -90,6 +90,17 @@ exports.acceptFriendRequest = async (req, res) => {
     const savedStatus = await friendship.save();
 
     if (savedStatus) {
+      const updatedNotification = await NotificationUser.findOneAndUpdate(
+        { 
+            userId: recipientId, 
+            "notifications.sender": userId, 
+            "notifications.type": "request" // Optionally filter by type
+        },
+        { $set: { "notifications.$.type": "looped" } },
+        { new: true } // Return the updated document
+    );
+    if(updatedNotification){
+
       const sendNotification = await createNotification(
         userId,
         recipientId,
@@ -100,7 +111,9 @@ exports.acceptFriendRequest = async (req, res) => {
         res.status(200).json({ message: "Friend request accepted." });
       }
     }
+  }
   } catch (error) {
+    console.log(error.message)
     res.status(500).json({ error: "Failed to accept friend request." });
   }
 };
