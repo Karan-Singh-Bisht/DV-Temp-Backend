@@ -435,32 +435,42 @@ exports.getPostsByUserId = async (req, res) => {
       user: userId,
       isBlocked: false,
       isArchived: false,
-    }).sort({ pinned: -1, pinnedAt: -1, createdAt: -1 })
+    })
+      .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 })
       .populate("user", "name username profileImg");
 
     if (!posts.length) {
       return res.status(404).json({ message: "No posts found for this user" });
     }
 
-    // Determine friendship status for each post's user
-    const postsWithFriendshipStatus = await Promise.all(posts.map(async (post) => {
-      const friendship = await Friendship.findOne({
-        $or: [
-          { requester: req.user._id, recipient: post.user._id },
-          { requester: post.user._id, recipient: req.user._id }
-        ]
-      });
+    // Filter posts based on friendship status
+    const postsFromFriends = await Promise.all(
+      posts.map(async (post) => {
+        const friendship = await Friendship.findOne({
+          $or: [
+            { requester: req.user._id, recipient: post.user._id },
+            { requester: post.user._id, recipient: req.user._id },
+          ],
+          status: 'accepted', // Filter directly by status
+        });
 
-      let friendshipStatus = 'none';
-      if (friendship) {
-        friendshipStatus = friendship.status === 'accepted' ? 'looped' :
-                           friendship.status === 'pending' ? 'requested' : 'none';
-      }
+        // Only include the post if the friendship is accepted
+        if (friendship) {
+          return { ...post.toObject(), friendshipStatus: 'looped' };
+        }
 
-      return { ...post.toObject(), friendshipStatus };
-    }));
+        return null; // Exclude posts from non-friends
+      })
+    );
 
-    res.status(200).json({ data: postsWithFriendshipStatus, message: "Successful" });
+    // Filter out null values (non-friend posts)
+    const filteredPosts = postsFromFriends.filter((post) => post !== null);
+
+    if (!filteredPosts.length) {
+      return res.status(404).json({ message: "No posts found for this user" });
+    }
+
+    res.status(200).json({ data: filteredPosts, message: "Successful" });
   } catch (error) {
     console.error("Error fetching user posts:", error);
     res.status(500).json({ error: "An error occurred while fetching posts" });

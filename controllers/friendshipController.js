@@ -3,7 +3,7 @@ const Friendship = require("../models/friendshipSchema");
 const Contact = require("../models/Contacts");
 const mongoose = require("mongoose");
 const { createNotification } = require("../controllers/NotificationUser");
-const NotificationUser= require('../models/NotificationUser')
+const NotificationUser = require("../models/NotificationUser");
 // Send a friend request
 exports.sendFriendRequest = async (req, res) => {
   const { recipientId } = req.params;
@@ -78,11 +78,9 @@ exports.acceptFriendRequest = async (req, res) => {
     });
 
     if (!friendship) {
-      return res
-        .status(404)
-        .json({
-          error: "Friend request not found or already accepted/declined.",
-        });
+      return res.status(404).json({
+        error: "Friend request not found or already accepted/declined.",
+      });
     }
 
     friendship.status = "accepted";
@@ -91,29 +89,28 @@ exports.acceptFriendRequest = async (req, res) => {
 
     if (savedStatus) {
       const updatedNotification = await NotificationUser.findOneAndUpdate(
-        { 
-            userId: recipientId, 
-            "notifications.sender": userId, 
-            "notifications.type": "request" // Optionally filter by type
+        {
+          userId: recipientId,
+          "notifications.sender": userId,
+          "notifications.type": "request", // Optionally filter by type
         },
         { $set: { "notifications.$.type": "looped" } },
         { new: true } // Return the updated document
-    );
-    if(updatedNotification){
-
-      const sendNotification = await createNotification(
-        userId,
-        recipientId,
-        "accept",
-        `${req.user.name} is accept You`
       );
-      if (sendNotification) {
-        res.status(200).json({ message: "Friend request accepted." });
+      if (updatedNotification) {
+        const sendNotification = await createNotification(
+          userId,
+          recipientId,
+          "accept",
+          `${req.user.name} is accept You`
+        );
+        if (sendNotification) {
+          res.status(200).json({ message: "Friend request accepted." });
+        }
       }
     }
-  }
   } catch (error) {
-    console.log(error.message)
+    console.log(error.message);
     res.status(500).json({ error: "Failed to accept friend request." });
   }
 };
@@ -131,30 +128,39 @@ exports.declineFriendRequest = async (req, res) => {
     });
 
     if (!friendship) {
-      return res
-        .status(404)
-        .json({
-          error: "Friend request not found or already accepted/declined.",
-        });
+      return res.status(404).json({
+        error: "Friend request not found or already accepted/declined.",
+      });
     }
 
     friendship.status = "declined";
     friendship.updatedAt = Date.now();
-   const savedStatus= await friendship.save();
+    const savedStatus = await friendship.save();
 
     if (savedStatus) {
-      const sendNotification = await createNotification(
-        userId,
-        recipientId,
-        "declined",
-        `${req.user.name} is declined You`
+      const updatedNotification = await NotificationUser.findOneAndUpdate(
+        { userId: recipientId },
+        {
+          $pull: {
+            notifications: { sender: userId, type: "request" },
+          },
+        },
+        { new: true } // Returns the updated document
       );
-      if (sendNotification) {
-        res.status(200).json({ message: "Friend request declined." });
+      if (updatedNotification) {
+        const sendNotification = await createNotification(
+          userId,
+          recipientId,
+          "declined",
+          `${req.user.name} is declined You`
+        );
+        if (sendNotification) {
+          res.status(200).json({ message: "Friend request declined." });
+        }
       }
-    }
 
-    res.status(200).json({ message: "Friend request declined." });
+      res.status(200).json({ message: "Friend request declined." });
+    }
   } catch (error) {
     res.status(500).json({ error: "Failed to decline friend request." });
   }
@@ -539,12 +545,10 @@ exports.accountBlockedList = async (req, res) => {
         .json({ message: "Page not found or no blocked list available." });
     }
 
-    res
-      .status(200)
-      .json({
-        message: "successfully fetched blocked list available.",
-        blockedUsers,
-      });
+    res.status(200).json({
+      message: "successfully fetched blocked list available.",
+      blockedUsers,
+    });
   } catch (error) {
     console.error("Error fetching blocked list:", error.message);
     res
