@@ -416,10 +416,12 @@ const getCombinedPosts = async (req, res) => {
       media: post.media,
       createdAt: post.createdAt,
       pageDetails: post.pageId, 
-      isBlog: post.isBlog,
+      //isBlog: post.isBlog,
+      platform: 'Devi',
       location: post.location,
       category: post.category,
       subCategory: post.subCategory,
+      mediatype: post.mediatype,
     }));
 
     const normalizedFeeds = allFeeds.map((feed) => ({
@@ -429,7 +431,7 @@ const getCombinedPosts = async (req, res) => {
       media: feed.mediaUrl, 
       createdAt: feed.createdAt,
       platform: feed.platform,
-      usernameOrName: feed.usernameOrName,
+      username: feed.usernameOrName,
       location: feed.location,
       category: feed.categories,
       subCategory: feed.subCategories,
