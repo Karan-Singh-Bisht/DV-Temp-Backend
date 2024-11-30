@@ -131,7 +131,7 @@ exports.createPost = [
 // };
 
 
-exports.getPostById = async (req, res) => {
+exports. getPostById = async (req, res) => {
   try {
     const post = await Post.findById(req.params.postId).populate(
       "user",
@@ -173,20 +173,33 @@ exports.getPostById = async (req, res) => {
 exports.getPosts = async (req, res) => {
   try {
     const userId = req.user._id;
+
+    // Fetch posts with the necessary filters and sorting
     const posts = await Post.find({
       user: userId,
       isBlocked: false,
       isArchived: false,
     })
-      .populate("user", "name username profileImg")
-      .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 });
+      .populate("user", "name username profileImg") // Populate user details
+      .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 }); // Apply sorting criteria
 
-    res.status(200).json(posts.length ? posts : { message: "No posts found" });
+    // Respond with posts or a clear message if no posts are found
+    if (posts && posts.length > 0) {
+      return res.status(200).json({ message:"Successful",data:posts});
+    } else {
+      return res.status(404).json({ message: "No posts found" });
+    }
   } catch (error) {
-    console.error("Error fetching posts:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error fetching posts:", error.message);
+
+    // Provide a descriptive error response
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "An unexpected issue occurred while fetching posts. ",
+    });
   }
 };
+
 
 
 // exports.getPosts = async (req, res) => {

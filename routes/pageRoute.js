@@ -12,6 +12,7 @@ router.post("/page/createpost", multer,userAuthMiddleware, postController.create
 router.post("/page/createcadpost", multer,userAuthMiddleware, postController.createCadPost);
 router.get("/page/getposts/:pageId",userAuthMiddleware, postController.getPosts);
 router.get("/page/getpostbyid/:postId",userAuthMiddleware, postController.getPostById);
+
 router.get("/page/getallpost", userAuthMiddleware,postController.getAllPosts);
 router.patch("/page/updatepost", multer,userAuthMiddleware, postController.updatePost);
 router.delete("/page/deletepost/:postId",userAuthMiddleware, postController.deletePost);
