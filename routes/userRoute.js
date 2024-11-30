@@ -86,6 +86,7 @@ router.post('/users/reportuser',userAuthMiddleware,reportController.reportUser)
 router.post('/users/notifications',userAuthMiddleware,notifcations.getNotifications)
 router.delete('/users/deletenotification/:userId/:id',userAuthMiddleware,notifcations.deleteNotification)
 router.patch('/users/updatafriendnotification/:userId/:id',userAuthMiddleware,notifcations.updateFriendNotification)
+router.post('/users/countnotification',userAuthMiddleware,notifcations.getUnreadMessageCount)
 
 
 

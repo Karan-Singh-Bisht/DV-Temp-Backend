@@ -84,10 +84,12 @@ const deleteNotification = async (req, res) => {
     );
 
     if (!updatedUser) {
-      return res.status(404).json({
-        success: false,
-        message: "Notification not found or user does not exist.",
-      });
+      return res
+        .status(404)
+        .json({
+          success: false,
+          message: "Notification not found or user does not exist.",
+        });
     }
 
     res.status(200).json({
@@ -140,28 +142,48 @@ const updateFriendNotification = async (req, res) => {
 // unread count
 // newMessageisTrue
 
-const newMessage = async (req, res) => {
+
+
+const getUnreadMessageCount = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user._id; // Get the user ID from the authenticated user
 
-    const userNotifications = await NotificationUser.findOne(
-      { userId }, // Match user by ID
-      { notifications: { $elemMatch: { isRead: false } } } // Return only unread notifications
-    );
+    const unreadCountResult = await NotificationUser.aggregate([
+      {
+        $match: {
+          userId, // Match notifications for the user
+        },
+      },
+      {
+        $project: {
+          unreadCount: {
+            $size: {
+              $filter: {
+                input: "$notifications", // Array to filter
+                as: "notification", // Alias for each element in the array
+                cond: { $eq: ["$$notification.isRead", false] }, // Condition: isRead is false
+              },
+            },
+          },
+        },
+      },
+    ]);
 
-    if (!userNotifications || !userNotifications.notifications) {
-      return res.status(404).json({ message: "No unread notifications found" });
-    }
+    // Handle cases where no document is found or unread notifications are 0
+    const unreadCount = unreadCountResult?.[0]?.unreadCount || 0;
 
-    console.log(userNotifications)
     res.status(200).json({
-      unreadNotifications: userNotifications.notifications,
+      message: "Count fetched successfully",
+      unreadCount,
     });
   } catch (error) {
-    console.error("Error fetching unread notifications:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error fetching unread message count:", error.message);
+    res.status(500).json({
+      message: "Internal Server Error",
+    });
   }
 };
+
 
 
 module.exports = {
@@ -169,5 +191,5 @@ module.exports = {
   createNotification,
   deleteNotification,
   updateFriendNotification,
-  newMessage
+  getUnreadMessageCount
 };
