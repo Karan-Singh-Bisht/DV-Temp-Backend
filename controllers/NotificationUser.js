@@ -174,6 +174,7 @@ const getUnreadMessageCount = async (req, res) => {
 
     res.status(200).json({
       message: "Count fetched successfully",
+      unReaded:unreadCount===0?false: true,
       unreadCount,
     });
   } catch (error) {
