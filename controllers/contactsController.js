@@ -117,7 +117,6 @@ exports.getContacts = async (req, res) => {
   try {
     const userId = req.user._id;
     const contacts = await Contact.find({ user: userId });
-    // res.status(200).json(contacts);
 
     return res.status(200).json({
       message: 'Contacts retrieved successfully.',
@@ -128,6 +127,49 @@ exports.getContacts = async (req, res) => {
   }
 };
 
+
+
+
+const normalizePhoneNumber = (phoneNumber) => {
+  if (phoneNumber.startsWith('+91')) {
+    phoneNumber = phoneNumber.slice(3);
+  }
+  return phoneNumber.replace(/[^0-9]/g, '');
+};
+
+// getContactsOnly
+exports.getContactsOnly = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+   
+    const contacts = await Contact.find({ user: userId });
+
+   
+    const normalizedContacts = contacts.map(contact => ({
+      ...contact._doc,
+      phoneNumber: normalizePhoneNumber(contact.phoneNumber),
+    }));
+
+   
+    const userPhoneNumbers = await User.find({}, 'phoneNumber');
+    const normalizedUserPhoneNumbers = userPhoneNumbers.map(user =>
+      normalizePhoneNumber(user.phoneNumber)
+    );
+
+   
+    const filteredContacts = normalizedContacts.filter(
+      contact => !normalizedUserPhoneNumbers.includes(contact.phoneNumber)
+    );
+
+    return res.status(200).json({
+      message: 'Contacts retrieved successfully.',
+      data: filteredContacts,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch contacts.' });
+  }
+};
 
 
 
@@ -215,7 +257,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
       }
     }
 
-    // // Search in Users collection
+    // // Search in Users collection only with fname
     // const users = await User.find({
     //   $or: [
     //     { username: { $regex: `^${searchTerm}`, $options: 'i' } },
@@ -224,7 +266,7 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
     //   ]
     // });
 
-     // Search in Users collection
+     // Search in Users collection with whole part of the name
      const users = await User.find({
       $or: [
         { username: { $regex: `^${searchTerm}`, $options: 'i' } },

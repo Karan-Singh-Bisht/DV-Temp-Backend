@@ -9,7 +9,8 @@ router.post('/sync-contacts',userAuthMiddleware, contactController.syncContacts)
 
 router.get('/',userAuthMiddleware, contactController.getContacts);
 
-// router.get('/search', userAuthMiddleware, contactController.searchByName)
+router.get('/getcontactsonly',userAuthMiddleware, contactController.getContactsOnly);
+
 router.get('/search', userAuthMiddleware, contactController.searchByNameOrPhoneNumber)
 
 module.exports = router;
