@@ -173,7 +173,7 @@ exports.getContactsOnly = async (req, res) => {
 
 
 
-exports.searchByNameOrPhoneNumber = async (req, res) => {
+exports.searchByName = async (req, res) => {
   const searchTerm = req.query.search;
   const userId = req.user._id;
 
@@ -257,14 +257,6 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
       }
     }
 
-    // // Search in Users collection only with fname
-    // const users = await User.find({
-    //   $or: [
-    //     { username: { $regex: `^${searchTerm}`, $options: 'i' } },
-    //     { name: { $regex: `^${searchTerm}`, $options: 'i' } },
-    //     { phoneNumber: { $regex: `^${normalizedSearchTerm}$`, $options: 'i' } }
-    //   ]
-    // });
 
      // Search in Users collection with whole part of the name
      const users = await User.find({
@@ -324,5 +316,141 @@ exports.searchByNameOrPhoneNumber = async (req, res) => {
   } catch (error) {
     console.error('Error searching by name, username, or phone number:', error);
     return res.status(500).json({ error: 'Failed to search by name, username, or phone number.' });
+  }
+};
+
+
+
+
+
+exports.searchByPhoneNumber = async (req, res) => {
+  const searchTerm = req.query.search;
+  const userId = req.user._id;
+
+  if (!searchTerm) {
+    return res.status(400).json({ error: 'Search query parameter (phone number) is required.' });
+  }
+
+  const normalizePhoneNumber = (phoneNumber) => {
+    if (phoneNumber.startsWith('+91')) {
+      phoneNumber = phoneNumber.slice(3);
+    }
+    return phoneNumber.replace(/[^0-9]/g, '');
+  };
+
+  try {
+    const result = [];
+    const normalizedSearchTerm = normalizePhoneNumber(searchTerm);
+
+    // Search in Contacts collection
+    const contacts = await Contact.find({
+      user: userId,
+      phoneNumber: { $regex: `^${normalizedSearchTerm}`, $options: 'i' }
+    });
+
+    for (const contact of contacts) {
+      const normalizedContactPhone = normalizePhoneNumber(contact.phoneNumber);
+      const user = await User.findOne({ phoneNumber: normalizedContactPhone });
+
+      if (user) {
+        // Check friendship status
+        const friendship = await Friendship.findOne({
+          $or: [
+            { requester: userId, recipient: user._id },
+            { requester: user._id, recipient: userId }
+          ]
+        });
+
+        if (friendship && friendship.status === 'accepted') {
+          result.push({
+            userId: user._id,
+            name: user.name,
+            username: user.username,
+            profileImg: user.profileImg,
+            gender: user.gender,
+            dob: user.dob,
+            phoneNumber: user.phoneNumber,
+            mailAddress: user.mailAddress,
+            bio: user.bio,
+            link: user.link,
+            friendshipStatus: 'looped'
+          });
+        } else {
+          result.push({
+            userId: user._id,
+            name: user.name,
+            username: user.username,
+            profileImg: user.profileImg,
+            gender: user.gender,
+            dob: user.dob,
+            phoneNumber: user.phoneNumber,
+            mailAddress: user.mailAddress,
+            bio: user.bio,
+            link: user.link,
+            friendshipStatus: 'Devian'
+          });
+        }
+      } else {
+        // If the user does not exist, include only contacts
+        result.push({
+          name: contact.name,
+          phoneNumber: contact.phoneNumber,
+          email: contact.email,
+          friendshipStatus: 'contacts'
+        });
+      }
+    }
+
+    // Search in Users collection with phone number
+    const users = await User.find({
+      phoneNumber: { $regex: `^${normalizedSearchTerm}$`, $options: 'i' }
+    });
+
+    for (const user of users) {
+      const isInContacts = result.some(item => item.phoneNumber === user.phoneNumber);
+
+      if (!isInContacts) {
+        const friendship = await Friendship.findOne({
+          $or: [
+            { requester: userId, recipient: user._id },
+            { requester: user._id, recipient: userId }
+          ]
+        });
+
+        if (friendship && friendship.status === 'accepted') {
+          result.push({
+            userId: user._id,
+            name: user.name,
+            username: user.username,
+            profileImg: user.profileImg,
+            gender: user.gender,
+            dob: user.dob,
+            phoneNumber: user.phoneNumber,
+            mailAddress: user.mailAddress,
+            bio: user.bio,
+            link: user.link,
+            friendshipStatus: 'looped'
+          });
+        }
+      }
+    }
+
+    // Remove duplicates
+    const filteredResult = result.filter(
+      (item, index, self) =>
+        index === self.findIndex((t) => t.phoneNumber === item.phoneNumber && t.name === item.name)
+    );
+
+    if (filteredResult.length === 0) {
+      return res.status(404).json({ message: 'No matching users or contacts found.' });
+    }
+
+    return res.status(200).json({
+      message: 'Search completed successfully.',
+      data: filteredResult
+    });
+  } catch (error) {
+    console.error('Error searching by phone number:', error);
+    return res.status(500).json({ error: 'Failed to search by phone number.' });
   }
 };
