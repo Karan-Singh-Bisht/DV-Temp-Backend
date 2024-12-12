@@ -45,7 +45,7 @@ const postSchema = new Schema(
     },
     mediatype: {
       type: String,
-    },
+    }, 
     category: {
       type: [String],
       default: [],

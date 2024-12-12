@@ -12,6 +12,8 @@ const cors = require('cors');
 const http = require('http');
 const { setupSocket } = require('./socketServer');
 require('dotenv').config();
+const{setupCronJobs}=require('./controllers/cronJobController')
+
 
 const app = express();
 const server = http.createServer(app);
@@ -44,7 +46,7 @@ app.use('/api/user/posts', userPostRoutes);
 
 // Initialize Socket.IO
 setupSocket(server); // Pass the server to the Socket.IO setup function
-
+setupCronJobs();
 
 const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {

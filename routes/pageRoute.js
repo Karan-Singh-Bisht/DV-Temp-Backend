@@ -6,15 +6,15 @@ const router = express.Router();
 const userAuthMiddleware = require('../middlewares/userAuthMiddleware');
 
 
-const multer = require("../middlewares/multer");
+const {uploadPostMedia} = require("../middlewares/multer");
 
-router.post("/page/createpost", multer,userAuthMiddleware, postController.createPost);
-router.post("/page/createcadpost", multer,userAuthMiddleware, postController.createCadPost);
+router.post("/page/createpost", uploadPostMedia,userAuthMiddleware, postController.createPost);
+router.post("/page/createcadpost", uploadPostMedia,userAuthMiddleware, postController.createCadPost);
 router.get("/page/getposts/:pageId",userAuthMiddleware, postController.getPosts);
 router.get("/page/getpostbyid/:postId",userAuthMiddleware, postController.getPostById);
 
 router.get("/page/getallpost", userAuthMiddleware,postController.getAllPosts);
-router.patch("/page/updatepost", multer,userAuthMiddleware, postController.updatePost);
+router.patch("/page/updatepost", uploadPostMedia,userAuthMiddleware, postController.updatePost);
 router.delete("/page/deletepost/:postId",userAuthMiddleware, postController.deletePost);
 
 router.get("/page/getallvisiofeeds", userAuthMiddleware,postController.getCombinedPosts);

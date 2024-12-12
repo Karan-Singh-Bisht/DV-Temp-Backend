@@ -8,6 +8,7 @@ const {
   deleteUser,
   //searchUsersByName,
   signoutUser,
+  allavatars
 } = require('../controllers/userController');
 const reportController= require('../controllers/reportController')
 
@@ -87,6 +88,7 @@ router.post('/users/notifications',userAuthMiddleware,notifcations.getNotificati
 router.delete('/users/deletenotification/:userId/:id',userAuthMiddleware,notifcations.deleteNotification)
 router.patch('/users/updatafriendnotification/:userId/:id',userAuthMiddleware,notifcations.updateFriendNotification)
 router.post('/users/countnotification',userAuthMiddleware,notifcations.getUnreadMessageCount)
+router.post('/users/allavatar',userAuthMiddleware,allavatars)
 
 
 

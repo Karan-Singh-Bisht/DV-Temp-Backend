@@ -4,10 +4,13 @@ const User = require("../models/User");
 const Friendship = require("../models/friendshipSchema");
 const Repost = require("../models/repostSchema")
 const Rewrite = require("../models/rewriteSchema");
+const ILikedPost = require("../models/iLikedPosts");
+
 
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("../config/cloudinaryConfig");
+const { findOne } = require("../models/visioFeed");
 
 // Cloudinary storage for posts
 const postStorage = new CloudinaryStorage({
@@ -58,6 +61,7 @@ exports.createPost = [
             public_id: req.files["coverPhoto"][0].filename,
           }
         : null;
+        
       const videoURL = req.files["video"]
         ? {
             path: req.files["video"][0].path,
@@ -281,47 +285,78 @@ console.log(req.body);
   }
 };
 
-// Delete post
-exports.deletePost = async (req, res) => {
+exports.toggleDeletePost = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.postId);
+    const { postId } = req.params; // Extract the postId from the request parameters.
 
-    if (!post) return res.status(404).json({ message: "Post not found" });
+    // Find the post by its ID.
+    const post = await Post.findById(postId);
 
-    if (post.media) {
-      post.media.forEach((file) => {
-        cloudinary.uploader.destroy(file.public_id, (error, result) => {
-          if (error) console.error("Error deleting media:", error);
-        });
-      });
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
     }
 
-    if (post.coverPhoto) {
-      cloudinary.uploader.destroy(
-        post.coverPhoto.public_id,
-        (error, result) => {
-          if (error) console.error("Error deleting cover photo:", error);
-        }
-      );
-    }
+    // Toggle the `isDeleted` field.
+    post.isDeleted = !post.isDeleted;
 
-    if (post.video) {
-      cloudinary.uploader.destroy(post.video.public_id, (error, result) => {
-        if (error) console.error("Error deleting video:", error);
-      });
-    }
+    // Save the updated post to the database.
+    await post.save();
 
-    const deletedPost = await Post.findByIdAndDelete(req.params.postId);
-    if (deletedPost) {
-      res.status(200).json({ message: "deleted successfully", success: true });
-    } else {
-      res.status(404).json({ message: "delete fail", success: false });
-    }
+    // Send a success response.
+    res.status(200).json({
+      message: `Post ${post.isDeleted ? "deleted" : "restored"} successfully`,
+      post,
+    });
   } catch (error) {
-    console.error("Error deleting post:", error);
-    res.status(500).json({ error: error.message });
+    console.error(error.message);
+
+    // Handle errors gracefully.
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
+// // Delete post
+// exports.deletePost = async (req, res) => {
+//   try {
+//     const post = await Post.findById(req.params.postId);
+
+//     if (!post) return res.status(404).json({ message: "Post not found" });
+
+//     if (post.media) {
+//       post.media.forEach((file) => {
+//         cloudinary.uploader.destroy(file.public_id, (error, result) => {
+//           if (error) console.error("Error deleting media:", error);
+//         });
+//       });
+//     }
+
+//     if (post.coverPhoto) {
+//       cloudinary.uploader.destroy(
+//         post.coverPhoto.public_id,
+//         (error, result) => {
+//           if (error) console.error("Error deleting cover photo:", error);
+//         }
+//       );
+//     }
+
+//     if (post.video) {
+//       cloudinary.uploader.destroy(post.video.public_id, (error, result) => {
+//         if (error) console.error("Error deleting video:", error);
+//       });
+//     }
+
+//     const deletedPost = await Post.findByIdAndDelete(req.params.postId);
+//     if (deletedPost) {
+//       res.status(200).json({ message: "deleted successfully", success: true });
+//     } else {
+//       res.status(404).json({ message: "delete fail", success: false });
+//     }
+//   } catch (error) {
+//     console.error("Error deleting post:", error);
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 
 // Like or unlike a post
 exports. likePost = async (req, res) => {
@@ -330,13 +365,17 @@ exports. likePost = async (req, res) => {
     if (!post) return res.status(404).json({ message: "Post not found" ,success:false });
 
     const userId = req.user._id;
+    const likedPosts= await ILikedPost.findOne({userId})
+
     if (post.likes.includes(userId)) {
       post.likes = post.likes.filter((like) => !like.equals(userId));
       await post.save();
       return res.status(200).json({ message: "Post unliked", post,success:true });
     } else {
       post.likes.push(userId);
-      await post.save();
+      
+     const savedLike= await post.save();
+
       return res.status(200).json({ message: "Post liked", post, success:true  });
     }
   } catch (error) {
@@ -884,3 +923,9 @@ exports.deleteRewrite = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+exports.iLikedPost = async (req,res)=>{
+  const userId= req.user._id
+
+  const likedPosts= []
+}

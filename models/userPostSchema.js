@@ -72,6 +72,10 @@ const userPostSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
 },
+isDeleted: {
+    type: Boolean,
+    default: false,
+},
 pinnedAt: {
     type: Date,
   },

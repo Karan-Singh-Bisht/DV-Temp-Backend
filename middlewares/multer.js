@@ -1,15 +1,14 @@
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const multer = require("multer");
-const path = require("path");
 const cloudinary = require("../config/cloudinaryConfig");
 
-// Configure Cloudinary storage for posts media uploads
+// Configure Cloudinary storage for post media uploads
 const postStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => {
     let folder = "Page_postsImages";
     let resource_type = "image";
-    let format = undefined;
+    let format = null; // Default format is null unless specified
 
     if (file.mimetype.startsWith("video")) {
       folder = "Page_postsVideos";
@@ -24,28 +23,19 @@ const postStorage = new CloudinaryStorage({
     }
 
     console.log(
-      `Uploading file of type: ${file.mimetype} to folder: ${folder} in ${format}`
+      `Uploading file of type: ${file.mimetype} to folder: ${folder} with format: ${format || "default"}`
     );
 
     return {
-      folder: folder,
-      resource_type: resource_type,
-      allowed_formats: [
-        "jpg",
-        "jpeg",
-        "png",
-        "mp4",
-        "mov",
-        "mp3",
-        "wav",
-        "glb",
-      ],
-      format: format, // Enforce the file format
+      folder,
+      resource_type,
+      allowed_formats: ["jpg", "jpeg", "png", "mp4", "mov", "mp3", "wav", "glb"],
+      format, // Enforce the file format if specified
     };
   },
 });
 
-// Multer middleware for handling multiple file uploads
+// Multer middleware for handling multiple file uploads for posts
 const uploadPostMedia = multer({
   storage: postStorage,
 }).fields([
@@ -56,4 +46,32 @@ const uploadPostMedia = multer({
   { name: "music", maxCount: 1 }, // 1 audio file
 ]);
 
-module.exports = uploadPostMedia;
+// Configure Cloudinary storage for avatar uploads
+const avatarStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    const folder = "avatars";
+    const resource_type = "image";
+    const format = "png"; // Enforce PNG format for avatars
+
+    console.log(
+      `Uploading avatar of type: ${file.mimetype} to folder: ${folder} with format: ${format}`
+    );
+
+    return {
+      folder,
+      resource_type,
+      allowed_formats: ["png"],
+      format, // Enforce PNG format
+    };
+  },
+});
+
+// Multer middleware for handling avatar uploads
+const uploadAvatarMulter = multer({
+  storage: avatarStorage,
+}).fields([
+  { name: "avatarName", maxCount: 1 }, // 1 avatar file
+]);
+
+module.exports = { uploadPostMedia, uploadAvatarMulter  };

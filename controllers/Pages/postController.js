@@ -144,6 +144,7 @@ const createCadPost = async (req, res) => {
           public_id: req.files["video"][0].filename,
         }
       : null;
+      
       const cadURL = req.files["cad"]
       ? {
           path: req.files["cad"][0].path,
@@ -193,7 +194,7 @@ console.log(cadURL);
       });
     }
   } catch (error) {
-    console.error("Error creating post:",error);
+    console.error("Error creating post:",error.message);
     res.status(500).json({ error: error.message });
   }
 };

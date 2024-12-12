@@ -1,4 +1,6 @@
 const NotificationUser = require("../models/NotificationUser");
+const User = require("../models/User");
+const Contact = require("../models/Contacts");
 const { sendNotification } = require("../socketServer");
 const createNotification = async (receiverId, senderId, type, message) => {
   try {
@@ -84,12 +86,10 @@ const deleteNotification = async (req, res) => {
     );
 
     if (!updatedUser) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "Notification not found or user does not exist.",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "Notification not found or user does not exist.",
+      });
     }
 
     res.status(200).json({
@@ -142,8 +142,6 @@ const updateFriendNotification = async (req, res) => {
 // unread count
 // newMessageisTrue
 
-
-
 const getUnreadMessageCount = async (req, res) => {
   try {
     const userId = req.user._id; // Get the user ID from the authenticated user
@@ -174,7 +172,7 @@ const getUnreadMessageCount = async (req, res) => {
 
     res.status(200).json({
       message: "Count fetched successfully",
-      unReaded:unreadCount===0?false: true,
+      unReaded: unreadCount === 0 ? false : true,
       unreadCount,
     });
   } catch (error) {
@@ -185,12 +183,22 @@ const getUnreadMessageCount = async (req, res) => {
   }
 };
 
-
+async function sendJoinNotification(userId) {
+  const phoneNumbers = await User.aggregate([
+    { $group: { _id: null, phoneNumbers: { $push: "$phoneNumber" } } },
+    { $project: { _id: 0, phoneNumbers: 1 } },
+  ]);
+  const contactNumbers = await Contact.aggregate([
+    { $match: { user: userId } },
+    { $group: { _id: null, phoneNumber: { $push: "$phoneNumber" } } },
+    { $project: { _id: 0, phoneNumber: 1 } },
+  ]);
+}
 
 module.exports = {
   getNotifications,
   createNotification,
   deleteNotification,
   updateFriendNotification,
-  getUnreadMessageCount
+  getUnreadMessageCount,
 };

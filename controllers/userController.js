@@ -3,6 +3,7 @@ const { signToken } = require("../utils/jwtUtils");
 const TokenBlacklist = require("../models/TokenBlacklist");
 const Pages = require("../models/Pages/PagesModel");
 const Friendship = require("../models/friendshipSchema");
+const UserAvatar = require("../models/userAvatarSchema");
 
 // Get all users without relationships
 exports.getUsers = async function (req, res) {
@@ -396,5 +397,15 @@ exports.reportUser = async (req, res) => {
   } catch (error) {
     console.error("Error in reporting post:", error.message);
     return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+exports.allavatars = async (req, res) => {
+  try {
+    const userAvatars = await UserAvatar.find();
+    res.status(200).json(userAvatars); // Return the found avatars in the response
+  } catch (error) {
+    console.error(error); // Log the error for debugging
+    res.status(500).json({ message: "An error occurred while fetching avatars" }); // Send error response
   }
 };
