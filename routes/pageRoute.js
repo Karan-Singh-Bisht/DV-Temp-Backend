@@ -16,6 +16,7 @@ router.get("/page/getpostbyid/:postId",userAuthMiddleware, postController.getPos
 router.get("/page/getallpost", userAuthMiddleware,postController.getAllPosts);
 router.patch("/page/updatepost", uploadPostMedia,userAuthMiddleware, postController.updatePost);
 router.delete("/page/deletepost/:postId",userAuthMiddleware, postController.deletePost);
+router.get("/page/alldeletepost/:pageId",userAuthMiddleware, postController.getAllDeletedPosts);
 
 router.get("/page/getallvisiofeeds", userAuthMiddleware,postController.getCombinedPosts);
 
@@ -38,4 +39,8 @@ router.get('/page/like/:postId/:userPageId',userAuthMiddleware,PostActionControl
 router.post('/page/reportpagepost',userAuthMiddleware,pageController.reportpagePost)
 //report page
 router.post('/page/reportpage',userAuthMiddleware,pageController.reportpage)
+
+
+//avatar allpageavatars
+router.post('/pages/allavatar',userAuthMiddleware)
 module.exports = router;

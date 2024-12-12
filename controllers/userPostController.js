@@ -315,6 +315,27 @@ exports.toggleDeletePost = async (req, res) => {
   }
 };
 
+ exports.getAllDeletedPosts = async (req, res) => {
+  try {
+    const userId= req.user._id
+
+    // Fetch all posts with the specified `pageId` and `isDeleted: true`
+    const deletedPosts = await PostModel.find({ user:userId, isDeleted: true });
+
+    // Check if deleted posts are found
+    if (!deletedPosts.length) {
+      return res.status(404).json({success: false, message: "No deleted posts found" });
+    }
+
+    // Return the deleted posts
+    return res.status(200).json({ success: true, data: deletedPosts });
+  } catch (error) {
+    console.error("Error fetching deleted posts:", error.message);
+    return res.status(500).json({success: false, error: "An error occurred while fetching deleted posts." });
+  }
+};
+
+
 
 // // Delete post
 // exports.deletePost = async (req, res) => {

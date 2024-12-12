@@ -338,65 +338,53 @@ const updatePost = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
 const deletePost = async (req, res) => {
   try {
     const id = req.params.postId;
 
-    const isPost = await PostModel.findById(id);
-    if (isPost) {
-      // Delete media images
-      if (isPost.media) {
-        isPost.media.map((file) => {
-          cloudinary.uploader.destroy(file.public_id, (error, result) => {
-            if (error) {
-              console.error("Error deleting image:", error);
-            } else {
-              console.log("Image deleted successfully:", result);
-            }
-          });
-        });
-      }
-      // Delete cover photo
-      if (isPost.coverPhoto) {
-        cloudinary.uploader.destroy(
-          isPost.coverPhoto.public_id,
-          (error, result) => {
-            if (error) {
-              console.error("Error deleting cover photo:", error);
-            } else {
-              console.log("Cover photo deleted successfully:", result);
-            }
-          }
-        );
-      }
-      // Delete video
-      if (isPost.video) {
-        cloudinary.uploader.destroy(isPost.video.public_id, (error, result) => {
-          if (error) {
-            console.error("Error deleting video:", error);
-          } else {
-            console.log("Video deleted successfully:", result);
-          }
-        });
-      }
+    // Find the post by its ID
+    const post = await PostModel.findById(id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
     }
 
-    // Delete the post
-    const deletedPost = await PostModel.findByIdAndDelete(id);
-    console.log(deletedPost); // Log the deleted post
+    // Toggle the `isDeleted` field
+    post.isDeleted = !post.isDeleted;
 
-    if (deletedPost) {
-      return res
-        .status(200)
-        .json({ success: true, message: "Deleted successfully" });
-    }
-    return res.status(404).json({ success: false, message: "Delete failed" });
+    // Save the updated post to the database
+    await post.save();
+
+    // Send a success response
+    return res.status(200).json({
+      message: `Post ${post.isDeleted ? "deleted" : "restored"} successfully`,
+      post,
+    });
   } catch (error) {
-    console.log(error.message);
-    return res.status(500).json({ error: error.message });
+    console.error("Error deleting/restoring post:", error.message);
+    return res.status(500).json({ error: "An error occurred while processing the request." });
   }
 };
+
+const getAllDeletedPosts = async (req, res) => {
+  try {
+    const { pageId } = req.params;
+
+    // Fetch all posts with the specified `pageId` and `isDeleted: true`
+    const deletedPosts = await PostModel.find({ pageId, isDeleted: true });
+
+    // Check if deleted posts are found
+    if (!deletedPosts.length) {
+      return res.status(404).json({success : false, message: "No deleted posts found" });
+    }
+
+    // Return the deleted posts
+    return res.status(200).json({success : true, message: 'Get all deleted post fetched successully', data: deletedPosts });
+  } catch (error) {
+    console.error("Error fetching deleted posts:", error.message);
+    return res.status(500).json({ success : false,error: "An error occurred while fetching deleted posts." });
+  }
+};
+
 
 
 
@@ -534,6 +522,7 @@ module.exports = {
   getAllPosts,
   updatePost,
   deletePost,
+  getAllDeletedPosts,
   createCadPost,
   getCombinedPosts,
 };
