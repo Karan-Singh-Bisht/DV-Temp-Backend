@@ -320,7 +320,7 @@ exports.toggleDeletePost = async (req, res) => {
     const userId= req.user._id
 
     // Fetch all posts with the specified `pageId` and `isDeleted: true`
-    const deletedPosts = await PostModel.find({ user:userId, isDeleted: true });
+    const deletedPosts = await Post.find({ user:userId, isDeleted: true });
 
     // Check if deleted posts are found
     if (!deletedPosts.length) {
