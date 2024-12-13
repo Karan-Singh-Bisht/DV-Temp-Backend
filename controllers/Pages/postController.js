@@ -370,7 +370,7 @@ const getAllDeletedPosts = async (req, res) => {
     const { pageId } = req.params;
 
     // Fetch all posts with the specified `pageId` and `isDeleted: true`
-    const deletedPosts = await PostModel.find({ pageId, isDeleted: true });
+    const deletedPosts = await PostModel.find({ pageId, isDeleted: true }).populate("pageId", "pageName userName profileImg");
 
     // Check if deleted posts are found
     if (!deletedPosts.length) {
