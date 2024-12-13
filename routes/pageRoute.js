@@ -42,7 +42,7 @@ router.post('/page/reportpage',userAuthMiddleware,pageController.reportpage)
 
 
 //avatar allpageavatars
-router.get('/pages/getallavatar/:pageId',userAuthMiddleware, pageController.getAllAvatar)
+router.get('/pages/getallavatarpage/:pageId',userAuthMiddleware, pageController.getAllAvatar)
 router.post('/pages/upload-customavatar',userAuthMiddleware,uploadAvatarMulter, pageController.addCustomAvatar)
 
 module.exports = router;

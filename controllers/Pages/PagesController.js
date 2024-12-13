@@ -458,7 +458,7 @@ const getAllAvatar = async (req, res) => {
       avatars= allavatars
     }
 
-    res.status(200).json(avatars);
+    res.status(200).json({message:"All avatar fetched successfully",data:avatars});
   } catch (error) {
     console.error("Error fetching avatars:", error);
     res.status(500).json({ message: "An error occurred while fetching avatars" });
@@ -499,7 +499,7 @@ console.log(pageId, category);
 
     res.status(200).json({
       message: "Avatar uploaded successfully",
-      avatar: avatarUrl,
+      
     });
 
   } catch (error) {
