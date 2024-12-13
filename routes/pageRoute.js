@@ -4,7 +4,7 @@ const PostActionController= require('../controllers/Pages/PostActionController')
 const express = require("express");
 const router = express.Router();
 const userAuthMiddleware = require('../middlewares/userAuthMiddleware');
-
+const {uploadAvatarMulter}=require('../middlewares/multer')
 
 const {uploadPostMedia} = require("../middlewares/multer");
 
@@ -42,5 +42,7 @@ router.post('/page/reportpage',userAuthMiddleware,pageController.reportpage)
 
 
 //avatar allpageavatars
-router.post('/pages/allavatar',userAuthMiddleware)
+router.get('/pages/getallavatar/:pageId',userAuthMiddleware, pageController.getAllAvatar)
+router.post('/pages/upload-customavatar',userAuthMiddleware,uploadAvatarMulter, pageController.addCustomAvatar)
+
 module.exports = router;

@@ -3,7 +3,8 @@ const Pages = require("../../models/Pages/PagesModel");
 const PageActions = require("../../models/Pages/PageActionsModel");
 const ReportPagePost = require("../../models/Pages/repostPagepostSchema");
 const ReportPage = require("../../models/Pages/reportPageSchema");
-
+const PageAvatar = require('../../models/Pages/pageAvatarSchema');
+const CustomPageAvatar = require('../../models/Pages/pageCustomAvatarSchema');
 
 
 // const getAllpages = async (req, res) => {
@@ -435,6 +436,80 @@ const reportpage = async (req, res) => {
   }
 };
 
+const getAllAvatar = async (req, res) => {
+  try {
+    const { pageId } = req.params;
+
+    // Fetch the `isCreator` field for the given page ID
+    const page = await Pages.findById(pageId, { isCreator: true });
+    if (!page) {
+      return res.status(404).json({ message: "Page not found" });
+    }
+
+    // Initialize avatars array
+    let avatars=[]
+    const allavatars = await PageAvatar.find();
+
+    // If the page is not a creator, include custom avatars
+    if (!page.isCreator) {
+      const customAvatars = await CustomPageAvatar.find({ pageId });
+      avatars = [...customAvatars,...allavatars]
+    }else{
+      avatars= allavatars
+    }
+
+    res.status(200).json(avatars);
+  } catch (error) {
+    console.error("Error fetching avatars:", error);
+    res.status(500).json({ message: "An error occurred while fetching avatars" });
+  }
+};
+
+const addCustomAvatar = async (req, res) => {
+  try {
+    const { pageId, category } = req.body;
+
+console.log(pageId, category);
+
+    // Fetch the `isCreator` field for the given page ID
+    const page = await Pages.findOne({_id:pageId,  isCreator: false });
+    if (!page) {
+      return res.status(404).json({ message: "Page not found" });
+    }
+
+    const avatarFile = req.files["avatar"]?.[0];
+    if (!avatarFile) {
+      return res.status(400).json({ message: "Avatar is required" });
+    }
+
+    const avatarUrl = {
+      path: avatarFile.path,
+      public_id: avatarFile.filename,
+    };
+
+    // Create a new UserAvatar instance
+    const newAvatar = new CustomPageAvatar({
+      pageId,
+      category,
+      avatarName: avatarUrl,
+    });
+
+    // Save the avatar to the database
+    await newAvatar.save();
+
+    res.status(200).json({
+      message: "Avatar uploaded successfully",
+      avatar: avatarUrl,
+    });
+
+  } catch (error) {
+    console.error("Error uploading avatar:", error);
+    res.status(500).json({ message: "An error occurred while uploading avatar" });
+  }
+};
+
+
+
 
 
 module.exports = {
@@ -447,4 +522,6 @@ module.exports = {
   getPageSelf,
   reportpagePost,
   reportpage,
+  getAllAvatar,
+  addCustomAvatar
 };

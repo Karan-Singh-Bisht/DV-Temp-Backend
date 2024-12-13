@@ -4,7 +4,7 @@ const {login,
     updatePost,
     deletePost,
     getAllFeeds,
-    getFeedById,uploadAvatar
+    getFeedById,uploadUserAvatar,uploadPageAvatar
 }= require('../controllers/adminController/adminController')
 const authMiddleware = require('../middlewares/authMiddleware');
 const {uploadAvatarMulter}=require('../middlewares/multer')
@@ -22,6 +22,7 @@ router.put('/feed/:id', updatePost);
 router.delete('/feed/:id', deletePost);
 router.get('/feeds', getAllFeeds);
 router.get('/feed/:id', getFeedById);
-router.post("/avatar/upload-avatar",uploadAvatarMulter, uploadAvatar)
+router.post("/avatar/upload-avataruser",uploadAvatarMulter, uploadUserAvatar)
+router.post("/avatar/upload-avatarpage",uploadAvatarMulter, uploadPageAvatar)
 
 module.exports = router;

@@ -1,6 +1,7 @@
 const Admin = require('../../models/adminModel');
 const Media = require('../../models/visioFeed');
 const UserAvatar = require('../../models/userAvatarSchema');
+const PageAvatar = require('../../models/Pages/pageAvatarSchema');
 const { signToken } = require('../../utils/jwtUtils');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('../../config/cloudinaryConfig');
@@ -181,7 +182,7 @@ exports.getFeedById = async (req, res) => {
 };
 
 
-exports.uploadAvatar = async (req, res) => {
+exports.uploadUserAvatar = async (req, res) => {
   try {
     const { category } = req.body;
 
@@ -198,6 +199,42 @@ exports.uploadAvatar = async (req, res) => {
 
     // Create a new UserAvatar instance
     const newAvatar = new UserAvatar({
+      category,
+      avatarName: avatarUrl,
+    });
+
+    // Save the avatar to the database
+    await newAvatar.save();
+
+    res.status(200).json({
+      message: "Avatar uploaded successfully",
+      avatar: avatarUrl,
+    });
+  } catch (error) {
+    console.error("Error uploading avatar:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
+
+exports.uploadPageAvatar = async (req, res) => {
+  try {
+    const { category } = req.body;
+
+    // Extract avatar details from the uploaded files
+    const avatarFile = req.files["avatar"]?.[0];
+    if (!avatarFile) {
+      return res.status(400).json({ message: "Avatar is required" });
+    }
+
+    const avatarUrl = {
+      path: avatarFile.path,
+      public_id: avatarFile.filename,
+    };
+
+    // Create a new UserAvatar instance
+    const newAvatar = new PageAvatar({
       category,
       avatarName: avatarUrl,
     });

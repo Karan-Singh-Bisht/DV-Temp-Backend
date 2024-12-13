@@ -71,7 +71,7 @@ const avatarStorage = new CloudinaryStorage({
 const uploadAvatarMulter = multer({
   storage: avatarStorage,
 }).fields([
-  { name: "avatarName", maxCount: 1 }, // 1 avatar file
+  { name: "avatar", maxCount: 1 }, // 1 avatar file
 ]);
 
 module.exports = { uploadPostMedia, uploadAvatarMulter  };
