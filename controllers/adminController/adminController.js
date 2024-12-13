@@ -187,7 +187,7 @@ exports.uploadUserAvatar = async (req, res) => {
     const { category } = req.body;
 
     // Extract avatar details from the uploaded files
-    const avatarFile = req.files["avatarName"]?.[0];
+    const avatarFile = req.files["avatar"]?.[0];
     if (!avatarFile) {
       return res.status(400).json({ message: "Avatar is required" });
     }
