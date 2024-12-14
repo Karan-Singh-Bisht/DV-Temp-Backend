@@ -403,7 +403,7 @@ exports.reportUser = async (req, res) => {
 exports.allavatars = async (req, res) => {
   try {
     const userAvatars = await UserAvatar.find();
-    res.status(200).json(userAvatars); // Return the found avatars in the response
+    res.status(200).json({message:"All avatar fetched successfully", data:userAvatars}); // Return the found avatars in the response
   } catch (error) {
     console.error(error); // Log the error for debugging
     res.status(500).json({ message: "An error occurred while fetching avatars" }); // Send error response
