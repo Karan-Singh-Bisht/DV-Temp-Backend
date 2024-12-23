@@ -1,4 +1,3 @@
-// index.js
 
 const express = require('express');
 const connectDB = require('./config/db');
@@ -8,6 +7,7 @@ const userRoutes = require('./routes/userRoute');
 const contactRoutes = require('./routes/contactRoute');
 const pageRoute = require('./routes/pageRoute');
 const userPostRoutes = require('./routes/userPostRoute');
+const userChatRoute = require('./routes/userChatRoute');
 const cors = require('cors');
 const http = require('http');
 const { setupSocket } = require('./socketServer');
@@ -43,6 +43,7 @@ apiRoutes.use(contactRoutes);
 app.use('/contacts', contactRoutes);
 
 app.use('/api/user/posts', userPostRoutes);
+app.use('/api/user/chat', userChatRoute);
 
 
 // Initialize Socket.IO
