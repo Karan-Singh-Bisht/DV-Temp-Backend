@@ -1,4 +1,3 @@
-// index.js
 
 const express = require('express');
 const connectDB = require('./config/db');
@@ -8,12 +7,17 @@ const userRoutes = require('./routes/userRoute');
 const contactRoutes = require('./routes/contactRoute');
 const pageRoute = require('./routes/pageRoute');
 const userPostRoutes = require('./routes/userPostRoute');
+<<<<<<< HEAD
 const userMapRoutes = require('./routes/userMapRoute'); 
 
 
+=======
+const userChatRoute = require('./routes/userChatRoute');
+>>>>>>> c03be1cc222b0cb79c56554129df88c55520fb78
 const cors = require('cors');
 const http = require('http');
 const { setupSocket } = require('./socketServer');
+const { setupSocket1 } = require('./socketServer1');
 require('dotenv').config();
 const{setupCronJobs}=require('./controllers/cronJobController')
 
@@ -48,12 +52,14 @@ app.use('/api', apiRoutes);
 app.use('/contacts', contactRoutes);
 
 app.use('/api/user/posts', userPostRoutes);
+app.use('/api/user/chat', userChatRoute);
 
 // Initialize Socket.IO
 setupSocket(server); // Pass the server to the Socket.IO setup function
+setupSocket1(server);
 setupCronJobs();
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
