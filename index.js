@@ -7,13 +7,8 @@ const userRoutes = require('./routes/userRoute');
 const contactRoutes = require('./routes/contactRoute');
 const pageRoute = require('./routes/pageRoute');
 const userPostRoutes = require('./routes/userPostRoute');
-<<<<<<< HEAD
-const userMapRoutes = require('./routes/userMapRoute'); 
-
-
-=======
 const userChatRoute = require('./routes/userChatRoute');
->>>>>>> c03be1cc222b0cb79c56554129df88c55520fb78
+const userMapRoutes = require('./routes/userMapRoute'); 
 const cors = require('cors');
 const http = require('http');
 const { setupSocket } = require('./socketServer');
