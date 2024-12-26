@@ -8,6 +8,9 @@ const userRoutes = require('./routes/userRoute');
 const contactRoutes = require('./routes/contactRoute');
 const pageRoute = require('./routes/pageRoute');
 const userPostRoutes = require('./routes/userPostRoute');
+const userMapRoutes = require('./routes/userMapRoute'); 
+
+
 const cors = require('cors');
 const http = require('http');
 const { setupSocket } = require('./socketServer');
@@ -28,21 +31,23 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev')); 
 
+
+
 app.get('/', (req, res) => {
   res.send('server ready');
 });
+
 
 const apiRoutes = express.Router();
 apiRoutes.use('/admin', adminRoutes);
 apiRoutes.use(userRoutes);
 apiRoutes.use(pageRoute);
-app.use('/api', apiRoutes);
-
+apiRoutes.use('/user/maps', userMapRoutes);
 apiRoutes.use(contactRoutes);
+app.use('/api', apiRoutes);
 app.use('/contacts', contactRoutes);
 
 app.use('/api/user/posts', userPostRoutes);
-
 
 // Initialize Socket.IO
 setupSocket(server); // Pass the server to the Socket.IO setup function

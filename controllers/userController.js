@@ -215,7 +215,8 @@ exports.signupUser = async function (req, res) {
   } = req.body;
 
   try {
-    let existingUser = await User.findOne({ phoneNumber }).populate("pages");
+    let existingUser = await User.findOne({ phoneNumber })
+    // .populate("pages");
 
     if (existingUser) {
       return res
@@ -234,6 +235,7 @@ exports.signupUser = async function (req, res) {
       link,
       profileImg,
       bgColor,
+      pages: []
     });
 
     await user.save();
@@ -255,6 +257,7 @@ exports.signupUser = async function (req, res) {
       // updatedAt: user.updatedAt,
       isPrivate: user.isPrivate,
       bgColor: user.bgColor,
+      pages: [] //thi
     };
 
     return res.status(201).send(userResponse);
