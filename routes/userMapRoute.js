@@ -19,4 +19,8 @@ router.put('/visibility', userAuthMiddleware, userMapController.updateVisibility
 
 router.get('/nearby/friends', userAuthMiddleware, userMapController.getNearbyFriends);
 
+router.get('/categories', userAuthMiddleware, userMapController.getPlaceCategories);
+
+router.get('/places/:category', userAuthMiddleware, userMapController.getPlacesByCategory);
+
 module.exports = router;

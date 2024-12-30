@@ -1,6 +1,13 @@
 const UserMap = require('../models/userMap');
 const { default: mongoose } = require('mongoose');
 
+const placeCategories = require('../utils/mapCategories');
+
+
+
+
+
+
 const updateCurrentLocation = async (req, res) => {
   try {
     const { latitude, longitude, isSharing } = req.body;
@@ -306,6 +313,10 @@ const getSavedLocations = async (req, res) => {
 
 
 
+
+
+
+
 const updateVisibility = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -366,6 +377,9 @@ const updateVisibility = async (req, res) => {
 
 
 
+
+
+
 const getNearbyFriends = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -405,22 +419,34 @@ const getNearbyFriends = async (req, res) => {
       select: '_id name username profileImg'
     });
 
-    const nearbyFriendsWithDistance = nearbyFriends
-      .map(friend => ({
-        userId: friend.user._id,
-        name: friend.user.name,
-        username: friend.user.username,
-        profileImg: friend.user.profileImg,
-        latitude: friend.currentLocation.latitude,
-        longitude: friend.currentLocation.longitude,
-        distance: Math.round(calculateDistance(
-          userMap.currentLocation.latitude,
-          userMap.currentLocation.longitude,
-          friend.currentLocation.latitude,
-          friend.currentLocation.longitude
-        ) * 10) / 10
-      }))
-      .filter(friend => friend.distance <= radiusInKm)
+    const validFriends = nearbyFriends.filter(friend => 
+      friend && friend.user && friend.user._id && friend.currentLocation
+    );
+
+    const nearbyFriendsWithDistance = validFriends
+      .map(friend => {
+        try {
+          const distance = Math.round(calculateDistance(
+            userMap.currentLocation.latitude,
+            userMap.currentLocation.longitude,
+            friend.currentLocation.latitude,
+            friend.currentLocation.longitude
+          ) * 10) / 10;
+
+          return {
+            userId: friend.user._id,
+            name: friend.user.name || 'Unknown',
+            username: friend.user.username || 'Unknown',
+            profileImg: friend.user.profileImg || '',
+            latitude: friend.currentLocation.latitude,
+            longitude: friend.currentLocation.longitude,
+            distance
+          };
+        } catch (error) {
+          return null;
+        }
+      })
+      .filter(friend => friend !== null && friend.distance <= radiusInKm)
       .sort((a, b) => a.distance - b.distance);
 
     return res.status(200).json({
@@ -429,7 +455,6 @@ const getNearbyFriends = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching nearby friends:', error);
     res.status(500).json({
       success: false,
       message: "Error fetching nearby friends"
@@ -452,6 +477,205 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 
 
 
+
+
+
+
+
+
+const getPlaceCategories = async (req, res) => {
+  try {
+      const categories = Object.keys(placeCategories).map(key => ({
+          id: key,
+          name: key.replace('_', ' ').toUpperCase(),
+          icon: placeCategories[key].icon
+      }));
+
+      res.json({
+          success: true,
+          data: categories
+      });
+  } catch (error) {
+      res.status(500).json({
+          success: false,
+          message: 'Error fetching categories'
+      });
+  }
+};
+
+
+const getPlacesByCategory = async (req, res) => {
+  try {
+      const userId = req.user.id;
+      const { category } = req.params;
+
+      if (!placeCategories[category]) {
+          return res.status(400).json({
+              success: false,
+              message: 'Invalid category'
+          });
+      }
+
+      const userMap = await UserMap.findOne({ user: userId });
+      if (!userMap?.currentLocation) {
+          return res.status(400).json({
+              success: false,
+              message: 'Please update your location first'
+          });
+      }
+
+      const lat = userMap.currentLocation.latitude;
+      const lon = userMap.currentLocation.longitude;
+      const offset = 0.045;
+
+      const url = new URL('https://nominatim.openstreetmap.org/search');
+      url.search = new URLSearchParams({
+          format: 'json',
+          amenity: placeCategories[category].type,
+          lat: lat,
+          lon: lon,
+          countrycodes: 'in',
+          addressdetails: 1,
+          bounded: 1,
+          limit: 30,
+          viewbox: `${lon - offset},${lat - offset},${lon + offset},${lat + offset}`,
+          dedupe: 1,
+          extratags: 1,
+          namedetails: 1,
+          'accept-language': 'en'
+      });
+
+      const response = await fetch(url, {
+          headers: {
+              'User-Agent': 'DeVi-Backend'
+          }
+      });
+      
+      if (!response.ok) {
+          throw new Error('Failed to fetch places');
+      }
+
+      const data = await response.json();
+
+      let places = data
+          .filter(place => {
+              const name = place.display_name.split(',')[0].toLowerCase();
+              return name !== 'hospital' && 
+                     name !== 'clinic' && 
+                     name.length > 3;
+          })
+          .map(place => {
+              const addressParts = [
+                  place.address?.road,
+                  place.address?.suburb,
+                  place.address?.city
+              ].filter(Boolean);
+
+              const emergency = place.extratags?.emergency === 'yes' || 
+                              place.extratags?.['healthcare:emergency'] === 'yes';
+              const healthcare = place.extratags?.healthcare;
+              
+              const phone = place.extratags?.phone || 
+                          place.extratags?.['contact:phone'] || 
+                          place.extratags?.['phone:emergency'] ||
+                          place.extratags?.['contact:mobile'] ||
+                          place.address?.['phone'];
+
+              const website = place.extratags?.website || 
+                            place.extratags?.['contact:website'] || 
+                            place.extratags?.['url'] ||
+                            place.address?.['website'];
+
+              const openingHours = place.extratags?.opening_hours || 
+                                 place.extratags?.['opening_hours:covid19'] ||
+                                 (emergency ? '24/7' : null);
+
+              const is24x7 = emergency || 
+                            openingHours === '24/7' || 
+                            place.name.toLowerCase().includes('emergency') ||
+                            (place.name.toLowerCase().includes('government') && healthcare === 'hospital');
+
+              return {
+                  id: place.place_id,
+                  name: place.display_name.split(',')[0],
+                  location: {
+                      latitude: parseFloat(place.lat),
+                      longitude: parseFloat(place.lon)
+                  },
+                  address: addressParts.join(', '),
+                  distance: calculateDistance(
+                      lat,
+                      lon,
+                      parseFloat(place.lat),
+                      parseFloat(place.lon)
+                  ),
+                  icon: placeCategories[category].icon,
+                  type: place.type,
+                  openingHours,
+                  emergency,
+                  healthcare_type: healthcare,
+                  specialization: place.extratags?.['healthcare:speciality'] || null,
+                  facilities: {
+                      ambulance: place.extratags?.['emergency:ambulance'] === 'yes',
+                      icu: place.extratags?.['healthcare:icu'] === 'yes',
+                      emergency_room: emergency,
+                      wheelchair: place.extratags?.['wheelchair'] === 'yes'
+                  },
+                  contact: {
+                      phone: phone || null,
+                      website: website || null,
+                      email: place.extratags?.['contact:email'] || null
+                  },
+                  is24x7,
+                  rating: place.extratags?.['rating'] || null,
+                  lastUpdated: place.extratags?.['last_updated'] || null
+              };
+          });
+
+      places = places.filter((place, index, self) =>
+          index === self.findIndex((p) => (
+              p.name.toLowerCase() === place.name.toLowerCase() &&
+              Math.abs(p.location.latitude - place.location.latitude) < 0.00005 &&
+              Math.abs(p.location.longitude - place.location.longitude) < 0.00005
+          ))
+      );
+
+      const nearbyPlaces = places
+          .filter(place => place.distance <= 5)
+          .sort((a, b) => a.distance - b.distance);
+
+      res.json({
+          success: true,
+          data: {
+              category: {
+                  id: category,
+                  name: category.replace('_', ' ').toUpperCase(),
+                  icon: placeCategories[category].icon
+              },
+              places: nearbyPlaces,
+              userLocation: {
+                  latitude: lat,
+                  longitude: lon
+              },
+              total: nearbyPlaces.length,
+              timestamp: new Date().toISOString()
+          }
+      });
+
+  } catch (error) {
+      console.error('Error fetching places:', error);
+      res.status(500).json({
+          success: false,
+          message: 'Error fetching places'
+      });
+  }
+};
+
+
+
+
+
+
 module.exports = {
   updateCurrentLocation,
   getMyLocation,
@@ -459,5 +683,7 @@ module.exports = {
   toggleSaveLocation,
   getSavedLocations,
   updateVisibility,
-  getNearbyFriends
+  getNearbyFriends,
+  getPlaceCategories,
+  getPlacesByCategory
 };
