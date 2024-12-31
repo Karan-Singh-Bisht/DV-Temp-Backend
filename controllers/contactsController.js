@@ -169,19 +169,14 @@ exports.searchByName = async (req, res) => {
   const userId = req.user._id;
 
   if (!searchTerm) {
-    return res
-      .status(400)
-      .json({
-        error:
-          "Search query parameter (name, username, or phone number) is required.",
-      });
+    return res.status(400).json({ error: 'Search query parameter (name, username, or phone number) is required.' });
   }
 
   const normalizePhoneNumber = (phoneNumber) => {
-    if (phoneNumber.startsWith("+91")) {
+    if (phoneNumber.startsWith('+91')) {
       phoneNumber = phoneNumber.slice(3);
     }
-    return phoneNumber.replace(/[^0-9]/g, "");
+    return phoneNumber.replace(/[^0-9]/g, '');
   };
 
   try {
@@ -192,52 +187,63 @@ exports.searchByName = async (req, res) => {
     const contacts = await Contact.find({
       user: userId,
       $or: [
-        { name: { $regex: `^${searchTerm}`, $options: "i" } },
-        { phoneNumber: { $regex: `^${normalizedSearchTerm}`, $options: "i" } },
-      ],
+        { name: { $regex: `^${searchTerm}`, $options: 'i' } },
+        { phoneNumber: { $regex: `^${normalizedSearchTerm}`, $options: 'i' } }
+      ]
     });
 
     for (const contact of contacts) {
       const normalizedContactPhone = normalizePhoneNumber(contact.phoneNumber);
       const user = await User.findOne({ phoneNumber: normalizedContactPhone });
 
-      let status = 'contacts';
-
       if (user) {
         // Check friendship status
         const friendship = await Friendship.findOne({
           $or: [
             { requester: userId, recipient: user._id },
-            { requester: user._id, recipient: userId },
-          ],
+            { requester: user._id, recipient: userId }
+          ]
         });
 
-        if (friendship) {
-          status = friendship.status === 'accepted' ? 'looped' : 'requested';
-        } else {
-          status = 'devian';
+        if (friendship && friendship.status === 'accepted') {
+          result.push({
+            userId: user._id,
+            name: user.name,
+            username: user.username,
+            profileImg: user.profileImg,
+            gender: user.gender,
+            dob: user.dob,
+            phoneNumber: user.phoneNumber,
+            mailAddress: user.mailAddress,
+            bio: user.bio,
+            link: user.link,
+            friendshipStatus: 'looped'
+          });
+         } else if (contacts.some(c => c.phoneNumber === normalizedContactPhone)) {
+        
+          
+          result.push({
+            userId: user._id,
+            name: user.name,
+            username: user.username,
+            profileImg: user.profileImg,
+            gender: user.gender,
+            dob: user.dob,
+            phoneNumber: user.phoneNumber,
+            mailAddress: user.mailAddress,
+            bio: user.bio,
+            link: user.link,
+            // friendshipStatus: 'contacts'
+            friendshipStatus: 'Devian'
+          });
         }
-
-        result.push({
-          userId: user._id,
-          name: user.name,
-          username: user.username,
-          profileImg: user.profileImg,
-          gender: user.gender,
-          dob: user.dob,
-          phoneNumber: user.phoneNumber,
-          mailAddress: user.mailAddress,
-          bio: user.bio,
-          link: user.link,
-          friendshipStatus: status
-        });
       } else {
         // If the user does not exist, include only contacts
         result.push({
           name: contact.name,
           phoneNumber: contact.phoneNumber,
           email: contact.email,
-          friendshipStatus: "contacts",
+          friendshipStatus: 'contacts'
         });
       }
     }
@@ -247,71 +253,66 @@ exports.searchByName = async (req, res) => {
      const users = await User.find({
       $or: [
         { username: { $regex: `^${searchTerm}`, $options: 'i' } },
-        { name: { $regex: `^${searchTerm}`, $options: 'i' } },
+        { name: { $regex: `${searchTerm}`, $options: 'i' } },
         { phoneNumber: { $regex: `^${normalizedSearchTerm}$`, $options: 'i' } }
       ]
     });
 
     for (const user of users) {
-      const isInContacts = result.some(
-        (item) => item.phoneNumber === user.phoneNumber
-      );
+      const isInContacts = result.some(item => item.phoneNumber === user.phoneNumber);
 
       if (!isInContacts) {
         const friendship = await Friendship.findOne({
           $or: [
             { requester: userId, recipient: user._id },
-            { requester: user._id, recipient: userId },
-          ],
+            { requester: user._id, recipient: userId }
+          ]
         });
 
-        let status = 'devian';
-
-        if (friendship) {
-          status = friendship.status === 'accepted' ? 'looped' : 'requested';
+        if (friendship && friendship.status === 'accepted') {
+          result.push({
+            userId: user._id,
+            name: user.name,
+            username: user.username,
+            profileImg: user.profileImg,
+            gender: user.gender,
+            dob: user.dob,
+            phoneNumber: user.phoneNumber,
+            mailAddress: user.mailAddress,
+            bio: user.bio,
+            link: user.link,
+            friendshipStatus: 'looped'
+          });
         }
-
-        result.push({
-          userId: user._id,
-          name: user.name,
-          username: user.username,
-          profileImg: user.profileImg,
-          gender: user.gender,
-          dob: user.dob,
-          phoneNumber: user.phoneNumber,
-          mailAddress: user.mailAddress,
-          bio: user.bio,
-          link: user.link,
-          friendshipStatus: status
-        });
       }
     }
 
     // Filter results by searchTerm and requirements
     const filteredResult = result.filter(
       item =>
-        item.name.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-        (item.username && item.username.toLowerCase().startsWith(searchTerm.toLowerCase())) ||
-        item.phoneNumber === normalizedSearchTerm
+        (item.friendshipStatus === 'looped' ||
+          (contacts.some(contact => contact.phoneNumber === item.phoneNumber) &&
+            users.some(user => user.phoneNumber === item.phoneNumber))) ||
+        contacts.some(contact => contact.name.toLowerCase().startsWith(searchTerm.toLowerCase()))
     );
 
     if (filteredResult.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No matching users or contacts found." });
+      return res.status(404).json({ message: 'No matching users or contacts found.' });
     }
 
     return res.status(200).json({
-      message: "Search completed successfully.",
-      data: filteredResult,
+      message: 'Search completed successfully.',
+      data: filteredResult
     });
   } catch (error) {
-    console.error("Error searching by name, username, or phone number:", error);
-    return res
-      .status(500)
-      .json({ error: "Failed to search by name, username, or phone number." });
+    console.error('Error searching by name, username, or phone number:', error);
+    return res.status(500).json({ error: 'Failed to search by name, username, or phone number.' });
   }
 };
+
+
+
+
 
 exports.searchByPhoneNumber = async (req, res) => {
   const searchTerm = req.query.search;

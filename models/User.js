@@ -13,7 +13,8 @@ const UserSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   isPrivate: { type: Boolean, default: true },
   updatedAt: { type: Date, default: Date.now },
-  bgColor:{ type: String, required: true }
+  bgColor:{ type: String, required: true },
+  pages: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Pages' }]  
 });
 
 module.exports = mongoose.model("User", UserSchema);
