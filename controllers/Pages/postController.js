@@ -121,7 +121,7 @@ const createCadPost = async (req, res) => {
       ? req.files["media"].map((file) => ({
           path: file.path,
           public_id: file.filename,
-        }))
+        }))   
       : [];
 
     const coverPhotoURL = req.files["coverPhoto"]

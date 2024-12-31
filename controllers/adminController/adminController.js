@@ -227,7 +227,7 @@ exports.uploadPageAvatar = async (req, res) => {
     if (!avatarFile) {
       return res.status(400).json({ message: "Avatar is required" });
     }
-
+    
     const avatarUrl = {
       path: avatarFile.path,
       public_id: avatarFile.filename,
