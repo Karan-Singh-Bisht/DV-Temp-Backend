@@ -1,88 +1,113 @@
 const mongoose = require("mongoose");
 
-const userPostSchema = new mongoose.Schema({
-  user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-  },
-  title: {
+const userPostSchema = new mongoose.Schema(
+  {
+    user: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+    ],
+    invitation: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+    ],
+    title: {
       type: String,
-      //required: true,
-  },
-  description: {
+    },
+    description: {
       type: String,
-  },
-  media: [{
-      path: {
+    },
+    media: [
+      {
+        path: {
           type: String,
           required: true,
+        },
+        public_id: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+    coverPhoto: {
+      path: {
+        type: String,
       },
       public_id: {
-          type: String,
-          required: true,
-      }
-  }],
-  coverPhoto: {
-      path: { type: String ,},
-      public_id: { type: String },
-  },
-  video: {
-      path: { type: String },
-      public_id: { type: String },
-  },
-  location: {
+        type: String,
+      },
+    },
+    video: {
+      path: {
+        type: String,
+      },
+      public_id: {
+        type: String,
+      },
+    },
+    location: {
       type: String,
-  },
-  category: {
+    },
+    category: {
       type: [String],
       default: [],
-  },
-  subCategory: {
+    },
+    subCategory: {
       type: [String],
       default: [],
-  },
-  likes: [
+    },
+    likes: [
       {
-          type: mongoose.Types.ObjectId,
-          ref: "User",
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
       },
-  ],
-  shared: [
+    ],
+    shared: [
       {
-          type: mongoose.Types.ObjectId,
-          ref: "User",
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
       },
-  ],
-  isBlocked: {
+    ],
+    isBlocked: {
       type: Boolean,
       default: false,
-  },
-  sensitive: {
+    },
+    sensitive: {
       type: Boolean,
       default: false,
-  },
-  isBlog: {
+    },
+    isBlog: {
       type: Boolean,
+    },
+    mediaType: {
+      type: String,
+    },
+    pinned: {
+      type: Boolean,
+      default: false,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    pinnedAt: {
+      type: Date,
+    },
+    isArchived: {
+      type: Boolean,
+      default: false,
+    },
+    isCollaborated: {
+      type: Boolean,
+      default: false,
+    },
   },
-  mediatype: {
-    type: String,
-  },
-  pinned: {
-    type: Boolean,
-    default: false,
-},
-isDeleted: {
-    type: Boolean,
-    default: false,
-},
-pinnedAt: {
-    type: Date,
-  },
-  isArchived: {
-    type: Boolean,
-    default: false,
-  },
-}, { timestamps: true });
+  { timestamps: true }
+);
 
-module.exports = mongoose.model("userPost", userPostSchema);
+module.exports = mongoose.model("UserPost", userPostSchema);

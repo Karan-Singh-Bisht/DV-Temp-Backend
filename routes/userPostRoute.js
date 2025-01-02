@@ -3,6 +3,7 @@ const router = express.Router();
 const postController = require('../controllers/userPostController');
 const userAuthMiddleware = require('../middlewares/userAuthMiddleware');
 const reportController= require('../controllers/reportController')
+const visibilityController= require('../controllers/visibilityController')
 // Routes for managing posts
 router.post('/createpost', userAuthMiddleware, postController.createPost);
 router.get('/user/getposts', userAuthMiddleware, postController.getPosts);
@@ -33,5 +34,13 @@ router.get('/archived/:postId',userAuthMiddleware, postController.getArchivedPos
 
 // report post
 router.post('/reportuserpost',userAuthMiddleware,reportController.reportPost)
+
+
+// collaburartion accept or decine
+router.get('/collaboration/status/:postId/:status', userAuthMiddleware, postController.changeStatusCollaboration);
+
+//visibility
+
+router.post('/visibility/add-filter',userAuthMiddleware,visibilityController.addOrUpdateIncludes)
 
 module.exports = router;

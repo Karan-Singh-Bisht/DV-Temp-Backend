@@ -5,6 +5,8 @@ const Friendship = require("../models/friendshipSchema");
 const Repost = require("../models/repostSchema")
 const Rewrite = require("../models/rewriteSchema");
 const ILikedPost = require("../models/iLikedPosts");
+const { createNotification } = require("../controllers/NotificationUser");
+const { visibilityFilter,visibilityPostFilter } = require("../controllers/visibilityController");
 
 
 const multer = require("multer");
@@ -44,45 +46,50 @@ exports.createPost = [
     { name: "coverPhoto", maxCount: 1 },
     { name: "video", maxCount: 1 },
   ]),
-  async (req, res, next) => {
-    try {
-      const { title, description, location, category, subCategory, isBlog } =
-        req.body;
 
-      const mediaURLs = req.files["media"]
-        ? req.files["media"].map((file) => ({
-            path: file.path,
-            public_id: file.filename,
-          }))
-        : [];
-      const coverPhotoURL = req.files["coverPhoto"]
+  async (req, res) => {
+    try {
+      const {
+        title,
+        description,
+        location,
+        category,
+        subCategory,
+        isBlog,
+        invitation,
+        isCollaborated
+      } = req.body;
+
+      // Parse and structure media files
+      const mediaURLs = req.files["media"]?.map((file) => ({
+        path: file.path,
+        public_id: file.filename,
+      })) || [];
+
+      const coverPhotoURL = req.files["coverPhoto"]?.[0]
         ? {
             path: req.files["coverPhoto"][0].path,
             public_id: req.files["coverPhoto"][0].filename,
           }
         : null;
-        
-      const videoURL = req.files["video"]
+
+      const videoURL = req.files["video"]?.[0]
         ? {
             path: req.files["video"][0].path,
             public_id: req.files["video"][0].filename,
           }
         : null;
 
-   
-          
-        let postType = "";
-        if (isBlog === "true" ||isBlog === 'true' || isBlog === true) {
-          postType = "blog";
-        } else if (videoURL) {
-          postType = "video";
-        } else if (mediaURLs.length > 0) {
-          postType = "image";
-        }else {
-          postType = "unknown"; // or any other default you want
-        }
+      // Determine post type
+      const postType = isBlog === "true" || isBlog === true
+        ? "blog"
+        : videoURL
+        ? "video"
+        : mediaURLs.length > 0
+        ? "image"
+        : "unknown";
 
-
+      // Create new post
       const newPost = await Post.create({
         user: req.user._id,
         title,
@@ -99,22 +106,40 @@ exports.createPost = [
         isBlocked: false,
         sensitive: false,
         isBlog,
+        isCollaborated,
+        invitation: Array.isArray(invitation) ? invitation : [invitation],
         mediatype: postType,
       });
 
-      if (newPost) {
-        res
-          .status(201)
-          .json({ message: "Post created successfully", data: newPost });
-      } else {
-        res.status(400).json({ message: "Page creation failed" });
+      if (!newPost) {
+        return res.status(400).json({ message: "Post creation failed" });
       }
+
+      // Handle invitations and notifications
+      if (Array.isArray(invitation)) {
+        await Promise.all(
+          invitation.map(async (id) => {
+            await createNotification(
+              id,
+              req.user._id,
+              "collab",
+              `${req.user.name} has sent collabutation request.`
+            );
+          })
+        );
+      }
+
+      res.status(201).json({
+        message: "Post created successfully",
+        data: newPost,
+      });
     } catch (error) {
-      console.error("Error creating post:", error.message);
+      console.error("Error creating post:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   },
 ];
+
 
 // exports.getPostById = async (req, res) => {
 //   try {
@@ -134,41 +159,48 @@ exports.createPost = [
 //   }
 // };
 
-
-exports. getPostById = async (req, res) => {
+exports.getPostById = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.postId).populate(
-      "user",
-      "name username profileImg"
-    );
+    const userId = req.user._id;
+    const postId = req.params.postId;
+
+    // Fetch the post and populate user details
+    const post = await Post.findById(postId).populate("user", "name username profileImg");
 
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
 
+    // Check visibility of the post for the user
+    const visiblePost = await visibilityPostFilter(post, userId);
+    if (!visiblePost) {
+      return res.status(403).json({ message: "You are not authorized to view this post." });
+    }
+
+    // Check the friendship status between the user and the post's owner
     const friendship = await Friendship.findOne({
       $or: [
-        { requester: req.user._id, recipient: post.user._id },
-        { requester: post.user._id, recipient: req.user._id },
+        { requester: userId, recipient: post.user._id },
+        { requester: post.user._id, recipient: userId },
       ],
     });
 
-    let friendshipStatus = 'none';
+    let friendshipStatus = "none";
     if (friendship) {
-      friendshipStatus = friendship.status === 'accepted' ? 'looped' :
-                         friendship.status === 'pending' ? 'requested' : 'none';
+      friendshipStatus =
+        friendship.status === "accepted" ? "looped" :
+        friendship.status === "pending" ? "requested" : "none";
     }
 
-    
-    res.status(200).json({ 
-      data: post, 
-      friendshipStatus, 
-      message: "successful" 
+    // Respond with the post and friendship status
+    res.status(200).json({
+      data: visiblePost,
+      friendshipStatus,
+      message: "Successful",
     });
-
   } catch (error) {
     console.error("Error fetching post:", error);
-    res.status(500).json({ error: "An error occurred while fetching posts" });
+    res.status(500).json({ error: "An error occurred while fetching the post." });
   }
 };
 
@@ -186,10 +218,10 @@ exports.getPosts = async (req, res) => {
     })
       .populate("user", "name username profileImg") // Populate user details
       .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 }); // Apply sorting criteria
-
+    const filterData= await visibilityFilter(posts,userId)
     // Respond with posts or a clear message if no posts are found
     if (posts && posts.length > 0) {
-      return res.status(200).json({ message:"Successful",data:posts});
+      return res.status(200).json({ message:"Successful",data:filterData});
     } else {
       return res.status(404).json({ message: "No posts found" });
     }
@@ -950,3 +982,46 @@ exports.iLikedPost = async (req,res)=>{
 
   const likedPosts= []
 }
+
+exports.changeStatusCollaboration = async (req, res) => {
+  try {
+    const { postId, status } = req.params; // Extract postId and status from params
+    const userId = req.user._id; // Get userId from the authenticated user
+
+    // Find the post by ID
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    if(!post.invitation.includes(userId.toString())){
+  return res.status(404).json({ message: 'You Haven\'t any invitaton' });
+
+}
+    // Remove the userId from the invitation array
+    post.invitation = post.invitation.filter(id => id.toString() !== userId.toString());
+
+    // Handle the collaboration status
+    if (status === 'accept') {
+      // Add the userId to the user array if not already present
+      if (!post.user.includes(userId)) {
+        post.user.push(userId);
+      }
+    }
+
+    // Save the updated post
+    await post.save();
+
+    // Return success response based on the status
+    const message =
+      status === 'accept'
+        ? 'Collaboration accepted successfully'
+        : 'Collaboration declined successfully';
+
+    return res.status(200).json({ message });
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
