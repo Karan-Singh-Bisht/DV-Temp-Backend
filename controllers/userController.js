@@ -412,3 +412,8 @@ exports.allavatars = async (req, res) => {
     res.status(500).json({ message: "An error occurred while fetching avatars" }); // Send error response
   }
 };
+
+
+const test=()=>{
+  console.log("test fn");
+}
