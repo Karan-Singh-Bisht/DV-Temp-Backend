@@ -481,10 +481,10 @@ exports. likePost = async (req, res) => {
 
 
 
-
 // Get all posts
 exports.getAllPosts = async (req, res) => {
   try {
+    // Fetch posts that are not blocked or archived and populate the user field
     const posts = await Post.find({
       isBlocked: false,
       isArchived: false,
@@ -494,66 +494,48 @@ exports.getAllPosts = async (req, res) => {
       return res.status(404).json({ message: "No posts found" });
     }
 
+    // Map through posts to include friendship status
     const postsWithFriendshipStatus = await Promise.all(
       posts.map(async (post) => {
-        if (!post.user || !Array.isArray(post.user) || post.user.length === 0) {
-          return null; // Skip posts without valid users
+        const user = post.user;
+        if (!user) {
+          return null; // Skip posts with missing user data
         }
 
-        // Handle multiple users in `post.user`
-        const friendshipStatuses = await Promise.all(
-          post.user.map(async (user) => {
-            const friendship = await Friendship.findOne({
-              $or: [
-                { requester: req.user.id, recipient: user._id },
-                { requester: user._id, recipient: req.user.id },
-              ],
-            });
+        // Check friendship status between the logged-in user and the post's user
+        const friendship = await Friendship.findOne({
+          $or: [
+            { requester: req.user.id, recipient: user._id },
+            { requester: user._id, recipient: req.user.id },
+          ],
+        });
 
-            let friendshipStatus = "none";
-            if (friendship) {
-              friendshipStatus =
-                friendship.status === "accepted"
-                  ? "looped"
-                  : friendship.status === "pending"
-                  ? "requested"
-                  : "none";
-            }
+        let friendshipStatus = "none";
+        if (friendship) {
+          friendshipStatus =
+            friendship.status === "accepted"
+              ? "looped"
+              : friendship.status === "pending"
+              ? "requested"
+              : "none";
+        }
 
-            return { user, friendshipStatus };
-          })
-        );
-
-        // Return the post with users and their friendship statuses
+        // Return the post with friendship status
         return {
           ...post.toObject(),
-          usersWithFriendshipStatus: friendshipStatuses,
+          friendshipStatus,
         };
       })
     );
 
-    // Filter posts with at least one "looped" friendship status
-    const acceptedFriendPosts = postsWithFriendshipStatus.filter((post) => {
-      if (post) {
-        return post.usersWithFriendshipStatus.some(
-          (status) => status.friendshipStatus === "looped"
-        );
-      }
-      return false;
-    });
-
-    res.status(200).json({
-      count: acceptedFriendPosts.length,
-      data: acceptedFriendPosts,
-      message: "Successful",
-    });
+    // Filter out null posts and send the response
+    const validPosts = postsWithFriendshipStatus.filter((post) => post !== null);
+    res.status(200).json(validPosts);
   } catch (error) {
-    console.error("Error fetching all posts:", error);
-    res.status(500).json({ message: error.message });
+    console.error("Error fetching posts:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
 
 // Get all posts of a specific user by user ID
 exports.getPostsByUserId = async (req, res) => {
