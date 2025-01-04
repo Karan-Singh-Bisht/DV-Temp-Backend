@@ -20,7 +20,7 @@ const addOrUpdateIncludes = async (req, res) => {
 
     // Validate input
     if (!userId || !type || !includesArray || !Array.isArray(includesArray)) {
-      return res.status(400).json({ error: "Invalid input data" });
+      return res.status(400).json({ message: "Invalid input data" });
     }
 
     let updateFields;
@@ -29,7 +29,7 @@ const addOrUpdateIncludes = async (req, res) => {
     } else if (type === "excludes") {
       updateFields = { excludes: includesArray }; // Replace the excludes array
     } else {
-      return res.status(400).json({ error: "Invalid type value" });
+      return res.status(400).json({ message: "Invalid type value" });
     }
 
     // Find and update the document or create a new one
@@ -50,7 +50,7 @@ const addOrUpdateIncludes = async (req, res) => {
     console.error(error.message);
     res
       .status(500)
-      .json({ error: "An error occurred while adding/updating the entry" });
+      .json({ message: "An error occurred while adding/updating the entry" });
   }
 };
 

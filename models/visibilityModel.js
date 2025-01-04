@@ -9,7 +9,7 @@ const visibilitySchema = mongoose.Schema({
     type: {
         type: String,
         required: true,
-        enum: ["buddy", "includes", "exclude"], // Corrected enum values
+        enum: ["buddy", "includes", "excludes"], // Corrected enum values
     },
     includes: [
         {
