@@ -378,8 +378,6 @@ const updateVisibility = async (req, res) => {
 
 
 
-
-
 const getNearbyFriends = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -462,6 +460,98 @@ const getNearbyFriends = async (req, res) => {
   }
 };
 
+
+
+// const getNearbyFriends = async (req, res) => {
+//   try {
+//     const userId = req.user.id;
+//     const userMap = await UserMap.findOne({ user: userId });
+
+//     if (!userMap || !userMap.currentLocation) {
+//       return res.status(422).json({
+//         success: false,
+//         message: "Your location is not set"
+//       });
+//     }
+
+//     const radiusInKm = 100;
+//     // Use a more precise conversion: 1 degree latitude ≈ 111km
+//     const latitudeDegrees = radiusInKm / 111.0;
+//     // Longitude degrees vary with latitude, so adjust the calculation
+//     const longitudeDegrees = radiusInKm / (111.0 * Math.cos(userMap.currentLocation.latitude * Math.PI / 180));
+
+//     const nearbyFriends = await UserMap.find({
+//       user: { $ne: userId },
+//       'currentLocation.isSharing': true,
+//       $or: [
+//         { visibility: 'everyone' },
+//         { visibility: 'selected_buddies', selectedBuddies: userId },
+//         { 
+//           visibility: 'excluded_buddies',
+//           excludedBuddies: { $ne: userId }
+//         }
+//       ],
+//       // More precise bounding box
+//       'currentLocation.latitude': {
+//         $gte: userMap.currentLocation.latitude - latitudeDegrees,
+//         $lte: userMap.currentLocation.latitude + latitudeDegrees
+//       },
+//       'currentLocation.longitude': {
+//         $gte: userMap.currentLocation.longitude - longitudeDegrees,
+//         $lte: userMap.currentLocation.longitude + longitudeDegrees
+//       }
+//     }).populate({
+//       path: 'user',
+//       select: '_id name username profileImg'
+//     });
+
+//     const validFriends = nearbyFriends.filter(friend => 
+//       friend && friend.user && friend.user._id && friend.currentLocation
+//     );
+
+//     const nearbyFriendsWithDistance = validFriends
+//       .map(friend => {
+//         try {
+//           const distance = Math.round(calculateDistance(
+//             userMap.currentLocation.latitude,
+//             userMap.currentLocation.longitude,
+//             friend.currentLocation.latitude,
+//             friend.currentLocation.longitude
+//           ) * 10) / 10;
+
+//           // Only include friends within exactly 100km
+//           if (distance > radiusInKm) {
+//             return null;
+//           }
+
+//           return {
+//             userId: friend.user._id,
+//             name: friend.user.name || 'Unknown',
+//             username: friend.user.username || 'Unknown',
+//             profileImg: friend.user.profileImg || '',
+//             latitude: friend.currentLocation.latitude,
+//             longitude: friend.currentLocation.longitude,
+//             distance
+//           };
+//         } catch (error) {
+//           return null;
+//         }
+//       })
+//       .filter(friend => friend !== null)
+//       .sort((a, b) => a.distance - b.distance);
+
+//     return res.status(200).json({
+//       success: true,
+//       nearby: nearbyFriendsWithDistance
+//     });
+
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: "Error fetching nearby friends"
+//     });
+//   }
+// };
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -675,15 +765,153 @@ const getPlacesByCategory = async (req, res) => {
 
 
 
+const getAllNearbyPlaces = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const maxDistance = 5; // 5 kilometers
+
+       
+        const userMap = await UserMap.findOne({ user: userId });
+        if (!userMap?.currentLocation) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please update your location first'
+            });
+        }
+
+        const lat = userMap.currentLocation.latitude;
+        const lon = userMap.currentLocation.longitude;
+        const offset = 0.045; // Approximately 5km in degrees
+
+     
+        const allPlacesPromises = Object.keys(placeCategories).map(async (category) => {
+            const url = new URL('https://nominatim.openstreetmap.org/search');
+            url.search = new URLSearchParams({
+                format: 'json',
+                amenity: placeCategories[category].type,
+                lat: lat,
+                lon: lon,
+                countrycodes: 'in',
+                addressdetails: 1,
+                bounded: 1,
+                limit: 10, 
+                viewbox: `${lon - offset},${lat - offset},${lon + offset},${lat + offset}`,
+                dedupe: 1,
+                extratags: 1,
+                namedetails: 1,
+                'accept-language': 'en'
+            });
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'User-Agent': 'DeVi-Backend'
+                    }
+                });
+
+                if (!response.ok) {
+                    return [];
+                }
+
+                const data = await response.json();
+
+                return data
+                    .filter(place => {
+                        const name = place.display_name.split(',')[0].toLowerCase();
+                        return name !== 'hospital' && 
+                               name !== 'clinic' && 
+                               name.length > 3;
+                    })
+                    .map(place => {
+                        const distance = calculateDistance(
+                            lat,
+                            lon,
+                            parseFloat(place.lat),
+                            parseFloat(place.lon)
+                        );
+
+                        
+                        if (distance > maxDistance) {
+                            return null;
+                        }
+
+                        const addressParts = [
+                            place.address?.road,
+                            place.address?.suburb,
+                            place.address?.city
+                        ].filter(Boolean);
+
+                        return {
+                            id: place.place_id,
+                            category: category,
+                            categoryName: category.replace('_', ' ').toUpperCase(),
+                            categoryIcon: placeCategories[category].icon,
+                            name: place.display_name.split(',')[0],
+                            location: {
+                                latitude: parseFloat(place.lat),
+                                longitude: parseFloat(place.lon)
+                            },
+                            address: addressParts.join(', '),
+                            distance: distance,
+                            contact: {
+                                phone: place.extratags?.phone || 
+                                      place.extratags?.['contact:phone'] || 
+                                      place.extratags?.['contact:mobile'],
+                                website: place.extratags?.website || 
+                                        place.extratags?.['contact:website'] || 
+                                        place.extratags?.['url'],
+                                email: place.extratags?.['contact:email'] || null
+                            },
+                            openingHours: place.extratags?.opening_hours || null,
+                            rating: place.extratags?.['rating'] || null
+                        };
+                    })
+                    .filter(place => place !== null);
+            } catch (error) {
+                console.error(`Error fetching places for category ${category}:`, error);
+                return [];
+            }
+        });
+
+        const allPlacesArrays = await Promise.all(allPlacesPromises);
+        const allPlaces = allPlacesArrays.flat();
+
+     
+        allPlaces.sort((a, b) => a.distance - b.distance);
+
+        res.json({
+            success: true,
+            data: {
+                userLocation: {
+                    latitude: lat,
+                    longitude: lon
+                },
+                places: allPlaces
+            }
+        });
+
+    } catch (error) {
+        console.error('Error in getAllNearbyPlaces:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching nearby places'
+        });
+    }
+};
+
+
 
 module.exports = {
-  updateCurrentLocation,
-  getMyLocation,
-  getFriendLocation,
-  toggleSaveLocation,
-  getSavedLocations,
-  updateVisibility,
-  getNearbyFriends,
-  getPlaceCategories,
-  getPlacesByCategory
+    updateCurrentLocation,
+    getMyLocation,
+    getFriendLocation,
+    toggleSaveLocation,
+    getSavedLocations,
+    updateVisibility,
+    getNearbyFriends,
+    getPlaceCategories,
+    getPlacesByCategory,
+    getAllNearbyPlaces
 };
+
+
