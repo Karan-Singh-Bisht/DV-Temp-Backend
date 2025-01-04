@@ -23,4 +23,7 @@ router.get('/categories', userAuthMiddleware, userMapController.getPlaceCategori
 
 router.get('/places/:category', userAuthMiddleware, userMapController.getPlacesByCategory);
 
+router.get('/nearby/places', userAuthMiddleware, userMapController.getAllNearbyPlaces);
+
+
 module.exports = router;
