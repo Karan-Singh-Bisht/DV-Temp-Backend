@@ -375,7 +375,7 @@ const getNearbyFriends = async (req, res) => {
       });
     }
 
-    const radiusInKm = 100;
+    const radiusInKm = 1000;
     const radiusInRadians = radiusInKm / 6371;
 
     const nearbyFriends = await UserMap.find({
