@@ -164,7 +164,6 @@ const toggleSaveLocation = async (req, res) => {
     const { locationId } = req.params;
     const { latitude, longitude, name, description, locationType, friendId } = req.body;
 
- 
     if (!latitude || !longitude || !name || !locationType) {
       return res.status(422).json({
         success: false,
@@ -204,34 +203,20 @@ const toggleSaveLocation = async (req, res) => {
     );
 
     if (existingLocations.length > 0) {
-      const keepLocation = existingLocations[0];
       
       userMap.locations = userMap.locations.filter(loc => 
         !(loc.latitude === latitude && 
           loc.longitude === longitude && 
-          loc.name === name) ||
-        loc._id.toString() === keepLocation._id.toString()
+          loc.name === name)
       );
-
-
-      keepLocation.isSaved = !keepLocation.isSaved;
-      keepLocation.description = description; 
-      keepLocation.locationType = locationType; 
-      if (locationType === "friend") {
-        keepLocation.friendId = friendId;
-      }
 
       await userMap.save();
 
       return res.status(200).json({
         success: true,
-        location: keepLocation,
-        message: keepLocation.isSaved ? 
-          "Location saved successfully" : 
-          "Location unsaved successfully"
+        message: "Location removed successfully"
       });
     } else {
-     
       const newLocation = {
         latitude,
         longitude,
@@ -390,7 +375,7 @@ const getNearbyFriends = async (req, res) => {
       });
     }
 
-    const radiusInKm = 100;
+    const radiusInKm = 1000;
     const radiusInRadians = radiusInKm / 6371;
 
     const nearbyFriends = await UserMap.find({
