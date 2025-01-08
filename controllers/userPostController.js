@@ -59,6 +59,7 @@ exports.createPost = [
         invitation,
         isCollaborated
       } = req.body;
+
       // Parse and structure media files
       const mediaURLs = req.files["media"]?.map((file) => ({
         path: file.path,
@@ -106,7 +107,7 @@ exports.createPost = [
         sensitive: false,
         isBlog,
         isCollaborated,
-        invitation: Array.isArray(invitation) ? invitation : [invitation],
+        invitation:invitation ,
         mediatype: postType,
       });
 
