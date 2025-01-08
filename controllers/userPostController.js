@@ -107,7 +107,7 @@ exports.createPost = [
         sensitive: false,
         isBlog,
         isCollaborated,
-        mediaType: postType,
+        mediatype: postType,
         invitation:invitation ,
       });
 

@@ -84,7 +84,7 @@ const userPostSchema = new mongoose.Schema(
     isBlog: {
       type: Boolean,
     },
-    mediaType: {
+    mediatype: {
       type: String,
     },
     pinned: {
