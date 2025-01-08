@@ -88,7 +88,7 @@ exports.createPost = [
         : mediaURLs.length > 0
         ? "image"
         : "unknown";
-
+      
       // Create new post
       const newPost = await Post.create({
         user: req.user._id,
@@ -107,8 +107,8 @@ exports.createPost = [
         sensitive: false,
         isBlog,
         isCollaborated,
+        mediaType: postType,
         invitation:invitation ,
-        mediatype: postType,
       });
 
       if (!newPost) {
