@@ -59,7 +59,6 @@ exports.createPost = [
         invitation,
         isCollaborated
       } = req.body;
-
       // Parse and structure media files
       const mediaURLs = req.files["media"]?.map((file) => ({
         path: file.path,
@@ -530,7 +529,7 @@ exports.getAllPosts = async (req, res) => {
 
     // Filter out null posts and send the response
     const validPosts = postsWithFriendshipStatus.filter((post) => post !== null);
-    res.status(200).json(validPosts);
+    res.status(200).json({data:validPosts});
   } catch (error) {
     console.error("Error fetching posts:", error);
     res.status(500).json({ message: "Internal server error" });
