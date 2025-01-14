@@ -218,10 +218,13 @@ exports.getPosts = async (req, res) => {
     })
       .populate("user", "name username profileImg") // Populate user details
       .sort({ pinned: -1, pinnedAt: -1, createdAt: -1 }); // Apply sorting criteria
-    const filterData= await visibilityFilter(posts,userId)
+
+      
+    // const filterData= await visibilityFilter(posts,userId)
+
     // Respond with posts or a clear message if no posts are found
     if (posts && posts.length > 0) {
-      return res.status(200).json({ message:"Successful",data:filterData});
+      return res.status(200).json({ message:"Successful",data:posts});
     } else {
       return res.status(404).json({ message: "No posts found" });
     }
