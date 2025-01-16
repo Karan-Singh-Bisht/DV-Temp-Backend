@@ -214,6 +214,7 @@ exports.getPosts = async (req, res) => {
     const posts = await Post.find({
       user: userId,
       isBlocked: false,
+      isDeleted: false,
       isArchived: false,
     })
       .populate("user", "name username profileImg") // Populate user details
