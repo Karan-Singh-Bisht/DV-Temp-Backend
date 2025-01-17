@@ -28,7 +28,7 @@ const addOrUpdateIncludes = async (req, res) => {
       updateFields = { includes: includesArray }; // Replace the includes array
     } else if (type === "excludes") {
       updateFields = { excludes: includesArray }; // Replace the excludes array
-    } else {
+    } else if(type!=='buddy') {
       return res.status(400).json({ message: "Invalid type value" });
     }
 
