@@ -143,6 +143,7 @@ const addNewPage = async (req, res) => {
     });
   }
 };
+
 const updatePage = async (req, res) => {
   try {
     const allowedFields = [
@@ -157,17 +158,51 @@ const updatePage = async (req, res) => {
       "profileBackground",
       "profileImg",
       "coPartner",
-      "profileAvatar",
       "isPrivate",
     ];
 
-    // Filter only the fields that are present in req.body
+    // Check for required fields
+    if (!req.body.pageId) {
+      return res.status(400).json({ message: "Page ID is required" });
+    }
+
+    if (!req.user?._id) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const avatarFile = req.files?.avatar?.[0];
+    let profileAvatar = null;
+
+    // Process avatar file if present
+    if (avatarFile) {
+      if (!avatarFile.path || !avatarFile.filename) {
+        return res.status(400).json({ message: "Invalid avatar file" });
+      }
+      profileAvatar = {
+        path: avatarFile.path,
+        public_id: avatarFile.filename,
+      };
+    }
+
+    // Filter fields from req.body
     const updateData = allowedFields.reduce((acc, field) => {
       if (req.body[field] !== undefined) {
         acc[field] = req.body[field];
       }
       return acc;
     }, {});
+
+    // Add profileAvatar if exists
+    if (profileAvatar) {
+      updateData.profileAvatar = profileAvatar;
+    }
+
+    // Check if updateData is empty
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: "No valid fields to update" });
+    }
+
+    // Update the page
     const updatedPage = await Pages.findOneAndUpdate(
       { _id: req.body.pageId, userId: req.user._id },
       updateData,
@@ -175,18 +210,19 @@ const updatePage = async (req, res) => {
         new: true, // Return the updated document
       }
     );
-    console.log(updatedPage);
+
     if (!updatedPage) {
-      return res.status(404).json({ message: "Page  not found" });
+      return res.status(404).json({ message: "Page not found" });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Page Updated successfully",
+      message: "Page updated successfully",
       data: updatedPage,
     });
   } catch (error) {
-    return res.status(500).json({ message: "Error updating user", error });
+    console.error("Error updating page:", error);
+    return res.status(500).json({ message: "Error updating page", error });
   }
 };
 

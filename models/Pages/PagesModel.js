@@ -44,7 +44,12 @@ const PagesSchema = new mongoose.Schema(
       requried: true,
     },
     profileAvatar: {
-      type: String,
+      path:{
+        type:String
+      },
+      public_id:{
+        type:String
+      }
     },
     isActive: {
       type: Boolean,

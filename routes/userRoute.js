@@ -11,7 +11,7 @@ const {
   allavatars
 } = require('../controllers/userController');
 const reportController= require('../controllers/reportController')
-
+const {uploadAvatarMulter}=require('../middlewares/multer')
 const { sendFriendRequest, acceptFriendRequest, declineFriendRequest, checkFriendshipStatus, listFriends,unfriendUser, getIncomingFriendRequests, handleFriendRequestOrUnfriend,updateUserBlockEntry,accountBlockedList } = require('../controllers/friendshipController');
 const PagesController= require('../controllers/Pages/PagesController')
 const PageActionsController= require('../controllers/Pages/PageActionsController')
@@ -59,7 +59,7 @@ router.post('/users/blockedlistuser', userAuthMiddleware,accountBlockedList)
 //account creation 
 router.get('/users/getallpages/:userPageId/:pageId',userAuthMiddleware,PagesController.getAllpages)
 router.post('/users/addnewpage',userAuthMiddleware, PagesController.addNewPage)
-router.patch ('/users/updatepage',userAuthMiddleware, PagesController.updatePage)
+router.patch ('/users/updatepage',userAuthMiddleware,uploadAvatarMulter, PagesController.updatePage)
 router.get ('/users/togglepagestatus/:pageId',userAuthMiddleware, PagesController.togglePageStatus)
 router.get('/users/searchpages/:search/:pageId',userAuthMiddleware, PagesController.searchPages)
 router.get ('/users/getpage/:userPageId/:pageId',userAuthMiddleware, PagesController.getPage)
