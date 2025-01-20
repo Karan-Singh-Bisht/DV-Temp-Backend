@@ -43,7 +43,7 @@ const PagesSchema = new mongoose.Schema(
       type: String,
       requried: true,
     },
-    profileAvathar: {
+    profileAvatar: {
       type: String,
     },
     isActive: {

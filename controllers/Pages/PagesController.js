@@ -157,7 +157,7 @@ const updatePage = async (req, res) => {
       "profileBackground",
       "profileImg",
       "coPartner",
-      "profileAvathar",
+      "profileAvatar",
       "isPrivate",
     ];
 
