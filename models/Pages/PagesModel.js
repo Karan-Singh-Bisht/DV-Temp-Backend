@@ -43,6 +43,9 @@ const PagesSchema = new mongoose.Schema(
       type: String,
       requried: true,
     },
+    profileAvathar: {
+      type: String,
+    },
     isActive: {
       type: Boolean,
       default: true,
