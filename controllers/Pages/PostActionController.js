@@ -83,7 +83,7 @@ const allArchivedPost = async (req, res) => {
     const allArchivedData = await PostModel.find({
       pageId,
       isArchive: true,
-    }).populate("pageId", "pageName userName profileImg");
+    }).populate("pageId", "pageName date_of_birth userName profileImg");
     if (allArchivedData) {
       return res
         .status(200)
