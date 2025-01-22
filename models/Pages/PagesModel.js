@@ -46,7 +46,14 @@ const PagesSchema = new mongoose.Schema(
     date_of_birth: {
       type: String,
       requried: true,
+
     },
+    gender: {
+      type: String,
+      requried: true,
+
+    },
+    
     profileAvatar: {
       path:{
         type:String

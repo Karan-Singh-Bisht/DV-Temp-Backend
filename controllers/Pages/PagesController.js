@@ -34,7 +34,7 @@ const getAllpages = async (req, res) => {
   try {
     const allPages = await Pages.find().populate(
       "pages",
-      "pageName date_of_birth userName profileImg"
+      "pageName date_of_birth gender userName profileImg"
     );
     const pageId = req.params.pageId;
     const userPageId = req.params.userPageId;
@@ -101,11 +101,12 @@ const addNewPage = async (req, res) => {
       isCreator,
       profileImg,
       date_of_birth,
+      gender,
       profileBackground,
     } = req.body;
 
     const userId = req.user._id;
-    const PageData = {
+    let PageData = {
       userId,
       pageName,
       userName,
@@ -117,8 +118,11 @@ const addNewPage = async (req, res) => {
       isCreator,
       profileImg,
       date_of_birth,
+      gender,
       profileBackground,
     };
+    
+  
     const newPage = new Pages(PageData);
     const savePageData = await newPage.save();
     if (savePageData) {
@@ -160,6 +164,7 @@ const updatePage = async (req, res) => {
       "profileBackground",
       "profileImg",
       "date_of_birth",
+      "gender",
       "coPartner",
       "isPrivate",
     ];

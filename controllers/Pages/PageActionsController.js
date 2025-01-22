@@ -267,7 +267,7 @@ const pageBlockedList = async (req, res) => {
     const blockList = await PageActions.findOne(
       { pageId }, 
       { blockedList: 1 } // Select only the blockedList field
-    ).populate( "blockedList", "pageName date_of_birth userName profileImg"  );
+    ).populate( "blockedList", "pageName date_of_birth gender userName profileImg"  );
 
     if (!blockList) {
       return res.status(404).json({ message: "Page not found or no blocked list available." });

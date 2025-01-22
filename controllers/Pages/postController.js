@@ -203,7 +203,7 @@ console.log(cadURL);
 const getPostById = async (req, res) => {
   try {
     const id = req.params.postId;
-    const post = await PostModel.findById(id).populate("pageId", "pageName date_of_birth userName profileImg");
+    const post = await PostModel.findById(id).populate("pageId", "pageName date_of_birth gender userName profileImg");
     if (post) {
       return res.status(200).json({
         data: post,
@@ -231,7 +231,7 @@ const getPosts = async (req, res) => {
     const allPagePosts = await PostModel.find({
       pageId,
       isArchive: false,
-    }).sort({ pinned: -1, pinnedAt: -1 ,createdAt:-1 }).populate("pageId", "pageName date_of_birth userName profileImg");
+    }).sort({ pinned: -1, pinnedAt: -1 ,createdAt:-1 }).populate("pageId", "pageName  userName profileImg");
 
     if (allPagePosts) {
       return res.status(200).json({
@@ -256,7 +256,7 @@ const getPosts = async (req, res) => {
 
 const getAllPosts = async (req, res) => {
   try {
-    const allPagePosts = await PostModel.find({ isArchive: false }).populate("pageId", "pageName date_of_birth userName profileImg");
+    const allPagePosts = await PostModel.find({ isArchive: false }).populate("pageId", "pageName date_of_birth gender userName profileImg");
     if (allPagePosts) {
       return res.status(200).json({
         data: allPagePosts,
@@ -321,7 +321,7 @@ const updatePost = async (req, res) => {
         isBlog,
       },
       { new: true } // This returns the updated document
-    ).populate("pageId", "pageName date_of_birth userName profileImg");
+    ).populate("pageId", "pageName date_of_birth gender userName profileImg");
     if (updatePost) {
       res.status(200).json({
         data: updatedPost,
@@ -370,7 +370,7 @@ const getAllDeletedPosts = async (req, res) => {
     const { pageId } = req.params;
 
     // Fetch all posts with the specified `pageId` and `isDeleted: true`
-    const deletedPosts = await PostModel.find({ pageId, isDeleted: true }).populate("pageId", "pageName date_of_birth userName profileImg");
+    const deletedPosts = await PostModel.find({ pageId, isDeleted: true }).populate("pageId", "pageName date_of_birth gender userName profileImg");
 
     // Check if deleted posts are found
     if (!deletedPosts.length) {
@@ -447,7 +447,7 @@ const getCombinedPosts = async (req, res) => {
   try {
     
     const allPagePosts = await PostModel.find({ isArchive: false })
-      .populate("pageId", "pageName date_of_birth userName profileImg")
+      .populate("pageId", "pageName date_of_birth gender userName profileImg")
       .lean();
 
     
