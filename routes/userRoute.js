@@ -10,8 +10,10 @@ const {
   signoutUser,
   allavatars
 } = require('../controllers/userController');
+
+const musicController= require("../controllers/musicLirbrarycontroller")
 const reportController= require('../controllers/reportController')
-const {uploadAvatarMulter}=require('../middlewares/multer')
+const {uploadAvatarMulter,uploadPostMedia}=require('../middlewares/multer')
 const { sendFriendRequest, acceptFriendRequest, declineFriendRequest, checkFriendshipStatus, listFriends,unfriendUser, getIncomingFriendRequests, handleFriendRequestOrUnfriend,updateUserBlockEntry,accountBlockedList } = require('../controllers/friendshipController');
 const PagesController= require('../controllers/Pages/PagesController')
 const PageActionsController= require('../controllers/Pages/PageActionsController')
@@ -91,5 +93,8 @@ router.post('/users/countnotification',userAuthMiddleware,notifcations.getUnread
 router.post('/users/allavatar',userAuthMiddleware,allavatars)
 
 
+//add music 
+router.post('/users/upload-music',userAuthMiddleware,uploadPostMedia,musicController.uploadMusicLibrary)
+router.post('/users/getmusic',userAuthMiddleware,musicController.fetchAllMusic)
 
 module.exports = router;

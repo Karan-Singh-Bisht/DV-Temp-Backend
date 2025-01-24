@@ -13,6 +13,7 @@ const createPost = async (req, res) => {
       location,
       category,
       subCategory,
+     
       isBlog,
      
       coPartner

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const CustomPageAvatarSchema = new mongoose.Schema({
+const PageProfilePictureSchema = new mongoose.Schema({
   pageId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Pages" 
@@ -21,5 +21,6 @@ const CustomPageAvatarSchema = new mongoose.Schema({
   },
 });
 
-const CustomPageAvatar = mongoose.model('CustomPageAvatar', CustomPageAvatarSchema)
-module.exports = CustomPageAvatar;
+const PageProfilePicture = mongoose.model('PageProfilePicture ', PageProfilePictureSchema)
+
+module.exports = PageProfilePicture;

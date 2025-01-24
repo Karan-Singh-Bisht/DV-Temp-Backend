@@ -57,6 +57,7 @@ exports.createPost = [
         subCategory,
         isBlog,
         invitation,
+        music,
         isCollaborated
       } = req.body;
 
@@ -98,6 +99,7 @@ exports.createPost = [
         coverPhoto: coverPhotoURL,
         video: videoURL,
         location,
+        music,
         category: Array.isArray(category) ? category : [],
         subCategory: Array.isArray(subCategory) ? subCategory : [],
         likes: [],

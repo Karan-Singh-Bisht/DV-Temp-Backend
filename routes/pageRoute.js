@@ -1,6 +1,7 @@
 const postController = require("../controllers/Pages/postController");
 const pageController = require("../controllers/Pages/PagesController");
 const PostActionController= require('../controllers/Pages/PostActionController')
+const Page= require('../models/Pages/PagesModel')
 const express = require("express");
 const router = express.Router();
 const userAuthMiddleware = require('../middlewares/userAuthMiddleware');
@@ -45,4 +46,28 @@ router.post('/page/reportpage',userAuthMiddleware,pageController.reportpage)
 router.get('/pages/getallavatarpage/:pageId',userAuthMiddleware, pageController.getAllAvatar)
 router.post('/pages/upload-customavatar',userAuthMiddleware,uploadAvatarMulter, pageController.addCustomAvatar)
 
+router.post("/add-fields-to-documents", async (req, res) => {
+      try {
+        // Fields to check and add with default values
+        const defaultFields = {
+          date_of_birth: '1995-08-15', // Default value for date_of_birth
+          gender: "male", // Default value for gender
+        };
+    
+        // Update documents to include missing fields
+        const result = await Page.updateMany(
+            { date_of_birth: { $exists: false } }, // Match documents where the field does not exist
+            { $set: { date_of_birth: "1995-08-15", gender: "Male" } }, // Add the missing fields with default values
+            { multi: true } // Update multiple documents
+          );
+          
+        res.status(200).json({
+          message: "Fields added to documents (if missing).",
+          modifiedCount: result.modifiedCount,
+        });
+      } catch (error) {
+        console.error("Error updating documents:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
+    });
 module.exports = router;

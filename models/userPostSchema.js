@@ -50,6 +50,10 @@ const userPostSchema = new mongoose.Schema(
         type: String,
       },
     },
+    music:{
+      type:String,
+      default:null
+    },
     location: {
       type: String,
     },
