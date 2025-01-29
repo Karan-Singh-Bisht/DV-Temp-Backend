@@ -1,21 +1,21 @@
-
-const express = require('express');
-const connectDB = require('./config/db');
-const morgan = require('morgan');
-const adminRoutes = require('./routes/adminRoute');
-const userRoutes = require('./routes/userRoute');
-const contactRoutes = require('./routes/contactRoute');
-const pageRoute = require('./routes/pageRoute');
-const userPostRoutes = require('./routes/userPostRoute');
-const userChatRoute = require('./routes/userChatRoute');
-const userMapRoutes = require('./routes/userMapRoute'); 
-const cors = require('cors');
-const http = require('http');
-const { setupSocket } = require('./socketServer');
-const { setupSocket1 } = require('./socketServer1');
-require('dotenv').config();
-const{setupCronJobs}=require('./controllers/cronJobController')
-
+const express = require("express");
+const connectDB = require("./config/db");
+const morgan = require("morgan");
+const adminRoutes = require("./routes/adminRoute");
+const userRoutes = require("./routes/userRoute");
+const userStoryRoutes = require("./routes/userStory");
+const contactRoutes = require("./routes/contactRoute");
+const pageRoute = require("./routes/pageRoute");
+const userPostRoutes = require("./routes/userPostRoute");
+const userChatRoute = require("./routes/userChatRoute");
+const userMapRoutes = require("./routes/userMapRoute");
+const cors = require("cors");
+const http = require("http");
+const { setupSocket } = require("./server/socketServer");
+const { setupSocket1 } = require("./server/socketServer1");
+const { setupSocketPage } = require("./server/socketServer1");
+require("dotenv").config();
+const { setupCronJobs } = require("./controllers/cronJobController");
 
 const app = express();
 const server = http.createServer(app);
@@ -28,26 +28,24 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan('dev')); 
+app.use(morgan("dev"));
 
-
-
-app.get('/', (req, res) => {
-  res.send('server ready');
+app.get("/", (req, res) => {
+  res.send("server ready");
 });
 
-
 const apiRoutes = express.Router();
-apiRoutes.use('/admin', adminRoutes);
+apiRoutes.use("/admin", adminRoutes);
 apiRoutes.use(userRoutes);
+apiRoutes.use(userStoryRoutes);
 apiRoutes.use(pageRoute);
-apiRoutes.use('/user/maps', userMapRoutes);
+apiRoutes.use("/user/maps", userMapRoutes);
 apiRoutes.use(contactRoutes);
-app.use('/api', apiRoutes);
-app.use('/contacts', contactRoutes);
+app.use("/api", apiRoutes);
+app.use("/contacts", contactRoutes);
 
-app.use('/api/user/posts', userPostRoutes);
-app.use('/api/user/chat', userChatRoute);
+app.use("/api/user/posts", userPostRoutes);
+app.use("/api/user/chat", userChatRoute);
 
 // Initialize Socket.IO
 setupSocket(server); // Pass the server to the Socket.IO setup function
@@ -79,10 +77,7 @@ app.post("/add-fields-to-documents", async (req, res) => {
   }
 });
 
-
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-
