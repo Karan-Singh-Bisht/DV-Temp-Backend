@@ -15,8 +15,6 @@ const { setupSocket } = require("./server/socketServer");
 const { setupSocket1 } = require("./server/socketServer1");
 const { setupSocketPage } = require("./server/socketServer1");
 require("dotenv").config();
-const { setupCronJobs } = require("./controllers/cronJobController");
-
 const app = express();
 const server = http.createServer(app);
 
@@ -50,7 +48,7 @@ app.use("/api/user/chat", userChatRoute);
 // Initialize Socket.IO
 setupSocket(server); // Pass the server to the Socket.IO setup function
 setupSocket1(server);
-setupCronJobs();
+
 
 app.post("/add-fields-to-documents", async (req, res) => {
   try {

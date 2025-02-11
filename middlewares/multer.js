@@ -52,17 +52,17 @@ const avatarStorage = new CloudinaryStorage({
   params: async (req, file) => {
     const folder = "avatars";
     const resource_type = "image";
-    const format = "png"; // Enforce PNG format for avatars
+    const format = null; // Allow various formats for avatars
 
     console.log(
-      `Uploading avatar of type: ${file.mimetype} to folder: ${folder} with format: ${format}`
+      `Uploading avatar of type: ${file.mimetype} to folder: ${folder} with format: ${format || "default"}`
     );
 
     return {
       folder,
       resource_type,
-      allowed_formats: ["png"],
-      format, // Enforce PNG format
+      allowed_formats: ["png", "jpg", "jpeg", "mp4", "mov", "mp3"],
+      format,
     };
   },
 });
@@ -70,8 +70,31 @@ const avatarStorage = new CloudinaryStorage({
 // Multer middleware for handling avatar uploads
 const uploadAvatarMulter = multer({
   storage: avatarStorage,
-}).fields([
-  { name: "avatar", maxCount: 1 }, // 1 avatar file
-]);
+}).fields([{ name: "avatar", maxCount: 1 }]);
 
-module.exports = { uploadPostMedia, uploadAvatarMulter  };
+// Configure Cloudinary storage for story uploads
+const storyStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    const folder = "story";
+    const resource_type = "image";
+    const format = "png"; // Enforce PNG format
+
+    console.log(
+      `Uploading story of type: ${file.mimetype} to folder: ${folder} with format: ${format}`
+    );
+
+    return {
+      folder,
+      resource_type,
+      allowed_formats: ["png"],
+      format,
+    };
+  },
+});
+
+const uploadStoryMulter = multer({
+  storage: storyStorage, // Use storyStorage instead of avatarStorage
+}).fields([{ name: "story", maxCount: 1 }]);
+
+module.exports = { uploadPostMedia, uploadAvatarMulter, uploadStoryMulter };
