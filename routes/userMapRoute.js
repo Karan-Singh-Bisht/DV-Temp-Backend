@@ -25,5 +25,12 @@ router.get('/places/:category', userAuthMiddleware, userMapController.getPlacesB
 
 router.get('/nearby/places', userAuthMiddleware, userMapController.getAllNearbyPlaces);
 
+// router.post("/poppins", userAuthMiddleware, userMapController.createStory);
+
+// router.get("/poppins/stories", userAuthMiddleware, userMapController.getStoriesByLocation);
+
+// router.get("/poppins/locations", userAuthMiddleware, userMapController.getStoryLocations);
+
+
 
 module.exports = router;
