@@ -1,7 +1,7 @@
 const NotificationUser = require("../models/NotificationUser");
 const User = require("../models/User");
 const Contact = require("../models/Contacts");
-const { sendNotification } = require("../socketServer");
+const { sendNotification } = require("../server/socketServer");
 const createNotification = async (receiverId, senderId, type, message) => {
   try {
     console.log("Received"); // Debug log to ensure function is called.
