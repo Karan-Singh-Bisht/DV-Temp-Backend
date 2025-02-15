@@ -3,6 +3,7 @@ const UserStory = require("../models/userStory");
 const addStory = async (req, res) => {
   try {
     const userId = req.user._id;
+    const { description } = req.body;
 
     const media = req.files["story"][0]
       ? {
@@ -18,17 +19,19 @@ const addStory = async (req, res) => {
     const newStory = new UserStory({
       userId,
       media,
+      description,
     });
 
     await newStory.save();
-    
-    return res.status(201).json({ message: "Story added successfully", story: newStory });
+
+    return res
+      .status(201)
+      .json({ message: "Story added successfully", story: newStory });
   } catch (error) {
     console.log(error.message);
     return res.status(500).json({ message: "Server error" });
   }
 };
-
 
 const deleteStory = async (req, res) => {
   try {
@@ -72,24 +75,25 @@ const markStoryAsRead = async (req, res) => {
   }
 };
 
-
 const getStoryViewers = async (req, res) => {
   try {
     const { storyId } = req.params;
 
-    const story = await UserStory.findById(storyId).populate("viewedBy", "name email profileImg"); // Fetching user details
+    const story = await UserStory.findById(storyId).populate(
+      "viewedBy",
+      "name email profileImg"
+    ); // Fetching user details
 
     if (!story) {
       return res.status(404).json({ message: "Story not found" });
     }
-    
+
     return res.status(200).json({ viewers: story.viewedBy });
   } catch (error) {
     console.log(error.message);
     return res.status(500).json({ message: "Server error" });
   }
 };
-
 
 const getAllStories = async (req, res) => {
   try {
@@ -100,8 +104,16 @@ const getAllStories = async (req, res) => {
     return res.status(200).json({ success: true, stories });
   } catch (error) {
     console.error("Error fetching stories:", error.message);
-    return res.status(500).json({ success: false, message: "Failed to fetch stories" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch stories" });
   }
 };
 
-module.exports = { addStory, deleteStory, markStoryAsRead,getStoryViewers,getAllStories };
+module.exports = {
+  addStory,
+  deleteStory,
+  markStoryAsRead,
+  getStoryViewers,
+  getAllStories,
+};

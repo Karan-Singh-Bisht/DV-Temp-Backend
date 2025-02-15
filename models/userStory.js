@@ -7,6 +7,9 @@ const UserStorySchema = new mongoose.Schema(
       path: { type: String, required: true },
       public_id: { type: String, required: true },
     },
+    description:{
+      type:String,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
