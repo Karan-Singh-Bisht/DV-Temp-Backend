@@ -1,9 +1,11 @@
 const UserMap = require('../models/userMap');
+// const PoppinsStory = require("../models/PoppinsStory");
+// const User = require("../models/userPage");
+//const User = require("../models/User")
+
 const { default: mongoose } = require('mongoose');
 
 const placeCategories = require('../utils/mapCategories');
-
-
 
 
 
@@ -809,4 +811,66 @@ module.exports = {
     getAllNearbyPlaces
 };
 
+// // Create a Poppins story
+// exports.createStory = async (req, res) => {
+//   try {
+//     const { pageId, images, description, visibility, category, hidePageName } = req.body;
+
+//     const page = await Page.findById(pageId);
+//     if (!page) return res.status(404).json({ message: "Page not found" });
+
+//     const userLocation = await UserMap.findOne({ userId: page.userId });
+//     if (!userLocation) return res.status(400).json({ message: "User location not found" });
+
+//     const story = new PoppinsStory({
+//       userId: page.userId,
+//       pageId,
+//       images,
+//       description,
+//       location: userLocation.location,
+//       visibility,
+//       category,
+//       hidePageName,
+//     });
+
+//     await story.save();
+//     res.status(201).json(story);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+// // Fetch stories by location
+// exports.getStoriesByLocation = async (req, res) => {
+//   try {
+//     const { longitude, latitude } = req.query;
+//     if (!longitude || !latitude) return res.status(400).json({ message: "Coordinates required" });
+
+//     const stories = await PoppinsStory.find({
+//       location: {
+//         $near: {
+//           $geometry: { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] },
+//           $maxDistance: 5000, // 5km radius
+//         },
+//       },
+//     });
+
+//     res.json(stories);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+// // Fetch locations with story counts
+// exports.getStoryLocations = async (req, res) => {
+//   try {
+//     const locations = await PoppinsStory.aggregate([
+//       { $group: { _id: "$location.coordinates", count: { $sum: 1 } } },
+//     ]);
+
+//     res.json(locations);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 
