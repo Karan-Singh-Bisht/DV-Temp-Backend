@@ -104,4 +104,35 @@ const getAllStories = async (req, res) => {
   }
 };
 
-module.exports = { addStory, deleteStory, markStoryAsRead,getStoryViewers,getAllStories };
+
+const getStoryByUserId = async (req, res) => {
+  try {
+      const { userId } = req.params;
+
+      const stories = await UserStory.find({ userId })
+          .sort({ createdAt: -1 }) // Sort by newest first
+          .populate('userId', 'username profileImg'); // Populate user details
+
+      if (!stories || stories.length === 0) {
+          return res.status(404).json({
+              success: false,
+              message: "No stories found for this user"
+          });
+      }
+
+      res.status(200).json({
+          success: true,
+          stories
+      });
+
+  } catch (error) {
+      console.error("Error fetching user's stories:", error);
+      res.status(500).json({
+          success: false,
+          message: "Internal server error"
+      });
+  }
+};
+
+
+module.exports = { addStory, deleteStory, markStoryAsRead,getStoryViewers,getAllStories,getStoryByUserId };

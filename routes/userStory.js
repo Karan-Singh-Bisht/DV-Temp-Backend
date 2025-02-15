@@ -7,7 +7,8 @@ const {
   deleteStory,
   markStoryAsRead,
   getStoryViewers,
-  getAllStories
+  getAllStories,
+  getStoryByUserId
 } = require("../controllers/userStoryController");
 
 const router = express.Router();
@@ -17,5 +18,7 @@ router.delete("/users/deletestory/:storyId", userAuthMiddleware, deleteStory);
 router.post("/users/markstoryasread/:storyId", userAuthMiddleware, markStoryAsRead);
 router.get("/users/storyviewers/:storyId", userAuthMiddleware, getStoryViewers);
 router.get("/users/stories", userAuthMiddleware, getAllStories);
+router.get("/users/story/:userId", userAuthMiddleware, getStoryByUserId);
+
 
 module.exports = router;
