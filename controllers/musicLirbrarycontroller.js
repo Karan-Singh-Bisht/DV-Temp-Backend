@@ -1,41 +1,82 @@
 const MusicLibrary = require('../models/musicLirbrary'); // Correct import path for your model
 
+// const uploadMusicLibrary = async (req, res) => {
+//     try {
+//         const { musicName, description } = req.body;
+
+//         const musicFile = req.files?.["music"]?.[0]; // Check if the file exists
+
+//         console.log(musicFile);
+        
+//         // Validate required fields
+//         if (!musicName || !musicFile) {
+//             return res.status(400).json({ message: "Music name and file are required." });
+//         }
+
+//         // Extract music file details
+//         const musicURL = {
+//             path: musicFile.path,
+//             public_id: musicFile.filename,
+//         };
+
+//         // Create a new music entry
+//         const uploadMusic = new MusicLibrary({
+//             musicName,
+//             description,
+//             musicAudio: musicURL, 
+//         });
+
+//         // Save to the database
+//         const savedMusic = await uploadMusic.save();
+
+//         // Send success response
+//         res.status(201).json({
+//             message: "Music uploaded successfully!",
+//             data: savedMusic,
+//         });
+//     } catch (error) {
+//         // Handle errors
+//         console.error("Error uploading music:", error);
+//         res.status(500).json({ message: "Failed to upload music.", error });
+//     }
+// };
+
+
 const uploadMusicLibrary = async (req, res) => {
     try {
         const { musicName, description } = req.body;
+        const musicFile = req.files?.["music"]?.[0];
 
-        const musicFile = req.files?.["music"]?.[0]; // Check if the file exists
-
-        console.log(musicFile);
-        
-        // Validate required fields
         if (!musicName || !musicFile) {
             return res.status(400).json({ message: "Music name and file are required." });
         }
 
-        // Extract music file details
+        // Upload to Cloudinary as an "audio" resource
+        const uploadResponse = await cloudinary.uploader.upload(musicFile.path, {
+            resource_type: "video",  // Cloudinary treats audio under 'video' resource type
+            format: "mp3", // Ensure it's served as an MP3 file
+            folder: "Page_postsMusic",
+        });
+
+        // Store the audio URL properly
         const musicURL = {
-            path: musicFile.path,
-            public_id: musicFile.filename,
+            path: uploadResponse.secure_url,  // Use the secure URL
+            public_id: uploadResponse.public_id,
         };
 
-        // Create a new music entry
         const uploadMusic = new MusicLibrary({
             musicName,
             description,
             musicAudio: musicURL, 
         });
 
-        // Save to the database
         const savedMusic = await uploadMusic.save();
 
-        // Send success response
         res.status(201).json({
             message: "Music uploaded successfully!",
             data: savedMusic,
         });
     } catch (error) {
-        // Handle errors
         console.error("Error uploading music:", error);
         res.status(500).json({ message: "Failed to upload music.", error });
     }
