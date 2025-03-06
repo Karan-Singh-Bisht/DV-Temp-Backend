@@ -1,6 +1,13 @@
 const express = require('express');
 const userMapController = require('../controllers/userMapController');
 const userAuthMiddleware = require('../middlewares/userAuthMiddleware');
+const { uploadStoryMulter } = require("../middlewares/multer");
+
+const multer = require("multer");
+
+// Configure Multer
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 const router = express.Router();
 
@@ -25,11 +32,11 @@ router.get('/places/:category', userAuthMiddleware, userMapController.getPlacesB
 
 router.get('/nearby/places', userAuthMiddleware, userMapController.getAllNearbyPlaces);
 
-// router.post("/poppins", userAuthMiddleware, userMapController.createStory);
+router.post("/poppins/createstory", userAuthMiddleware, uploadStoryMulter, userMapController.createStory);
 
-// router.get("/poppins/stories", userAuthMiddleware, userMapController.getStoriesByLocation);
+router.get("/poppins/storiesbyloc", userAuthMiddleware, userMapController.getStoriesByLocation);
 
-// router.get("/poppins/locations", userAuthMiddleware, userMapController.getStoryLocations);
+router.get("/poppins/locations", userAuthMiddleware, userMapController.getStoryLocations);
 
 
 

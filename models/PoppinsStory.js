@@ -13,7 +13,7 @@ const PoppinsStorySchema = new mongoose.Schema(
     },
     visibility: { type: String, enum: ["public", "private"], default: "public" },
     category: { type: String, required: true },
-    hidePageName: { type: Boolean, default: false },
+    // hidePageName: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

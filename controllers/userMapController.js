@@ -1,8 +1,10 @@
 const UserMap = require('../models/userMap');
-// const PoppinsStory = require("../models/PoppinsStory");
-// const User = require("../models/userPage");
+ const PoppinsStory = require("../models/PoppinsStory");
+ const multer = require("multer");
+const cloudinary = require("../config/cloudinaryConfig");
+const { uploadStoryMulter } = require("../middlewares/multer");
+//const Page = require("../models/userPage");
 //const User = require("../models/User")
-
 const { default: mongoose } = require('mongoose');
 
 const placeCategories = require('../utils/mapCategories');
@@ -797,26 +799,14 @@ const getAllNearbyPlaces = async (req, res) => {
 };
 
 
-
-module.exports = {
-    updateCurrentLocation,
-    getMyLocation,
-    getFriendLocation,
-    toggleSaveLocation,
-    getSavedLocations,
-    updateVisibility,
-    getNearbyFriends,
-    getPlaceCategories,
-    getPlacesByCategory,
-    getAllNearbyPlaces
-};
-
 // // Create a Poppins story
-// exports.createStory = async (req, res) => {
+// const createStory = async (req, res) => {
 //   try {
-//     const { pageId, images, description, visibility, category, hidePageName } = req.body;
+//     // const { pageId, images, description, visibility, category, hidePageName } = req.body;
+//     const { pageId, images, description, visibility, category} = req.body;
 
 //     const page = await Page.findById(pageId);
+//     //const page = pageId
 //     if (!page) return res.status(404).json({ message: "Page not found" });
 
 //     const userLocation = await UserMap.findOne({ userId: page.userId });
@@ -830,7 +820,7 @@ module.exports = {
 //       location: userLocation.location,
 //       visibility,
 //       category,
-//       hidePageName,
+//       // hidePageName,
 //     });
 
 //     await story.save();
@@ -840,37 +830,118 @@ module.exports = {
 //   }
 // };
 
-// // Fetch stories by location
-// exports.getStoriesByLocation = async (req, res) => {
-//   try {
-//     const { longitude, latitude } = req.query;
-//     if (!longitude || !latitude) return res.status(400).json({ message: "Coordinates required" });
 
-//     const stories = await PoppinsStory.find({
-//       location: {
-//         $near: {
-//           $geometry: { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] },
-//           $maxDistance: 5000, // 5km radius
-//         },
-//       },
-//     });
 
-//     res.json(stories);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
+const createStory = async (req, res) => {
+  try {
+    console.log("Received Files:", req.files);
+    console.log("Received Body:", req.body);
 
-// // Fetch locations with story counts
-// exports.getStoryLocations = async (req, res) => {
-//   try {
-//     const locations = await PoppinsStory.aggregate([
-//       { $group: { _id: "$location.coordinates", count: { $sum: 1 } } },
-//     ]);
+    const { pageId, description, visibility, category, location } = req.body;
 
-//     res.json(locations);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
+    if (!pageId || !description || !visibility || !category) {
+      return res
+        .status(400)
+        .json({ error: "pageId, description, visibility, and category are required." });
+    }
 
+    let storyLocation = { type: "Point", coordinates: [0, 0] };
+    if (location) {
+      try {
+        const parsedLocation = JSON.parse(location);
+        if (parsedLocation.longitude && parsedLocation.latitude) {
+          storyLocation.coordinates = [parsedLocation.longitude, parsedLocation.latitude];
+        } else {
+          return res.status(400).json({ error: "Invalid location format." });
+        }
+      } catch (err) {
+        return res.status(400).json({ error: "Invalid JSON format for location." });
+      }
+    }
+
+    const image = req.files["story"]?.[0]
+      ? {
+          path: req.files["story"][0].path,
+          public_id: req.files["story"][0].filename,
+        }
+      : null;
+
+    if (!image) {
+      return res.status(400).json({ error: "Story image is required" });
+    }
+
+    const newStory = new PoppinsStory({
+      userId: pageId,
+      pageId,
+      image, // Updated field name from media to image
+      description,
+      location: storyLocation,
+      visibility,
+      category,
+    });
+
+    await newStory.save();
+
+    res.status(201).json({ message: "Story added successfully", story: newStory });
+  } catch (error) {
+    console.error("Error creating story:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+
+
+
+// Fetch stories by location
+const getStoriesByLocation = async (req, res) => {
+  try {
+    const { longitude, latitude } = req.query;
+    if (!longitude || !latitude) return res.status(400).json({ message: "Coordinates required" });
+
+    const stories = await PoppinsStory.find({
+      location: {
+        $near: {
+          $geometry: { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] },
+          $maxDistance: 5000, // 5km radius
+        },
+      },
+    });
+
+    res.json(stories);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Fetch locations with story counts
+const getStoryLocations = async (req, res) => {
+  try {
+    const locations = await PoppinsStory.aggregate([
+      { $group: { _id: "$location.coordinates", count: { $sum: 1 } } },
+    ]);
+
+    res.json(locations);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+
+
+module.exports = {
+    updateCurrentLocation,
+    getMyLocation,
+    getFriendLocation,
+    toggleSaveLocation,
+    getSavedLocations,
+    updateVisibility,
+    getNearbyFriends,
+    getPlaceCategories,
+    getPlacesByCategory,
+    getAllNearbyPlaces,
+    createStory: [uploadStoryMulter, createStory],
+    getStoriesByLocation,
+    getStoryLocations
+};

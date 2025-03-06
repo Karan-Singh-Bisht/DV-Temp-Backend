@@ -46,7 +46,7 @@ app.use("/api/user/posts", userPostRoutes);
 app.use("/api/user/chat", userChatRoute);
 
 // Initialize Socket.IO
-setupSocket(server); // Pass the server to the Socket.IO setup function
+setupSocket(server);
 setupSocket1(server);
 
 
@@ -54,15 +54,15 @@ app.post("/add-fields-to-documents", async (req, res) => {
   try {
     // Fields to check and add with default values
     const defaultFields = {
-      date_of_birth: null, // Default value for date_of_birth
-      gender: "Not Specified", // Default value for gender
+      date_of_birth: null,
+      gender: "Not Specified",
     };
 
     // Update documents to include missing fields
     const result = await User.updateMany(
-      {}, // Match all documents
-      { $setOnInsert: defaultFields }, // Only set fields if they are missing
-      { upsert: false, multi: true } // Update multiple documents without creating new ones
+      {}, 
+      { $setOnInsert: defaultFields },
+      { upsert: false, multi: true }
     );
 
     res.status(200).json({
