@@ -1,5 +1,6 @@
 const UserMap = require('../models/userMap');
- const PoppinsStory = require("../models/PoppinsStory");
+const PoppinsStory = require("../models/PoppinsStory");
+const Infonics = require("../models/Infonics");
  const multer = require("multer");
 const cloudinary = require("../config/cloudinaryConfig");
 const { uploadStoryMulter } = require("../middlewares/multer");
@@ -929,6 +930,122 @@ const getStoryLocations = async (req, res) => {
 
 
 
+// Create an Infonics Card
+const createInfonics = async (req, res) => {
+  try {
+    const { pageId } = req.params; // Take pageId from params
+    const { name, category, phone, email, bio, location, company, website, lookingFor, visibility } = req.body;
+
+    const newCard = new Infonics({
+      pageId,
+      name,
+      category,
+      phone,
+      email,
+      bio,
+      location,
+      company,
+      website,
+      lookingFor,
+      visibility,
+    });
+
+    await newCard.save();
+    res.status(201).json({ success: true, message: "Infonics card created successfully", data: newCard });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error creating Infonics card", error });
+  }
+};
+
+// Fetch all Infonics cards
+const getAllInfonics = async (req, res) => {
+  try {
+    const cards = await Infonics.find();
+    res.status(200).json({ success: true, data: cards });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching Infonics cards", error });
+  }
+};
+
+// Fetch Infonics cards within 20km
+const getNearbyInfonics = async (req, res) => {
+  try {
+    const { latitude, longitude } = req.query;
+
+    if (!latitude || !longitude) {
+      return res.status(400).json({ success: false, message: "Latitude and longitude are required" });
+    }
+
+    const nearbyCards = await Infonics.find({
+      "location.latitude": { $gte: latitude - 0.18, $lte: latitude + 0.18 },
+      "location.longitude": { $gte: longitude - 0.18, $lte: longitude + 0.18 },
+    });
+
+    res.status(200).json({ success: true, data: nearbyCards });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching nearby Infonics cards", error });
+  }
+};
+
+// Fetch Infonics cards by "lookingFor" field
+const getInfonicsByLookingFor = async (req, res) => {
+  try {
+    const { keyword } = req.params;
+    const cards = await Infonics.find({ lookingFor: keyword });
+
+    res.status(200).json({ success: true, data: cards });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching Infonics cards", error });
+  }
+};
+
+// Fetch Infonics cards by pageId
+const getInfonicsByPageId = async (req, res) => {
+  try {
+    const { pageId } = req.params;
+    const cards = await Infonics.find({ pageId });
+
+    res.status(200).json({ success: true, data: cards });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching Infonics cards", error });
+  }
+};
+
+// Update an Infonics card
+const updateInfonics = async (req, res) => {
+  try {
+    const { cardId } = req.params;
+    const updatedCard = await Infonics.findByIdAndUpdate(cardId, req.body, { new: true });
+
+    if (!updatedCard) {
+      return res.status(404).json({ success: false, message: "Infonics card not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Infonics card updated successfully", data: updatedCard });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error updating Infonics card", error });
+  }
+};
+
+// Delete an Infonics card
+const deleteInfonics = async (req, res) => {
+  try {
+    const { cardId } = req.params;
+    const deletedCard = await Infonics.findByIdAndDelete(cardId);
+
+    if (!deletedCard) {
+      return res.status(404).json({ success: false, message: "Infonics card not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Infonics card deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error deleting Infonics card", error });
+  }
+};
+
+
+
+
 
 module.exports = {
     updateCurrentLocation,
@@ -943,5 +1060,12 @@ module.exports = {
     getAllNearbyPlaces,
     createStory: [uploadStoryMulter, createStory],
     getStoriesByLocation,
-    getStoryLocations
+    getStoryLocations,
+      createInfonics,
+      getAllInfonics,
+      getNearbyInfonics,
+      getInfonicsByLookingFor,
+      getInfonicsByPageId,
+      updateInfonics,
+      deleteInfonics
 };

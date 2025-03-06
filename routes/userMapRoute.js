@@ -32,11 +32,29 @@ router.get('/places/:category', userAuthMiddleware, userMapController.getPlacesB
 
 router.get('/nearby/places', userAuthMiddleware, userMapController.getAllNearbyPlaces);
 
+
+//poppins
 router.post("/poppins/createstory", userAuthMiddleware, uploadStoryMulter, userMapController.createStory);
 
 router.get("/poppins/storiesbyloc", userAuthMiddleware, userMapController.getStoriesByLocation);
 
 router.get("/poppins/locations", userAuthMiddleware, userMapController.getStoryLocations);
+
+
+//infonics
+router.post("/infonics/:pageId", userAuthMiddleware, userMapController.createInfonics);
+
+router.get("/infonics", userAuthMiddleware, userMapController.getAllInfonics);
+
+router.get("/infonics/nearby", userAuthMiddleware, userMapController.getNearbyInfonics);
+
+router.get("/infonics/looking-for/:keyword", userAuthMiddleware, userMapController.getInfonicsByLookingFor);
+
+router.get("/infonics/page/:pageId", userAuthMiddleware, userMapController.getInfonicsByPageId);
+
+router.put("/infonics/:cardId", userAuthMiddleware, userMapController.updateInfonics);
+
+router.delete("/infonics/:cardId", userAuthMiddleware, userMapController.deleteInfonics);
 
 
 
