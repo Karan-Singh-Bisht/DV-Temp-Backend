@@ -44,17 +44,25 @@ router.get("/poppins/locations", userAuthMiddleware, userMapController.getStoryL
 //infonics
 router.post("/infonics/:pageId", userAuthMiddleware, userMapController.createInfonics);
 
-router.get("/infonics", userAuthMiddleware, userMapController.getAllInfonics);
+router.get("/infonics/all/:requestingPageId", userAuthMiddleware, userMapController.getAllInfonics);
 
-router.get("/infonics/nearby", userAuthMiddleware, userMapController.getNearbyInfonics);
+router.get("/infonics/nearby/:requestingPageId", userAuthMiddleware, userMapController.getNearbyInfonics);
 
-router.get("/infonics/looking-for/:keyword", userAuthMiddleware, userMapController.getInfonicsByLookingFor);
+router.get("/infonics/looking-for/:requestingPageId/:keyword", userAuthMiddleware, userMapController.getInfonicsByLookingFor);
 
-router.get("/infonics/page/:pageId", userAuthMiddleware, userMapController.getInfonicsByPageId);
+router.get("/infonics/page/:requestingPageId/:pageId", userAuthMiddleware, userMapController.getInfonicsByPageId);
 
 router.put("/infonics/:cardId", userAuthMiddleware, userMapController.updateInfonics);
 
 router.delete("/infonics/:cardId", userAuthMiddleware, userMapController.deleteInfonics);
+
+router.post("/infonics/request/:targetCardId/:requestingPageId", userAuthMiddleware, userMapController.sendOrCancelRequest);
+  
+router.post("/infonics/request/:targetCardId/accept/:requestPageId", userAuthMiddleware, userMapController.acceptRequest);
+
+router.post("/infonics/request/:targetCardId/decline/:requestPageId", userAuthMiddleware, userMapController.declineRequest);
+
+router.get("/infonics/request/:targetCardId/incoming", userAuthMiddleware, userMapController.getIncomingRequests);
 
 
 

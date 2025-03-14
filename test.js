@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 
 const InfonicsSchema = new mongoose.Schema({
   pageId: { type: mongoose.Schema.Types.ObjectId, ref: "Page", required: true },
-  
   name: { type: String, required: true },
   category: { type: String, required: true },
   phone: { type: String },
@@ -24,20 +23,8 @@ const InfonicsSchema = new mongoose.Schema({
 
   lookingFor: [{ type: String }],
   visibility: { type: Boolean, default: true },
-  
-  connectionRequests: [{
-    fromPage: { type: mongoose.Schema.Types.ObjectId, ref: "Page" },
-    status: { 
-      type: String, 
-      enum: ["requested", "accepted", "declined"], 
-      default: "requested" 
-    }
-  }],
-  
-  connections: [{
-    page: { type: mongoose.Schema.Types.ObjectId, ref: "Page" },
-    connectedAt: { type: Date, default: Date.now }
-  }]
-}, { timestamps: true });
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
 
 module.exports = mongoose.model("Infonics", InfonicsSchema);

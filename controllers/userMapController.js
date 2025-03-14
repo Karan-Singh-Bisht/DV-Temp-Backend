@@ -4,11 +4,13 @@ const Infonics = require("../models/Infonics");
  const multer = require("multer");
 const cloudinary = require("../config/cloudinaryConfig");
 const { uploadStoryMulter } = require("../middlewares/multer");
-//const Page = require("../models/userPage");
-//const User = require("../models/User")
+// const Page = require("../models/Pages/PagesModel");
+const Page = require("../models/userPage");
 const { default: mongoose } = require('mongoose');
 
 const placeCategories = require('../utils/mapCategories');
+
+
 
 
 
@@ -933,9 +935,39 @@ const getStoryLocations = async (req, res) => {
 // Create an Infonics Card
 const createInfonics = async (req, res) => {
   try {
-    const { pageId } = req.params; // Take pageId from params
-    const { name, category, phone, email, bio, location, company, website, lookingFor, visibility } = req.body;
+    const { pageId } = req.params;
+    const {
+      name,
+      category,
+      phone,
+      email,
+      bio,
+      location,
+      company,
+      website,
+      lookingFor,
+      visibility,
+      InstagramUrl,
+      FacebookUrl,
+      LinkedinUrl,
+      ThreadsUrl,
+      YoutubeUrl,
+      XUrl
+    } = req.body;
 
+    console.log("Incoming Data:", req.body);
+
+    // 1️⃣ Check if a card already exists for this pageId
+    const existingCard = await Infonics.findOne({ pageId });
+
+    if (existingCard) {
+      return res.status(409).json({
+        success: false,
+        message: "An Infonics card already exists for this page."
+      });
+    }
+
+    // 2️⃣ Create the new card
     const newCard = new Infonics({
       pageId,
       name,
@@ -948,68 +980,176 @@ const createInfonics = async (req, res) => {
       website,
       lookingFor,
       visibility,
+      InstagramUrl,
+      FacebookUrl,
+      LinkedinUrl,
+      ThreadsUrl,
+      YoutubeUrl,
+      XUrl
     });
 
-    await newCard.save();
-    res.status(201).json({ success: true, message: "Infonics card created successfully", data: newCard });
+    const savedCard = await newCard.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Infonics card created successfully",
+      data: savedCard
+    });
+
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error creating Infonics card", error });
+    console.error('Error creating Infonics card:', error.message);
+    res.status(500).json({
+      success: false,
+      message: "Error creating Infonics card",
+      error: error.message
+    });
   }
 };
 
-// Fetch all Infonics cards
+
+
+
 const getAllInfonics = async (req, res) => {
   try {
-    const cards = await Infonics.find();
-    res.status(200).json({ success: true, data: cards });
+    const { requestingPageId } = req.params;
+
+    if (!requestingPageId) {
+      return res.status(400).json({ success: false, message: "Requesting pageId is required." });
+    }
+
+    const cards = await Infonics.find().populate({
+      path: 'pageId',
+      model: 'Page',
+      select: 'pageName profileImg profileAvatar',
+    });
+
+    const modifiedCards = await Promise.all(cards.map(async (card) => {
+      const connectionStatus = await getConnectionStatus(card, requestingPageId);
+
+      return {
+        ...card._doc,
+        pageName: card.pageId?.pageName || null,
+        // profileImg: card.pageId?.profileImg || null,
+        // profileAvatar: card.pageId?.profileAvatar || null,
+        connectionStatus
+      };
+    }));
+
+    res.status(200).json({ success: true, data: modifiedCards });
   } catch (error) {
+    console.error("Error fetching all infonics cards:", error);
     res.status(500).json({ success: false, message: "Error fetching Infonics cards", error });
   }
 };
 
-// Fetch Infonics cards within 20km
+
+
+
 const getNearbyInfonics = async (req, res) => {
   try {
     const { latitude, longitude } = req.query;
+    const { requestingPageId } = req.params;
 
-    if (!latitude || !longitude) {
-      return res.status(400).json({ success: false, message: "Latitude and longitude are required" });
+    if (!latitude || !longitude || !requestingPageId) {
+      return res.status(400).json({ success: false, message: "Latitude, longitude, and requestingPageId are required" });
     }
 
     const nearbyCards = await Infonics.find({
       "location.latitude": { $gte: latitude - 0.18, $lte: latitude + 0.18 },
       "location.longitude": { $gte: longitude - 0.18, $lte: longitude + 0.18 },
+    }).populate({
+      path: 'pageId',
+      model: 'Page',
+      select: 'pageName profileImg profileAvatar',
     });
 
-    res.status(200).json({ success: true, data: nearbyCards });
+    const modifiedCards = await Promise.all(nearbyCards.map(async (card) => {
+      const connectionStatus = await getConnectionStatus(card, requestingPageId);
+
+      return {
+        ...card._doc,
+        pageName: card.pageId?.pageName || null,
+        // profileImg: card.pageId?.profileImg || null,
+        // profileAvatar: card.pageId?.profileAvatar || null,
+        connectionStatus
+      };
+    }));
+
+    res.status(200).json({ success: true, data: modifiedCards });
   } catch (error) {
+    console.error("Error fetching nearby infonics cards:", error);
     res.status(500).json({ success: false, message: "Error fetching nearby Infonics cards", error });
   }
 };
 
-// Fetch Infonics cards by "lookingFor" field
+
 const getInfonicsByLookingFor = async (req, res) => {
   try {
-    const { keyword } = req.params;
-    const cards = await Infonics.find({ lookingFor: keyword });
+    const { keyword, requestingPageId } = req.params;
 
-    res.status(200).json({ success: true, data: cards });
+    if (!keyword || !requestingPageId) {
+      return res.status(400).json({ success: false, message: "Keyword and requestingPageId are required" });
+    }
+
+    const cards = await Infonics.find({ lookingFor: keyword }).populate({
+      path: 'pageId',
+      model: 'Page',
+      select: 'pageName profileImg profileAvatar',
+    });
+
+    const modifiedCards = await Promise.all(cards.map(async (card) => {
+      const connectionStatus = await getConnectionStatus(card, requestingPageId);
+
+      return {
+        ...card._doc,
+        pageName: card.pageId?.pageName || null,
+        // profileImg: card.pageId?.profileImg || null,
+        // profileAvatar: card.pageId?.profileAvatar || null,
+        connectionStatus
+      };
+    }));
+
+    res.status(200).json({ success: true, data: modifiedCards });
   } catch (error) {
+    console.error("Error fetching infonics cards by lookingFor:", error);
     res.status(500).json({ success: false, message: "Error fetching Infonics cards", error });
   }
 };
 
-// Fetch Infonics cards by pageId
+
 const getInfonicsByPageId = async (req, res) => {
   try {
-    const { pageId } = req.params;
-    const cards = await Infonics.find({ pageId });
+    const { pageId, requestingPageId } = req.params;
 
-    res.status(200).json({ success: true, data: cards });
+    if (!pageId || !requestingPageId) {
+      return res.status(400).json({ success: false, message: "Both pageId and requestingPageId are required" });
+    }
+
+    const cards = await Infonics.find({ pageId }).populate({
+      path: 'pageId',
+      model: 'Page',
+      select: 'pageName profileImg profileAvatar',
+    });
+
+    const modifiedCards = await Promise.all(cards.map(async (card) => {
+      const connectionStatus = await getConnectionStatus(card, requestingPageId);
+
+      return {
+        ...card._doc,
+        pageName: card.pageId?.pageName || null,
+        // profileImg: card.pageId?.profileImg || null,
+        // profileAvatar: card.pageId?.profileAvatar || null,
+        connectionStatus
+      };
+    }));
+
+    res.status(200).json({ success: true, data: modifiedCards });
   } catch (error) {
+    console.error("Error fetching infonics cards by pageId:", error);
     res.status(500).json({ success: false, message: "Error fetching Infonics cards", error });
   }
 };
+
 
 // Update an Infonics card
 const updateInfonics = async (req, res) => {
@@ -1044,6 +1184,171 @@ const deleteInfonics = async (req, res) => {
 };
 
 
+const sendOrCancelRequest = async (req, res) => {
+  try {
+    const { targetCardId, requestingPageId } = req.params;  // Both IDs from params
+
+    // Validate input IDs (optional but recommended)
+    if (!targetCardId || !requestingPageId) {
+      return res.status(400).json({ success: false, message: "Both targetCardId and requestingPageId are required." });
+    }
+
+    const targetCard = await Infonics.findById(targetCardId);
+
+    if (!targetCard) {
+      return res.status(404).json({ success: false, message: "Target Infonics card not found." });
+    }
+
+    // Find if the request already exists
+    const existingRequestIndex = targetCard.connectionRequests.findIndex(
+      req => req.fromPage.toString() === requestingPageId
+    );
+
+    if (existingRequestIndex !== -1) {
+      // Cancel the existing request
+      targetCard.connectionRequests.splice(existingRequestIndex, 1);
+      await targetCard.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Connection request canceled.",
+        requested: false,
+        connected: false
+      });
+    }
+
+    // Send a new request
+    targetCard.connectionRequests.push({
+      fromPage: requestingPageId,
+      status: "requested"
+    });
+
+    await targetCard.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Connection request sent.",
+      requested: true,
+      connected: false
+    });
+
+  } catch (error) {
+    console.error("Error sending/canceling request:", error);
+    return res.status(500).json({ success: false, message: "Something went wrong.", error });
+  }
+};
+
+
+const acceptRequest = async (req, res) => {
+  try {
+    const { targetCardId, requestPageId } = req.params;
+
+    const targetCard = await Infonics.findById(targetCardId);
+    if (!targetCard) {
+      return res.status(404).json({ success: false, message: "Infonics card not found." });
+    }
+
+    const request = targetCard.connectionRequests.find(
+      req => req.fromPage.toString() === requestPageId && req.status === "requested"
+    );
+
+    if (!request) {
+      return res.status(404).json({ success: false, message: "Request not found or already handled." });
+    }
+
+    request.status = "accepted";
+
+    targetCard.connections.push({
+      page: requestPageId
+    });
+
+    await targetCard.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Request accepted.",
+      connected: true
+    });
+
+  } catch (error) {
+    console.error("Error accepting request:", error);
+    res.status(500).json({ success: false, message: "Something went wrong.", error });
+  }
+};
+
+
+const declineRequest = async (req, res) => {
+  try {
+    const { targetCardId, requestPageId } = req.params;
+
+    const targetCard = await Infonics.findById(targetCardId);
+    if (!targetCard) {
+      return res.status(404).json({ success: false, message: "Infonics card not found." });
+    }
+
+    const request = targetCard.connectionRequests.find(
+      req => req.fromPage.toString() === requestPageId && req.status === "requested"
+    );
+
+    if (!request) {
+      return res.status(404).json({ success: false, message: "Request not found or already handled." });
+    }
+
+    request.status = "declined";
+
+    await targetCard.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Request declined."
+    });
+
+  } catch (error) {
+    console.error("Error declining request:", error);
+    res.status(500).json({ success: false, message: "Something went wrong.", error });
+  }
+};
+
+
+const getIncomingRequests = async (req, res) => {
+  try {
+    const { targetCardId } = req.params;
+
+    const targetCard = await Infonics.findById(targetCardId)
+      .populate('connectionRequests.fromPage', 'pageName profileImg');
+
+    if (!targetCard) {
+      return res.status(404).json({ success: false, message: "Infonics card not found." });
+    }
+
+    const incomingRequests = targetCard.connectionRequests.filter(req => req.status === "requested");
+
+    res.status(200).json({
+      success: true,
+      data: incomingRequests
+    });
+
+  } catch (error) {
+    console.error("Error fetching incoming requests:", error);
+    res.status(500).json({ success: false, message: "Something went wrong.", error });
+  }
+};
+
+
+const getConnectionStatus = async (targetCard, requestingPageId) => {
+  const request = targetCard.connectionRequests.find(
+    req => req.fromPage.toString() === requestingPageId
+  );
+
+  const isConnected = targetCard.connections.some(
+    conn => conn.page.toString() === requestingPageId
+  );
+
+  return {
+    requested: !!request && request.status === "requested",
+    connected: isConnected
+  };
+};
 
 
 
@@ -1067,5 +1372,9 @@ module.exports = {
       getInfonicsByLookingFor,
       getInfonicsByPageId,
       updateInfonics,
-      deleteInfonics
+      deleteInfonics,
+      sendOrCancelRequest,
+      acceptRequest,
+      declineRequest,
+      getIncomingRequests
 };
