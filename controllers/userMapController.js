@@ -5,7 +5,7 @@ const Infonics = require("../models/Infonics");
 const cloudinary = require("../config/cloudinaryConfig");
 const { uploadStoryMulter } = require("../middlewares/multer");
 // const Page = require("../models/Pages/PagesModel");
-const Page = require("../models/userPage");
+//const Page = require("../models/userPage");
 const { default: mongoose } = require('mongoose');
 
 const placeCategories = require('../utils/mapCategories');
@@ -848,15 +848,31 @@ const createStory = async (req, res) => {
         .json({ error: "pageId, description, visibility, and category are required." });
     }
 
+    // Validate page existence and get userId (if userId should be different)
+    const page = await Page.findById(pageId);
+    if (!page) {
+      return res.status(404).json({ error: "Page not found" });
+    }
+
+    // Validate visibility enum
+    if (!["public", "private"].includes(visibility)) {
+      return res
+        .status(400)
+        .json({ error: "Visibility must be 'public' or 'private'." });
+    }
+
     let storyLocation = { type: "Point", coordinates: [0, 0] };
     if (location) {
       try {
         const parsedLocation = JSON.parse(location);
-        if (parsedLocation.longitude && parsedLocation.latitude) {
-          storyLocation.coordinates = [parsedLocation.longitude, parsedLocation.latitude];
-        } else {
-          return res.status(400).json({ error: "Invalid location format." });
+        const lon = parseFloat(parsedLocation.longitude);
+        const lat = parseFloat(parsedLocation.latitude);
+
+        if (isNaN(lon) || isNaN(lat)) {
+          return res.status(400).json({ error: "Invalid location coordinates." });
         }
+
+        storyLocation.coordinates = [lon, lat];
       } catch (err) {
         return res.status(400).json({ error: "Invalid JSON format for location." });
       }
@@ -874,9 +890,9 @@ const createStory = async (req, res) => {
     }
 
     const newStory = new PoppinsStory({
-      userId: pageId,
+      userId: page.userId, // Correct userId here
       pageId,
-      image, // Updated field name from media to image
+      image,
       description,
       location: storyLocation,
       visibility,
@@ -891,7 +907,6 @@ const createStory = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 
 
@@ -1363,7 +1378,8 @@ module.exports = {
     getPlaceCategories,
     getPlacesByCategory,
     getAllNearbyPlaces,
-    createStory: [uploadStoryMulter, createStory],
+    // createStory: [uploadStoryMulter, createStory],
+    createStory,
     getStoriesByLocation,
     getStoryLocations,
       createInfonics,

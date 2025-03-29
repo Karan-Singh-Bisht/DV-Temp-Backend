@@ -13,29 +13,24 @@ const setupSocket1 = (server) => {
   io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
 
-    // Join chat room
-    socket.on('joinChat', (chatId) => {
-      socket.join(chatId);
-      console.log(`User joined chat: ${chatId}`);
+    socket.on('joinChat', (recipientId) => {
+      socket.join(recipientId);
+      console.log(`User joined chat with: ${recipientId}`);
     });
 
-    // Handle typing indicator
-    socket.on('typing', ({ chatId, isTyping }) => {
-      socket.to(chatId).emit('typing', { chatId, isTyping });
+    socket.on('typing', ({ recipientId, isTyping }) => {
+      socket.to(recipientId).emit('typing', { recipientId, isTyping });
     });
 
-    // Handle new message
     socket.on('newMessage', (message) => {
-      const { chatId } = message;
-      io.to(chatId).emit('newMessage', message);
+      const { recipientId } = message;
+      io.to(recipientId).emit('newMessage', message);
     });
 
-    // Handle message deletion
-    socket.on('deleteMessage', ({ chatId, messageId }) => {
-      io.to(chatId).emit('deleteMessage', { chatId, messageId });
+    socket.on('deleteMessage', ({ recipientId, messageId }) => {
+      io.to(recipientId).emit('deleteMessage', { recipientId, messageId });
     });
 
-    // Handle disconnection
     socket.on('disconnect', () => {
       console.log(`User disconnected: ${socket.id}`);
     });

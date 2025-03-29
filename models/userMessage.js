@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 const userMessageSchema = new mongoose.Schema(
   {
-    chatId: {
+    recipientId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'UserChat',
+      ref: 'User',
       required: true,
     },
     sender: {

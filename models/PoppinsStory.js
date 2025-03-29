@@ -3,9 +3,13 @@ const mongoose = require("mongoose");
 
 const PoppinsStorySchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User"},
     pageId: { type: mongoose.Schema.Types.ObjectId, ref: "Page", required: true },
-    images: [{ type: String, required: true }],
+    // images: [{ type: String, required: true }],
+    image: {
+      path: { type: String, required: true },
+      public_id: { type: String, required: true },
+    },
     description: { type: String },
     location: {
       type: { type: String, enum: ["Point"], default: "Point" },

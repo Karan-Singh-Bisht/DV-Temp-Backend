@@ -97,4 +97,32 @@ const uploadStoryMulter = multer({
   storage: storyStorage, // Use storyStorage instead of avatarStorage
 }).fields([{ name: "story", maxCount: 1 }]);
 
-module.exports = { uploadPostMedia, uploadAvatarMulter, uploadStoryMulter };
+
+// Configure Cloudinary storage for spotlight collection images
+const spotlightStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    const folder = "spotlight_collections"; // Folder in Cloudinary
+    const resource_type = "image"; // Only images allowed
+    const format = "png"; // Default format
+
+    console.log(
+      `Uploading Spotlight Collection image of type: ${file.mimetype} to folder: ${folder}`
+    );
+
+    return {
+      folder,
+      resource_type,
+      allowed_formats: ["png", "jpg", "jpeg"],
+      format,
+    };
+  },
+});
+
+// Multer middleware for handling spotlight collection image uploads
+const uploadCollectionMulter = multer({
+  storage: spotlightStorage,
+}).fields([{ name: "collectionImage", maxCount: 1 }]); // Only 1 image per collection
+
+
+module.exports = { uploadPostMedia, uploadAvatarMulter, uploadStoryMulter,uploadCollectionMulter };
