@@ -1,5 +1,5 @@
-const socketIO = require('socket.io');
-
+// === setupSocketPage.js ===
+const socketIO = require('socket.io'); 
 let io;
 
 const setupSocketPage = (server) => {
@@ -11,40 +11,41 @@ const setupSocketPage = (server) => {
   });
 
   io.on('connection', (socket) => {
-    console.log(`User connected: ${socket.id}`);
+    console.log(`Page connected: ${socket.id}`);
 
-    // Join chat room
-    socket.on('joinChat', (chatId) => {
-      socket.join(chatId);
-      console.log(`User joined chat: ${chatId}`);
+    socket.on('joinPage', (pageId) => {
+      socket.join(pageId);
+      console.log(`Page joined room: ${pageId}`);
     });
 
-    // Handle typing indicator
-    socket.on('typing', ({ chatId, isTyping }) => {
-      socket.to(chatId).emit('typing', { chatId, isTyping });
+    socket.on('pageTyping', ({ recipientPageId, senderPageId, isTyping }) => {
+      socket.to(recipientPageId).emit('pageTyping', {
+        recipientPageId,
+        senderPageId,
+        isTyping,
+      });
     });
 
-    // Handle new message
-    socket.on('newMessage', (message) => {
-      const { chatId } = message;
-      io.to(chatId).emit('newMessage', message);
+    socket.on('newPageMessage', (message) => {
+      const { recipientPageId, senderPageId } = message;
+      io.to(recipientPageId).emit('newPageMessage', message);
     });
 
-    socket.on('deleteMessage',({chatId,messageId})=>{
-      io.to(chatId).emit('deleteMessage',{chatId,messageId})
-    })
+    socket.on('deletePageMessage', ({ recipientPageId, messageId }) => {
+      io.to(recipientPageId).emit('deletePageMessage', {
+        recipientPageId,
+        messageId,
+      });
+    });
 
-    // Handle disconnection
     socket.on('disconnect', () => {
-      console.log(`User disconnected: ${socket.id}`);
+      console.log(`Page disconnected: ${socket.id}`);
     });
   });
 };
 
 const getIO = () => {
-  if (!io) {
-    throw new Error('Socket.io not initialized');
-  }
+  if (!io) throw new Error('Socket.io not initialized');
   return io;
 };
 

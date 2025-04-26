@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const InfonicsSchema = new mongoose.Schema({
-  pageId: { type: mongoose.Schema.Types.ObjectId, ref: "Page", required: true },
+  pageId: { type: mongoose.Schema.Types.ObjectId, ref: "Pages", required: true },
   
   name: { type: String, required: true },
   category: { type: String, required: true },

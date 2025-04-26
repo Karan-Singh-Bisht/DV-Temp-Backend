@@ -46,6 +46,22 @@ router.post('/page/reportpage',userAuthMiddleware,pageController.reportpage)
 router.get('/pages/getallavatarpage/:pageId',userAuthMiddleware, pageController.getAllAvatar)
 router.post('/pages/upload-customavatar',userAuthMiddleware,uploadAvatarMulter, pageController.addCustomAvatar)
 
+
+router.post("/page/repost/:postId", userAuthMiddleware, PostActionController.createPageRepost);
+router.get("/page/reposts", userAuthMiddleware, PostActionController.getAllPageReposts);
+router.get("/page/reposts/:pageId", userAuthMiddleware, PostActionController.getRepostsByPageId);
+router.put("/page/repost/:repostId", userAuthMiddleware, PostActionController.editPageRepost);
+router.get("/page/repost/:repostId", userAuthMiddleware, PostActionController.getRepostById);
+router.delete("/page/repost/:repostId", userAuthMiddleware, PostActionController.deletePageRepost);
+
+
+router.post("/page/rewrite/:postId", userAuthMiddleware, PostActionController.createPageRewrite);
+router.delete("/page/rewrite/:postId", userAuthMiddleware, PostActionController.deletePageRewrite);
+router.get("/page/rewrites/:postId", userAuthMiddleware, PostActionController.getRewritesByPostId);
+router.get("/page/rewrites", userAuthMiddleware, PostActionController.getAllRewrites);
+router.get("/page/rewrites/by-page/:pageId", userAuthMiddleware, PostActionController.getRewritesByPageId);
+router.patch("/page/rewrite/pin/:rewriteId", userAuthMiddleware, PostActionController.pinRewrite);
+
 router.post("/add-fields-to-documents", async (req, res) => {
       try {
         // Fields to check and add with default values

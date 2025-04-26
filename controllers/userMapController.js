@@ -4,7 +4,7 @@ const Infonics = require("../models/Infonics");
  const multer = require("multer");
 const cloudinary = require("../config/cloudinaryConfig");
 const { uploadStoryMulter } = require("../middlewares/multer");
-// const Page = require("../models/Pages/PagesModel");
+const Page = require("../models/Pages/PagesModel");
 //const Page = require("../models/userPage");
 const { default: mongoose } = require('mongoose');
 
@@ -1034,7 +1034,7 @@ const getAllInfonics = async (req, res) => {
 
     const cards = await Infonics.find().populate({
       path: 'pageId',
-      model: 'Page',
+      model: 'Pages',
       select: 'pageName profileImg profileAvatar',
     });
 

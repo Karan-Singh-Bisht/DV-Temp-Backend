@@ -11,15 +11,15 @@ const userChatRoute = require("./routes/userChatRoute");
 const userMapRoutes = require("./routes/userMapRoute");
 const cors = require("cors");
 const http = require("http");
-const { setupSocket } = require("./server/socketServer");
-const { setupSocket1 } = require("./server/socketServer1");
-const { setupSocketPage } = require("./server/socketServer1");
 require("dotenv").config();
+
+const { setupSocket } = require("./server/socketServer");
+const { setupSocketPage } = require("./server/setupSocketPage"); // ✅ use the new file
+
 const app = express();
 const server = http.createServer(app);
 
-// Initialize socket server
-
+// Connect MongoDB
 connectDB();
 
 // Middleware
@@ -28,10 +28,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
+// Base Route
 app.get("/", (req, res) => {
   res.send("server ready");
 });
 
+// API Routes
 const apiRoutes = express.Router();
 apiRoutes.use("/admin", adminRoutes);
 apiRoutes.use(userRoutes);
@@ -41,30 +43,25 @@ apiRoutes.use("/user/maps", userMapRoutes);
 apiRoutes.use(contactRoutes);
 app.use("/api", apiRoutes);
 app.use("/contacts", contactRoutes);
-
 app.use("/api/user/posts", userPostRoutes);
 app.use("/api/user/chat", userChatRoute);
 
-// Initialize Socket.IO
-setupSocket(server);
-setupSocket1(server);
+// Initialize Sockets
+setupSocket(server);       // for user chat
+setupSocketPage(server);   // for page chat
 
-
+// Optional route to modify documents
 app.post("/add-fields-to-documents", async (req, res) => {
   try {
-    // Fields to check and add with default values
     const defaultFields = {
       date_of_birth: null,
       gender: "Not Specified",
     };
-
-    // Update documents to include missing fields
     const result = await User.updateMany(
       {}, 
       { $setOnInsert: defaultFields },
       { upsert: false, multi: true }
     );
-
     res.status(200).json({
       message: "Fields added to documents (if missing).",
       modifiedCount: result.modifiedCount,
@@ -75,6 +72,7 @@ app.post("/add-fields-to-documents", async (req, res) => {
   }
 });
 
+// Start Server
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

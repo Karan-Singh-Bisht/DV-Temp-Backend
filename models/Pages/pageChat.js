@@ -5,7 +5,7 @@ const pageChatSchema = new mongoose.Schema(
     participants: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Page',
+        ref: 'Pages',
         required: true,
       },
     ],
@@ -14,9 +14,7 @@ const pageChatSchema = new mongoose.Schema(
       ref: 'PageMessage',
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 module.exports = mongoose.model('PageChat', pageChatSchema);

@@ -13,7 +13,8 @@ const SpotlightCollectionSchema = new mongoose.Schema(
     },
     collectionImg: {
       path: { type: String, required: true },
-      public_id: { type: String, required: true },
+      public_id: { type: String },
+      // public_id: { type: String, required: true },
     },
     stories: [
       {

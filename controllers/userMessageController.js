@@ -1,4 +1,5 @@
 const Message = require('../models/userMessage');
+const Chat = require('../models/userChat');
 const User = require('../models/User');
 
 exports.getMessages = async (req, res) => {
@@ -16,55 +17,53 @@ exports.getMessages = async (req, res) => {
   }
 };
 
-exports.sendMessage = async (req, res) => {
-  try {
-    const { recipientId } = req.params;
-    const { content } = req.body;
-    const message = new Message({ recipientId, sender: req.user.id, content });
-    await message.save();
-    res.status(201).json(message);
-  } catch (err) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-
-// // Fetch chat messages with sender and recipient details
-// exports.getMessages = async (req, res) => {
-//   try {
-//     const { recipientId } = req.params;
-//     const messages = await Message.find({
-//       $or: [
-//         { sender: req.user.id, recipientId },
-//         { sender: recipientId, recipientId: req.user.id },
-//       ],
-//     })
-//       .populate({ path: 'sender', select: 'username profileImg' })
-//       .populate({ path: 'recipientId', select: 'username profileImg' })
-//       .sort({ createdAt: 1 });
-
-//     res.status(200).json({ recipientId, messages });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: 'Internal server error' });
-//   }
-// };
-
-// // Send a message
 // exports.sendMessage = async (req, res) => {
 //   try {
 //     const { recipientId } = req.params;
 //     const { content } = req.body;
 //     const message = new Message({ recipientId, sender: req.user.id, content });
 //     await message.save();
-    
 //     res.status(201).json(message);
 //   } catch (err) {
-//     console.error(err);
 //     res.status(500).json({ error: 'Internal server error' });
 //   }
 // };
 
+
+exports.sendMessage = async (req, res) => {
+  try {
+    const { recipientId } = req.params;
+    const { content } = req.body;
+    const senderId = req.user.id;
+
+    
+    const message = new Message({ recipientId, sender: senderId, content });
+    await message.save();
+
+    
+    let chat = await Chat.findOne({
+      participants: { $all: [senderId, recipientId] },
+    });
+
+    if (!chat) {
+     
+      chat = new Chat({
+        participants: [senderId, recipientId],
+        lastMessage: message._id,
+      });
+    } else {
+     
+      chat.lastMessage = message._id;
+    }
+
+    await chat.save(); 
+
+    res.status(201).json({ success: true, message });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 
 

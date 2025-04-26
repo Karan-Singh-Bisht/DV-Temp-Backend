@@ -1,6 +1,8 @@
 const PostModel = require("../../models/Pages/postSchema");
 const UserModel = require("../../models/User");
 const PostSave = require("../../models/Pages/PostSaveModel");
+const PageRepost = require("../../models/Pages/PageRepost");
+const PageRewrite = require("../../models/Pages/PageRewrite");
 
 const savePost = async (req, res) => {
   try {
@@ -221,7 +223,294 @@ const actionLike = async (req, res) => {
   }
 };
 
+
+
+
+
+
+//From this part::::::::::::::
+const createPageRepost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const userId = req.user._id;
+    const { pageId } = req.body; // posting pageId from frontend
+
+    const pagePost = await Post.findById(postId);
+    if (!pagePost) {
+      return res.status(404).json({ message: "Page post not found" });
+    }
+
+    const newRepost = await PageRepost.create({
+      user: userId,
+      pageId,
+      pagePost: postId,
+    });
+
+    res.status(201).json({ message: "Page post reposted successfully", data: newRepost });
+  } catch (err) {
+    console.error("Error creating page repost:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+const getAllPageReposts = async (req, res) => {
+  try {
+    const reposts = await PageRepost.find()
+      .populate({
+        path: "pagePost",
+        populate: {
+          path: "pageId",
+          select: "pageName profileImg",
+        },
+      })
+      .populate({
+        path: "pageId", // reposting page
+        select: "pageName profileImg",
+      })
+      .sort({ createdAt: -1 });
+
+    if (!reposts.length) {
+      return res.status(200).json({ message: "No page reposts found" });
+    }
+
+    res.status(200).json(reposts);
+  } catch (err) {
+    console.error("Error fetching all page reposts:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+const editPageRepost = async (req, res) => {
+  try {
+    const { repostId } = req.params;
+    const userId = req.user._id;
+
+    const repost = await PageRepost.findOne({ _id: repostId, user: userId });
+    if (!repost) {
+      return res.status(404).json({ message: "Repost not found" });
+    }
+
+    // You can update specific fields here if needed in future
+    // repost.updatedField = req.body.updatedField;
+
+    await repost.save();
+    res.status(200).json({ message: "Repost updated", data: repost });
+  } catch (err) {
+    console.error("Error editing repost:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const getRepostById = async (req, res) => {
+  try {
+    const { repostId } = req.params;
+
+    const repost = await PageRepost.findById(repostId)
+      .populate({
+        path: "pagePost",
+        populate: {
+          path: "pageId",
+          select: "pageName profileImg",
+        },
+      })
+      .populate({
+        path: "pageId",
+        select: "pageName profileImg",
+      });
+
+    if (!repost) {
+      return res.status(404).json({ message: "Repost not found" });
+    }
+
+    res.status(200).json(repost);
+  } catch (err) {
+    console.error("Error fetching repost by ID:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+const getRepostsByPageId = async (req, res) => {
+  try {
+    const { pageId } = req.params;
+
+    const reposts = await PageRepost.find({ pageId })
+      .populate({
+        path: "pagePost",
+        populate: {
+          path: "pageId",
+          select: "pageName profileImg",
+        },
+      })
+      .populate({
+        path: "pageId",
+        select: "pageName profileImg",
+      })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(reposts.length ? reposts : { message: "No reposts found for this page" });
+  } catch (err) {
+    console.error("Error fetching reposts by page ID:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+const deletePageRepost = async (req, res) => {
+  try {
+    const { repostId } = req.params;
+    const userId = req.user._id;
+
+    const repost = await PageRepost.findOneAndDelete({ _id: repostId, user: userId });
+
+    if (!repost) {
+      return res.status(404).json({ message: "Repost not found" });
+    }
+
+    res.status(200).json({ message: "Repost deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting repost:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+
+
+const createPageRewrite = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { comment } = req.body;
+    const userId = req.user._id;
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: "Page post not found" });
+    }
+
+    const alreadyRewritten = await PageRewrite.findOne({ user: userId, pagePost: postId });
+    if (alreadyRewritten) {
+      return res.status(400).json({ message: "Already rewritten this page post" });
+    }
+
+    const rewrite = await PageRewrite.create({
+      user: userId,
+      pagePost: postId,
+      comment,
+    });
+
+    res.status(201).json({ message: "Rewrite created", data: rewrite });
+  } catch (err) {
+    console.error("Error creating page rewrite:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const deletePageRewrite = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const userId = req.user._id;
+
+    const rewrite = await PageRewrite.findOneAndDelete({ user: userId, pagePost: postId });
+
+    if (!rewrite) {
+      return res.status(404).json({ message: "Rewrite not found" });
+    }
+
+    res.status(200).json({ message: "Rewrite deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting rewrite:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+const getRewritesByPostId = async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    const rewrites = await PageRewrite.find({ pagePost: postId })
+      .populate("user", "name username profileImg")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(rewrites.length ? rewrites : { message: "No rewrites found" });
+  } catch (err) {
+    console.error("Error fetching rewrites:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+const getAllRewrites = async (req, res) => {
+  try {
+    const rewrites = await PageRewrite.find()
+      .populate("user", "name username profileImg")
+      .populate("pagePost")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(rewrites.length ? rewrites : { message: "No rewrites found" });
+  } catch (err) {
+    console.error("Error fetching all rewrites:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const getRewritesByPageId = async (req, res) => {
+  try {
+    const { pageId } = req.params;
+
+    const posts = await Post.find({ pageId }).select("_id");
+    const postIds = posts.map(p => p._id);
+
+    const rewrites = await PageRewrite.find({ pagePost: { $in: postIds } })
+      .populate("user", "name username profileImg")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(rewrites.length ? rewrites : { message: "No rewrites found for this page" });
+  } catch (err) {
+    console.error("Error fetching rewrites by page ID:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+const pinRewrite = async (req, res) => {
+  try {
+    const { rewriteId } = req.params;
+
+    const rewrite = await PageRewrite.findById(rewriteId);
+    if (!rewrite) {
+      return res.status(404).json({ message: "Rewrite not found" });
+    }
+
+    rewrite.pinned = !rewrite.pinned; // Toggle pinned
+    await rewrite.save();
+
+    res.status(200).json({ message: `Rewrite ${rewrite.pinned ? "pinned" : "unpinned"} successfully`, data: rewrite });
+  } catch (err) {
+    console.error("Error pinning/unpinning rewrite:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+
 module.exports = {
+  createPageRepost,
+  getAllPageReposts,
+  getRepostsByPageId,
+  editPageRepost,
+  getRepostById,
+  deletePageRepost,
+  createPageRewrite,
+  deletePageRewrite,
+  getRewritesByPostId,
+  getAllRewrites,
+  getAllRewrites,
+  getRewritesByPageId,
+  pinRewrite,
   savePost,
   allSavedPost,
   allArchivedPost,
