@@ -3,12 +3,18 @@ const { uploadStoryMulter, uploadCollectionMulter } = require("../middlewares/mu
 const userAuthMiddleware = require("../middlewares/userAuthMiddleware");
 
 const {
+  // addStory,
+  // deleteStory,
+  // markStoryAsRead,
+  // getStoryViewers,
+  // getAllStories,
+  // getStoryByUserId,
   addStory,
   deleteStory,
   markStoryAsRead,
   getStoryViewers,
   getAllStories,
-  getStoryByUserId,
+  getStoriesByPageId,
   createSpotlightCollection,
   addStoryToSpotlightCollection,
   removeStoryFromSpotlightCollection,
@@ -19,12 +25,21 @@ const {
 
 const router = express.Router();
 
-router.post("/users/addnewstory", userAuthMiddleware, uploadStoryMulter, addStory);
-router.delete("/users/deletestory/:storyId", userAuthMiddleware, deleteStory);
-router.post("/users/markstoryasread/:storyId", userAuthMiddleware, markStoryAsRead);
-router.get("/users/storyviewers/:storyId", userAuthMiddleware, getStoryViewers);
-router.get("/users/stories", userAuthMiddleware, getAllStories);
-router.get("/users/story/:userId", userAuthMiddleware, getStoryByUserId);
+
+// Now under page based routes
+router.post("/pages/:pageId/addstory", userAuthMiddleware, uploadStoryMulter, addStory);
+router.delete("/pages/:pageId/deletestory/:storyId", userAuthMiddleware, deleteStory);
+router.post("/pages/:pageId/markstoryasread/:storyId", userAuthMiddleware, markStoryAsRead);
+router.get("/pages/:pageId/storyviewers/:storyId", userAuthMiddleware, getStoryViewers);
+router.get("/pages/stories", userAuthMiddleware, getAllStories);
+router.get("/pages/:pageId/stories", userAuthMiddleware, getStoriesByPageId);
+
+// router.post("/users/addnewstory", userAuthMiddleware, uploadStoryMulter, addStory);
+// router.delete("/users/deletestory/:storyId", userAuthMiddleware, deleteStory);
+// router.post("/users/markstoryasread/:storyId", userAuthMiddleware, markStoryAsRead);
+// router.get("/users/storyviewers/:storyId", userAuthMiddleware, getStoryViewers);
+// router.get("/users/stories", userAuthMiddleware, getAllStories);
+// router.get("/users/story/:userId", userAuthMiddleware, getStoryByUserId);
 
 
 // Create a new Spotlight Collection
