@@ -2,6 +2,7 @@ const Message = require('../models/userMessage');
 const Chat = require('../models/userChat');
 const User = require('../models/User');
 
+
 exports.getMessages = async (req, res) => {
   try {
     const { recipientId } = req.params;

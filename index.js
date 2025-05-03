@@ -9,6 +9,7 @@ const pageRoute = require("./routes/pageRoute");
 const userPostRoutes = require("./routes/userPostRoute");
 const userChatRoute = require("./routes/userChatRoute");
 const userMapRoutes = require("./routes/userMapRoute");
+const pageChatRoutes = require("./routes/pageChatRoutes")
 const cors = require("cors");
 const http = require("http");
 require("dotenv").config();
@@ -45,6 +46,7 @@ app.use("/api", apiRoutes);
 app.use("/contacts", contactRoutes);
 app.use("/api/user/posts", userPostRoutes);
 app.use("/api/user/chat", userChatRoute);
+app.use("/api/page/chat", pageChatRoutes)
 
 // Initialize Sockets
 setupSocket(server);       // for user chat
