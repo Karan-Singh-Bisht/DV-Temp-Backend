@@ -17,6 +17,7 @@ const {
   getAllPagePosts,
   getPagePost,
   getInfoCards,
+  getInfoCard,
 } = require("../controllers/adminController/adminController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const { uploadAvatarMulter } = require("../middlewares/multer");
@@ -50,5 +51,6 @@ router.get("/get-page-post/:id", getPagePost);
 
 //InfoCards routes
 router.get("/get-all-infoCards", getInfoCards);
+router.get("/get-info-card/:id", getInfoCard);
 
 module.exports = router;

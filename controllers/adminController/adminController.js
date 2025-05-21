@@ -416,3 +416,16 @@ exports.getInfoCards = async (req, res) => {
     res.status(500).json({ message: "No Infocards found", err });
   }
 };
+
+exports.getInfoCard = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const infoCard = await Infonics.findById(id).populate("pageId");
+    if (!infoCard) {
+      return res.status(404).json({ message: "No card found" });
+    }
+    res.status(200).json(infoCard);
+  } catch (err) {
+    res.status(500).json({ message: "No Info Card found", err });
+  }
+};
