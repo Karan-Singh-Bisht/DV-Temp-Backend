@@ -557,6 +557,196 @@ console.log(pageId, category);
 
 
 
+//Page admin managing
+// ✅ Add admin (super admin only)
+const addAdminToPage = async (req, res) => {
+  const { pageId, userIdToAdd, role } = req.body;
+  const requesterId = req.user._id;
+
+  try {
+    const page = await Pages.findById(pageId);
+    if (!page) {
+      return res.status(404).json({ success: false, message: "Page not found" });
+    }
+
+    const isSuperAdmin = page.superAdmins.includes(requesterId.toString());
+    if (!isSuperAdmin) {
+      return res.status(403).json({ success: false, message: "Only super admins can add admins" });
+    }
+
+    if (role === "super") {
+      if (!page.superAdmins.includes(userIdToAdd)) {
+        page.superAdmins.push(userIdToAdd);
+      }
+    } else if (role === "co") {
+      if (!page.coAdmins.includes(userIdToAdd)) {
+        page.coAdmins.push(userIdToAdd);
+      }
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid role type" });
+    }
+
+    await page.save();
+    return res.status(200).json({
+      success: true,
+      message: "Admin added successfully",
+      page,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+// ✅ Remove admin (super admin only)
+const removeAdminFromPage = async (req, res) => {
+  const { pageId, userIdToRemove, role } = req.body;
+  const requesterId = req.user._id;
+
+  try {
+    const page = await Pages.findById(pageId);
+    if (!page) {
+      return res.status(404).json({ success: false, message: "Page not found" });
+    }
+
+    const isSuperAdmin = page.superAdmins.includes(requesterId.toString());
+    if (!isSuperAdmin) {
+      return res.status(403).json({ success: false, message: "Only super admins can remove admins" });
+    }
+
+    if (role === "super") {
+      page.superAdmins = page.superAdmins.filter(id => id.toString() !== userIdToRemove);
+      if (page.superAdmins.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Page must have at least one super admin",
+        });
+      }
+    } else if (role === "co") {
+      page.coAdmins = page.coAdmins.filter(id => id.toString() !== userIdToRemove);
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid role type" });
+    }
+
+    await page.save();
+    return res.status(200).json({
+      success: true,
+      message: "Admin removed successfully",
+      page,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+// ✅ Co-admin leaves the page
+const leaveAsCoAdmin = async (req, res) => {
+  const { pageId } = req.body;
+  const userId = req.user._id;
+
+  try {
+    const page = await Pages.findById(pageId);
+    if (!page) {
+      return res.status(404).json({ success: false, message: "Page not found" });
+    }
+
+    page.coAdmins = page.coAdmins.filter(id => id.toString() !== userId.toString());
+    await page.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "You have left as co-admin",
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+// ✅ Super admin leaves the page (only if another super admin exists)
+const leaveAsSuperAdmin = async (req, res) => {
+  const { pageId } = req.body;
+  const userId = req.user._id;
+
+  try {
+    const page = await Pages.findById(pageId);
+    if (!page) {
+      return res.status(404).json({ success: false, message: "Page not found" });
+    }
+
+    if (!page.superAdmins.includes(userId.toString())) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not a super admin",
+      });
+    }
+
+    if (page.superAdmins.length <= 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Page must have at least one super admin",
+      });
+    }
+
+    page.superAdmins = page.superAdmins.filter(id => id.toString() !== userId.toString());
+    await page.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "You have left as super admin",
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+
+// ✅ Get all admins of a page (super + co)
+const getAllAdminsOfPage = async (req, res) => {
+  const { pageId } = req.body; // or use req.params.pageId if route is dynamic like /pages/:pageId/admins
+
+  try {
+    const page = await Pages.findById(pageId)
+      .populate("superAdmins", "name username profileImg") // Only select needed fields
+      .populate("coAdmins", "name username profileImg");
+
+    if (!page) {
+      return res.status(404).json({
+        success: false,
+        message: "Page not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Admins fetched successfully",
+      superAdmins: page.superAdmins,
+      coAdmins: page.coAdmins,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+
 module.exports = {
   getAllpages,
   addNewPage,
@@ -568,5 +758,10 @@ module.exports = {
   reportpagePost,
   reportpage,
   getAllAvatar,
-  addCustomAvatar
+  addCustomAvatar,
+  addAdminToPage,
+  removeAdminFromPage,
+  leaveAsCoAdmin,
+  leaveAsSuperAdmin,
+  getAllAdminsOfPage
 };

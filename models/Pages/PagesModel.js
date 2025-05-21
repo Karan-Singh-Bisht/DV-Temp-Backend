@@ -2,79 +2,60 @@ const mongoose = require("mongoose");
 
 const PagesSchema = new mongoose.Schema(
   {
-    pageName: {
-      type: String,
-      required: true,
-    },
+    pageName: { type: String, required: true },
+
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Pages",
-    },
-    userName: {
-      type: String,
+      ref: "User",
       required: true,
-    },
-    Category: {
-      type: String,
-      required: true,
-    },
-    Phone: {
-      type: Number,
-    },
-    email: {
-      type: String,
-      required: true,
-    },
-    Bio: {
-      type: String,
-    },
-    profileBackground: {
-      type: String,
-      required: true,
-    },
-    Website: {
-      type: String,
-    },
-    isCreator: {
-      type: Boolean,
-      requried: true,
-    },
-    profileImg: {
-      type: String,
-      requried: true,
-    },
-    date_of_birth: {
-      type: String,
-      requried: true,
-    },
-    gender: {
-      type: String,
-      requried: true,
-    },
-    profileAvatar: {
-      path:{
-        type:String
-      },
-      public_id:{
-        type:String
-      }
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
-    isPrivate: {
-      type: Boolean,
-      default: false,
     },
 
-    profileBackground: {
-      type: String,
-      required: true,
+    // 👇 Ensure unique entries by using Set-like array structure
+    superAdmins: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+
+    coAdmins: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+
+    userName: { type: String, required: true },
+    Category: { type: String, required: true },
+    Phone: { type: Number },
+    email: { type: String, required: true },
+    Bio: { type: String },
+    profileBackground: { type: String, required: true },
+    Website: { type: String },
+    isCreator: { type: Boolean, required: true },
+    profileImg: { type: String, required: true },
+    date_of_birth: { type: String, required: true },
+    gender: { type: String, required: true },
+    profileAvatar: {
+      path: { type: String },
+      public_id: { type: String },
     },
+    isActive: { type: Boolean, default: true },
+    isPrivate: { type: Boolean, default: false },
+
+    // 👉 Optional: track who added each admin in the future (for auditing)
+    // adminHistory: [
+    //   {
+    //     addedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    //     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    //     role: { type: String, enum: ["super", "co"] },
+    //     action: { type: String, enum: ["added", "removed"] },
+    //     timestamp: { type: Date, default: Date.now }
+    //   }
+    // ]
+
   },
   { timestamps: true }
 );
 
-const Pages = mongoose.model("Pages", PagesSchema);
-module.exports = Pages;
+module.exports = mongoose.model("Pages", PagesSchema);
