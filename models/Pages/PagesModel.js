@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 
+//Add Page Type
+
 const PagesSchema = new mongoose.Schema(
   {
     pageName: {
@@ -8,7 +10,7 @@ const PagesSchema = new mongoose.Schema(
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Pages",
+      ref: "User",
     },
     userName: {
       type: String,
@@ -37,27 +39,27 @@ const PagesSchema = new mongoose.Schema(
     },
     isCreator: {
       type: Boolean,
-      requried: true,
+      required: true,
     },
     profileImg: {
       type: String,
-      requried: true,
+      required: true,
     },
     date_of_birth: {
       type: String,
-      requried: true,
+      required: true,
     },
     gender: {
       type: String,
-      requried: true,
+      required: true,
     },
     profileAvatar: {
-      path:{
-        type:String
+      path: {
+        type: String,
       },
-      public_id:{
-        type:String
-      }
+      public_id: {
+        type: String,
+      },
     },
     isActive: {
       type: Boolean,
