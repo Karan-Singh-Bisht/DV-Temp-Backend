@@ -28,29 +28,29 @@ router.post("/login", login);
 // router.post('/login',authMiddleware, login);
 
 // Vision feed routes
-router.post("/feed", createPost);
-router.put("/feed/:id", updatePost);
-router.delete("/feed/:id", deletePost);
-router.get("/feeds", getAllFeeds);
-router.get("/feed/:id", getFeedById);
+router.post("/feed", authMiddleware, createPost);
+router.put("/feed/:id", authMiddleware, updatePost);
+router.delete("/feed/:id", authMiddleware, deletePost);
+router.get("/feeds", authMiddleware, getAllFeeds);
+router.get("/feed/:id", authMiddleware, getFeedById);
 router.post("/avatar/upload-avataruser", uploadAvatarMulter, uploadUserAvatar);
 router.post("/avatar/upload-avatarpage", uploadAvatarMulter, uploadPageAvatar);
 
 //All the routes below this should be protected
 
-router.get("/get-all-users", getAllUsers);
-router.get("/get-user-details/:id", getUserDetails);
-router.delete("/delete-user/:id", deleteUser);
-router.get("/get-all-pages", getAllPages);
-router.get("/get-page-details/:id", getPageDetails);
-router.delete("/delete-page/:id", deletePage);
+router.get("/get-all-users", authMiddleware, getAllUsers);
+router.get("/get-user-details/:id", authMiddleware, getUserDetails);
+router.delete("/delete-user/:id", authMiddleware, deleteUser);
+router.get("/get-all-pages", authMiddleware, getAllPages);
+router.get("/get-page-details/:id", authMiddleware, getPageDetails);
+router.delete("/delete-page/:id", authMiddleware, deletePage);
 
 //Page Post routes
-router.get("/get-all-page-posts", getAllPagePosts);
-router.get("/get-page-post/:id", getPagePost);
+router.get("/get-all-page-posts", authMiddleware, getAllPagePosts);
+router.get("/get-page-post/:id", authMiddleware, getPagePost);
 
 //InfoCards routes
-router.get("/get-all-infoCards", getInfoCards);
-router.get("/get-info-card/:id", getInfoCard);
+router.get("/get-all-infoCards", authMiddleware, getInfoCards);
+router.get("/get-info-card/:id", authMiddleware, getInfoCard);
 
 module.exports = router;
