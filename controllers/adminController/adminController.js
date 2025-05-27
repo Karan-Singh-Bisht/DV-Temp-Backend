@@ -14,7 +14,6 @@ const Infonics = require("../../models/Infonics");
 // Login function
 exports.login = async function (req, res) {
   const { email, password } = req.body;
-  console.log(req.body);
 
   try {
     const admin = await Admin.findOne({ email });
@@ -24,7 +23,12 @@ exports.login = async function (req, res) {
     }
 
     const token = signToken(admin._id);
-    console.log("varanille data:" + admin._id);
+    // console.log("varanille data:" + admin._id);
+
+    res.cookie("token", token, {
+      expires: new Date(Date.now() + 86400000),
+      httpOnly: true,
+    });
 
     res.json({ token, adminId: admin._id, username: admin.username });
   } catch (err) {
@@ -36,6 +40,10 @@ exports.login = async function (req, res) {
 const mediaStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => {
+    if (!file || !file.mimetype) {
+      console.log("Invalid file");
+    }
+
     let folder = "admin_post_media";
     if (file.mimetype.startsWith("video")) {
       folder = "admin_post_videos";
@@ -44,10 +52,19 @@ const mediaStorage = new CloudinaryStorage({
     return {
       folder: folder,
       resource_type: file.mimetype.startsWith("video") ? "video" : "image",
-      allowed_formats: ["jpg", "jpeg", "png", "mp4", "mov"],
+      allowed_formats: ["jpg", "jpeg", "webp", "png", "mp4", "mov"],
     };
   },
 });
+
+const multerErrorHandler = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({ error: err.message });
+  } else if (err) {
+    return res.status(500).json({ error: "Server error during upload" });
+  }
+  next();
+};
 
 // Multer middleware for handling media uploads
 const uploadMedia = multer({ storage: mediaStorage });
@@ -55,6 +72,7 @@ const uploadMedia = multer({ storage: mediaStorage });
 // Create post (Admin)
 exports.createPost = [
   uploadMedia.fields([{ name: "mediaUrl", maxCount: 5 }]),
+  multerErrorHandler,
   async (req, res) => {
     try {
       const {
@@ -66,6 +84,11 @@ exports.createPost = [
         subCategories,
       } = req.body;
 
+      //For Debugging
+
+      // console.log("BODY:", req.body);
+      // console.log("FILES:", JSON.stringify(req.files, null, 2));
+
       const mediaURLs = req.files["mediaUrl"]
         ? req.files["mediaUrl"].map((file) => file.path)
         : [];
@@ -74,17 +97,23 @@ exports.createPost = [
         return res.status(400).json({ error: "Missing required fields" });
       }
 
+      const parsedSubCategories = (() => {
+        try {
+          return JSON.parse(subCategories);
+        } catch {
+          return [subCategories];
+        }
+      })();
+
       const newPost = new Media({
-        mediaUrl: mediaURLs[0],
+        mediaUrl: mediaURLs,
         description,
         platform,
         usernameOrName,
         location,
         categories,
         //categories: Array.isArray(categories) ? categories : [categories],
-        subCategories: Array.isArray(subCategories)
-          ? subCategories
-          : [subCategories],
+        subCategories: parsedSubCategories,
       });
 
       await newPost.save();
@@ -187,7 +216,7 @@ exports.getAllFeeds = async (req, res) => {
 // Get a single feed by ID
 exports.getFeedById = async (req, res) => {
   const postId = req.params.id;
-  console.log(postId);
+
   try {
     const feed = await Media.findById(postId);
     if (!feed) {
@@ -273,6 +302,9 @@ exports.uploadPageAvatar = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find();
+    if (!users) {
+      return res.status(404).json({ message: "No User found" });
+    }
     res.status(200).json(users);
   } catch (error) {
     console.error("Error fetching users:", error.message);
@@ -413,7 +445,7 @@ exports.getInfoCards = async (req, res) => {
     }
     res.status(200).json(infoCards);
   } catch (err) {
-    res.status(500).json({ message: "No Infocards found", err });
+    res.status(500).json({ message: "Internal Server Error", err });
   }
 };
 

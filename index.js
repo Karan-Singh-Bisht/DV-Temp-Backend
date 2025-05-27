@@ -14,7 +14,8 @@ const http = require("http");
 require("dotenv").config();
 
 const { setupSocket } = require("./server/socketServer");
-const { setupSocketPage } = require("./server/setupSocketPage"); // ✅ use the new file
+const { setupSocketPage } = require("./server/setupSocketPage");
+const cookieParser = require("cookie-parser");
 
 const app = express();
 const server = http.createServer(app);
@@ -23,6 +24,7 @@ const server = http.createServer(app);
 connectDB();
 
 // Middleware
+app.use(cookieParser());
 app.use(cors("*"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -36,8 +36,6 @@ router.get("/feed/:id", authMiddleware, getFeedById);
 router.post("/avatar/upload-avataruser", uploadAvatarMulter, uploadUserAvatar);
 router.post("/avatar/upload-avatarpage", uploadAvatarMulter, uploadPageAvatar);
 
-//All the routes below this should be protected
-
 router.get("/get-all-users", authMiddleware, getAllUsers);
 router.get("/get-user-details/:id", authMiddleware, getUserDetails);
 router.delete("/delete-user/:id", authMiddleware, deleteUser);

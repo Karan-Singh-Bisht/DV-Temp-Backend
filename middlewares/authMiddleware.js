@@ -1,17 +1,7 @@
 const { verifyToken } = require("../utils/jwtUtils");
 
 const authMiddleware = (req, res, next) => {
-  console.log("Auth middleware working");
-
-  const tokenFromCookie = req.cookies?.token;
-
-  const authHeader = req.headers.authorization;
-  const tokenFromHeader =
-    authHeader && authHeader.startsWith("Bearer ")
-      ? authHeader.split(" ")[1]
-      : null;
-
-  const token = tokenFromCookie || tokenFromHeader;
+  const token = req.cookies?.token || req.headers.authorization?.split(" ")[1];
 
   if (!token) {
     return res.status(401).json({ message: "No token, authorization denied" });
