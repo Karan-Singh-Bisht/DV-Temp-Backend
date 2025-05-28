@@ -26,7 +26,13 @@ connectDB();
 
 // Middleware
 app.use(cookieParser());
-app.use(cors("*"));
+app.use(
+  cors({
+    origin: "*", // Frontend URL
+    credentials: true, // Only needed if you send cookies or auth headers
+  })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));

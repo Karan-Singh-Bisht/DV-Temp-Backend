@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 
+//Add Page Type
+
 const PagesSchema = new mongoose.Schema(
   {
     pageName: { type: String, required: true },

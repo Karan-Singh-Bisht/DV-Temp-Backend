@@ -25,6 +25,7 @@ const { uploadAvatarMulter } = require("../middlewares/multer");
 const router = express.Router();
 
 router.post("/login", login);
+// router.post('/login',authMiddleware, login);
 
 // Vision feed routes
 router.post("/feed", authMiddleware, createPost);
