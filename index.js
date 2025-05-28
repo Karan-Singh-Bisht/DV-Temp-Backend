@@ -15,7 +15,8 @@ const http = require("http");
 require("dotenv").config();
 
 const { setupSocket } = require("./server/socketServer");
-const { setupSocketPage } = require("./server/setupSocketPage"); // ✅ use the new file
+const { setupSocketPage } = require("./server/setupSocketPage");
+const cookieParser = require("cookie-parser");
 
 const app = express();
 const server = http.createServer(app);
@@ -24,7 +25,8 @@ const server = http.createServer(app);
 connectDB();
 
 // Middleware
-app.use(cors());
+app.use(cookieParser());
+app.use(cors("*"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
@@ -49,8 +51,8 @@ app.use("/api/user/chat", userChatRoute);
 app.use("/api/page/chat", pageChatRoutes)
 
 // Initialize Sockets
-setupSocket(server);       // for user chat
-setupSocketPage(server);   // for page chat
+setupSocket(server); // for user chat
+setupSocketPage(server); // for page chat
 
 // Optional route to modify documents
 app.post("/add-fields-to-documents", async (req, res) => {
@@ -60,7 +62,7 @@ app.post("/add-fields-to-documents", async (req, res) => {
       gender: "Not Specified",
     };
     const result = await User.updateMany(
-      {}, 
+      {},
       { $setOnInsert: defaultFields },
       { upsert: false, multi: true }
     );
