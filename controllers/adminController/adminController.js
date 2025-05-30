@@ -230,6 +230,31 @@ exports.getFeedById = async (req, res) => {
   }
 };
 
+//Delete a visioFeed
+exports.deleteVisionFeed = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    if (!id) {
+      return res.status(400).json({ message: "Id is required!" });
+    }
+
+    const response = await Media.findByIdAndDelete(id);
+
+    if (!response) {
+      return res
+        .status(404)
+        .json({ message: "No media found with the given id" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Media deleted successfully", data: response });
+  } catch (err) {
+    res.status(500).json({ message: "Deletion failed", error: err.message });
+  }
+};
+
 exports.uploadUserAvatar = async (req, res) => {
   try {
     const { category } = req.body;

@@ -18,6 +18,7 @@ const {
   getPagePost,
   getInfoCards,
   getInfoCard,
+  deleteVisionFeed,
 } = require("../controllers/adminController/adminController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const { uploadAvatarMulter } = require("../middlewares/multer");
@@ -33,6 +34,7 @@ router.put("/feed/:id", authMiddleware, updatePost);
 router.delete("/feed/:id", authMiddleware, deletePost);
 router.get("/feeds", authMiddleware, getAllFeeds);
 router.get("/feed/:id", authMiddleware, getFeedById);
+router.delete("/feed/:id", authMiddleware, deleteVisionFeed);
 router.post("/avatar/upload-avataruser", uploadAvatarMulter, uploadUserAvatar);
 router.post("/avatar/upload-avatarpage", uploadAvatarMulter, uploadPageAvatar);
 
