@@ -23,13 +23,24 @@ const postStorage = new CloudinaryStorage({
     }
 
     console.log(
-      `Uploading file of type: ${file.mimetype} to folder: ${folder} with format: ${format || "default"}`
+      `Uploading file of type: ${
+        file.mimetype
+      } to folder: ${folder} with format: ${format || "default"}`
     );
 
     return {
       folder,
       resource_type,
-      allowed_formats: ["jpg", "jpeg", "png", "mp4", "mov", "mp3", "wav", "glb"],
+      allowed_formats: [
+        "jpg",
+        "jpeg",
+        "png",
+        "mp4",
+        "mov",
+        "mp3",
+        "wav",
+        "glb",
+      ],
       format, // Enforce the file format if specified
     };
   },
@@ -55,7 +66,9 @@ const avatarStorage = new CloudinaryStorage({
     const format = null; // Allow various formats for avatars
 
     console.log(
-      `Uploading avatar of type: ${file.mimetype} to folder: ${folder} with format: ${format || "default"}`
+      `Uploading avatar of type: ${
+        file.mimetype
+      } to folder: ${folder} with format: ${format || "default"}`
     );
 
     return {
@@ -97,7 +110,6 @@ const uploadStoryMulter = multer({
   storage: storyStorage, // Use storyStorage instead of avatarStorage
 }).fields([{ name: "story", maxCount: 1 }]);
 
-
 // Configure Cloudinary storage for spotlight collection images
 const spotlightStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -124,5 +136,51 @@ const uploadCollectionMulter = multer({
   storage: spotlightStorage,
 }).fields([{ name: "collectionImage", maxCount: 1 }]); // Only 1 image per collection
 
+const UserVerificationDetailsStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "user_verifications", // cloud folder name
+    allowed_formats: ["jpg", "png", "jpeg"],
+    transformation: [{ width: 800, height: 800, crop: "limit" }],
+  },
+});
 
-module.exports = { uploadPostMedia, uploadAvatarMulter, uploadStoryMulter,uploadCollectionMulter };
+const uploadVerficationDetailsMulter = multer({
+  storage: UserVerificationDetailsStorage,
+});
+
+const businessVerificationDetailsStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "business_verifications", // cloud folder name
+    allowed_formats: ["jpg", "png", "jpeg"],
+    transformation: [{ width: 800, height: 800, crop: "limit" }],
+  },
+});
+
+const uploadBusinessVerificationDetailsMulter = multer({
+  storage: businessVerificationDetailsStorage,
+});
+
+const dvCardsStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "dv_cards", // cloud folder name
+    allowed_formats: ["jpg", "png", "jpeg"],
+    transformation: [{ width: 800, height: 800, crop: "limit" }],
+  },
+});
+
+const uploadDvCardsMulter = multer({
+  storage: dvCardsStorage,
+});
+
+module.exports = {
+  uploadPostMedia,
+  uploadAvatarMulter,
+  uploadStoryMulter,
+  uploadCollectionMulter,
+  uploadVerficationDetailsMulter,
+  uploadBusinessVerificationDetailsMulter,
+  uploadDvCardsMulter,
+};

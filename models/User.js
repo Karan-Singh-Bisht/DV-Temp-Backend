@@ -14,6 +14,7 @@ const UserSchema = new mongoose.Schema({
   isPrivate: { type: Boolean, default: true },
   updatedAt: { type: Date, default: Date.now },
   bgColor: { type: String, required: true },
+  isVerified: { type: Boolean, default: false },
 
   // Pages owned or created
   pages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Pages" }],
@@ -26,4 +27,3 @@ const UserSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model("User", UserSchema);
-
