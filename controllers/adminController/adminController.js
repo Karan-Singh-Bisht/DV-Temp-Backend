@@ -14,6 +14,7 @@ const ReportUser = require("../../models/reportUserSchema");
 const UserVerification = require("../../models/userVerification");
 const BusinessVerification = require("../../models/Pages/businessVerification");
 const VisioFeedSave = require("../../models/visioFeedSaveModel");
+const CreatorVerification = require("../../models/Pages/creatorVerification");
 
 // Login function
 exports.login = async function (req, res) {
@@ -307,7 +308,7 @@ exports.saveFeed = async (req, res) => {
           .json({ message: "Saved Feed Deleted successfully", success: true });
       } else {
         return res
-          .status(404)
+          .status(400)
           .json({ message: "Feed deleted fail", success: false });
       }
     }
@@ -321,7 +322,6 @@ exports.saveFeed = async (req, res) => {
 exports.getAllSavedFeeds = async (req, res) => {
   try {
     const { pageId } = req.params;
-    console.log(pageId);
 
     if (!pageId) {
       return res.status(400).json({ message: "Page ID is required" });
@@ -669,7 +669,7 @@ exports.getReportedUser = async (req, res) => {
 
 exports.createVerificationRequest = async (req, res) => {
   const userId = req.user?._id || req.user?.id;
-  // const userId = "682abe896017e836dd119a35";
+  // const userId = "6833443cd4871639f8570bc1";
 
   if (!userId) {
     return res.status(400).json({ message: "User ID is required" });
@@ -682,7 +682,7 @@ exports.createVerificationRequest = async (req, res) => {
     });
     if (existingRequest) {
       return res
-        .status(400)
+        .status(401)
         .json({ message: "A pending verification request already exists." });
     }
 
@@ -808,6 +808,10 @@ exports.rejectUserVerificationRequest = async (req, res) => {
 
     verificationRequest.rejectionReason = rejectReason || "No reason provided";
 
+    if (verificationRequest.status === "approved") {
+      return res.status(403).json({ message: "User is already verified" });
+    }
+
     // Update the request status to 'denied'
     verificationRequest.status = "rejected";
     await verificationRequest.save();
@@ -848,9 +852,9 @@ exports.deleteUserVerificationRequest = async (req, res) => {
 
 //Business Verification Requests
 
-//Update the userId later
 exports.createBusinessVerificationRequest = async (req, res) => {
-  const userId = req.user?._id || req.user?.id;
+  // const userId = req.user?._id || req.user?.id;
+  const userId = "6833443cd4871639f8570bc1";
   const { pageId } = req.params;
   const { phone, email, adminFullName, roleType, link1, link2, link3 } =
     req.body;
@@ -1018,6 +1022,10 @@ exports.rejectBusinessVerificationRequest = async (req, res) => {
       });
     }
 
+    if (verificationRequest.status === "approved") {
+      return res.status(401).json({ message: "Request already approved" });
+    }
+
     verificationRequest.rejectionReason = rejectReason || "No reason provided";
     verificationRequest.status = "rejected";
 
@@ -1051,6 +1059,67 @@ exports.deleteBusinessVerificationRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting business verification request:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+//Creator Verificaion Requests
+exports.createCreatorVerificationRequest = async (req, res) => {
+  // const userId = req.user?._id || req.user?.id;
+  const userId = "682abe896017e836dd119a35";
+  const pageId = req.params.pageId;
+  const { phone, email, link1, link2, link3 } = req.body;
+
+  if (!userId || !pageId) {
+    return res
+      .status(400)
+      .json({ message: "Both userId and PageId is required" });
+  }
+
+  try {
+    const existingRequest = await CreatorVerification.findOne({
+      user: userId,
+      page: pageId,
+      status: "pending",
+    });
+    if (existingRequest) {
+      return res
+        .status(400)
+        .json({ message: "A pending verification request already exists." });
+    }
+
+    const authorizedSelfieFile = req.files["authorizedSelfie"]?.[0]?.path;
+    const professionalDocFile = req.files["professionalDoc"]?.[0]?.path;
+
+    if (!authorizedSelfieFile || !professionalDocFile) {
+      return res
+        .status(400)
+        .json({ message: "Both selfie and ID document are required." });
+    }
+
+    const newRequest = new CreatorVerification({
+      user: userId,
+      page: pageId,
+      authorizedSelfie: authorizedSelfieFile,
+      professionalDoc: professionalDocFile,
+      phone,
+      email,
+      link1,
+      link2,
+      link3,
+    });
+
+    await newRequest.save();
+
+    res.status(201).json({
+      message: "Creator verification request created successfully",
+      request: newRequest,
+    });
+  } catch (error) {
+    console.error(
+      "Error creating creator verification request:",
+      error.message
+    );
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

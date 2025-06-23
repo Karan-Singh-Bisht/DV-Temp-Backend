@@ -14,7 +14,6 @@ const UserVerificationSchema = new mongoose.Schema(
     },
     identityDocument: {
       type: String,
-      required: true,
     },
     requestedAt: { type: Date, default: Date.now },
     reviewedAt: Date,

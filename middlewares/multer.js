@@ -175,6 +175,19 @@ const uploadDvCardsMulter = multer({
   storage: dvCardsStorage,
 });
 
+const creatorVerificationDetailsStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "creator-verifications",
+    allowed_formats: ["jpg", "png", "jpeg"],
+    transformation: [{ width: 800, height: 800, crop: "limit" }],
+  },
+});
+
+const uploadCreatorVerificationDetailsMulter = multer({
+  storage: creatorVerificationDetailsStorage,
+});
+
 module.exports = {
   uploadPostMedia,
   uploadAvatarMulter,
@@ -183,4 +196,5 @@ module.exports = {
   uploadVerficationDetailsMulter,
   uploadBusinessVerificationDetailsMulter,
   uploadDvCardsMulter,
+  uploadCreatorVerificationDetailsMulter,
 };

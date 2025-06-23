@@ -206,13 +206,30 @@ router.post("/add-fields-to-documents", async (req, res) => {
 
 router.post(
   "/create-dv-card/:pageId",
-  // userAuthMiddleware,
   uploadDvCardsMulter.fields([
     { name: "cardFrontImage", maxCount: 1 },
     { name: "cardBackImage", maxCount: 1 },
     { name: "selfie", maxCount: 1 },
   ]),
   pageController.createDVCard
+);
+
+router.post(
+  "/create-shout-out",
+  // userAuthMiddleware,
+  pageController.createShoutOutCard
+);
+
+router.post(
+  "/accept-shout-out/:cardId",
+  // userAuthMiddleware,
+  pageController.acceptShoutOutCard
+);
+
+router.post(
+  "/reject-shout-out/:cardId",
+  // userAuthMiddleware,
+  pageController.rejectShoutOutCard
 );
 
 module.exports = router;

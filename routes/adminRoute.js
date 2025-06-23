@@ -37,12 +37,14 @@ const {
   getSpecificBusinessVerificationRequest,
   saveFeed,
   getAllSavedFeeds,
+  createCreatorVerificationRequest,
 } = require("../controllers/adminController/adminController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const {
   uploadAvatarMulter,
   uploadVerficationDetailsMulter,
   uploadBusinessVerificationDetailsMulter,
+  uploadCreatorVerificationDetailsMulter,
 } = require("../middlewares/multer");
 const userAuthMiddleware = require("../middlewares/userAuthMiddleware");
 
@@ -99,7 +101,7 @@ router.get(
 
 router.post(
   "/user-verification-request",
-  userAuthMiddleware,
+  // userAuthMiddleware,
   uploadVerficationDetailsMulter.fields([
     { name: "authorizedSelfie", maxCount: 1 }, // 1 selfie
     { name: "identityDocument", maxCount: 1 }, // 1 identity document
@@ -172,6 +174,18 @@ router.delete(
   "/delete-business-verification-request/:requestId",
   authMiddleware,
   deleteBusinessVerificationRequest
+);
+
+//Creator Verification
+
+router.post(
+  "/creator-verification-request/:pageId",
+  // userAuthMiddleware,
+  uploadCreatorVerificationDetailsMulter.fields([
+    { name: "authorizedSelfie", maxCount: 1 },
+    { name: "professionalDoc", maxCount: 1 },
+  ]),
+  createCreatorVerificationRequest
 );
 
 module.exports = router;

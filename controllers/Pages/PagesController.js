@@ -6,6 +6,7 @@ const ReportPage = require("../../models/Pages/reportPageSchema");
 const PageAvatar = require("../../models/Pages/pageAvatarSchema");
 const CustomPageAvatar = require("../../models/Pages/pageCustomAvatarSchema");
 const dvCards = require("../../models/Pages/dvCardsModel");
+const ShoutOut = require("../../models/Pages/shoutOut");
 
 // const getAllpages = async (req, res) => {
 //   try {
@@ -29,6 +30,8 @@ const dvCards = require("../../models/Pages/dvCardsModel");
 
 const mongoose = require("mongoose"); // Make sure to import mongoose
 const postSchema = require("../../models/Pages/postSchema");
+const { getUsersWithinARadius } = require("../../utils/getUsersWithinARadius");
+const { sendNotificationToNearbyUsers } = require("../../server/socketServer");
 
 const getAllpages = async (req, res) => {
   try {
@@ -851,6 +854,150 @@ const createDVCard = async (req, res) => {
   }
 };
 
+const createShoutOutCard = async (req, res) => {
+  // const creatorId = req?.userId || req?.user?.id;
+  const creatorId = "682abe896017e836dd119a35";
+  const {
+    message,
+    category,
+    subCategory,
+    event,
+    lng,
+    lat,
+    date,
+    time,
+    maxMembers,
+    radiusInKm,
+  } = req.body;
+
+  if (!time || !/^\d{2}:\d{2}-\d{2}:\d{2}$/.test(time)) {
+    return res.status(400).json({ message: "Invalid time format" });
+  }
+
+  const [start, end] = time.split("-");
+  const expiryDate = new Date(`${date}T${end}:00`);
+
+  try {
+    if (!creatorId) {
+      return res.status(403).json({ message: "Unauthorized! Pls Login" });
+    }
+
+    const radiusInMetres = radiusInKm * 1000;
+
+    const newShoutOutCard = await ShoutOut.create({
+      creator: creatorId,
+      message,
+      category,
+      subCategory,
+      event,
+      location: {
+        type: "Point",
+        coordinates: [lng, lat],
+      },
+      dateOfTheEvent: new Date(date),
+      timeOfTheEvent: time,
+      maxMembers,
+      radius: radiusInMetres,
+      expiresAt: expiryDate,
+    });
+
+    if (!newShoutOutCard) {
+      return res.status(404).json({ message: "Shout Out Card not created!!" });
+    }
+
+    const user = await User.findById(creatorId);
+    if (!user) {
+      return res.status(404).json({ message: "User Not Found" });
+    }
+
+    user.shoutOutCard = newShoutOutCard._id;
+    await user.save();
+
+    const nearByUsers = await getUsersWithinARadius(radiusInKm, creatorId);
+
+    res
+      .status(201)
+      .json({ message: "card Created successfully!", newShoutOutCard });
+
+    nearByUsers.forEach((user) => {
+      sendNotificationToNearbyUsers(user._id, newShoutOutCard);
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal Server Error", err });
+  }
+};
+
+const acceptShoutOutCard = async (req, res) => {
+  const userId = req.user?.id || req.user;
+  const { cardId } = req.params;
+
+  if (!userId) {
+    return res.status(403).json({ message: "Unauthorized" });
+  }
+
+  try {
+    const shoutOutCard = await ShoutOut.findById(cardId);
+    if (!shoutOutCard) {
+      return res.status(404).json({ message: "ShoutOut card not found" });
+    }
+
+    if (shoutOutCard.acceptedUsers.includes(userId)) {
+      return res
+        .status(400)
+        .json({ message: "You have already accepted this shoutout" });
+    }
+
+    if (shoutOutCard.acceptedUsers.length >= shoutOutCard.maxMembers) {
+      return res.status(400).json({ message: "Maximum members reached" });
+    }
+
+    shoutOutCard.acceptedUsers.push(userId);
+    await shoutOutCard.save();
+
+    res.status(201).json({ message: "Request Accepted!" });
+  } catch (err) {
+    console.error("❌ Error accepting shoutout:", err);
+    res.status(500).json({ message: "Internal server error", error: err });
+  }
+};
+
+const rejectShoutOutCard = async (req, res) => {
+  const userId = req.user?.id || req.user;
+  const { cardId } = req.params;
+
+  if (!userId) {
+    return res.status(403).json({ message: "Unauthorized" });
+  }
+
+  try {
+    const shoutOutCard = await ShoutOut.findById(cardId);
+    if (!shoutOutCard) {
+      return res.status(404).json({ message: "ShoutOut card not found" });
+    }
+
+    if (shoutOutCard.acceptedUsers.includes(userId)) {
+      return res
+        .status(400)
+        .json({ message: "You already accepted this shoutout" });
+    }
+
+    if (shoutOutCard.rejectedUsers.includes(userId)) {
+      return res
+        .status(400)
+        .json({ message: "You already rejected this shoutout" });
+    }
+
+    shoutOutCard.rejectedUsers.push(userId);
+    await shoutOutCard.save();
+
+    return res.status(200).json({ message: "You rejected the shoutout" });
+  } catch (err) {
+    console.error("❌ Error rejecting shoutout:", err);
+    res.status(500).json({ message: "Internal server error", error: err });
+  }
+};
+
 module.exports = {
   getAllpages,
   addNewPage,
@@ -869,4 +1016,7 @@ module.exports = {
   leaveAsSuperAdmin,
   getAllAdminsOfPage,
   createDVCard,
+  createShoutOutCard,
+  acceptShoutOutCard,
+  rejectShoutOutCard,
 };
