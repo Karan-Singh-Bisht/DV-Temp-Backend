@@ -68,7 +68,12 @@ router.get ('/users/getpage/:userPageId/:pageId',userAuthMiddleware, PagesContro
 router.get ('/users/getpageself/:pageId',userAuthMiddleware, PagesController.getPageSelf)
 
 
-//Page 
+//Page manage
+router.post("/users/page/add-admin", userAuthMiddleware, PagesController.addAdminToPage);
+router.post("/users/page/remove-admin", userAuthMiddleware, PagesController.removeAdminFromPage);
+router.post("/users/page/leave-coadmin", userAuthMiddleware, PagesController.leaveAsCoAdmin);
+router.post("/users/page/leave-superadmin", userAuthMiddleware, PagesController.leaveAsSuperAdmin);
+router.post("/users/page/get-admins", userAuthMiddleware, PagesController.getAllAdminsOfPage);
 
 //page blocking
 router.get('/users/blocktoggle/:pageId/:blockpageId', userAuthMiddleware,PageActionsController.updatePageBlockEntry)

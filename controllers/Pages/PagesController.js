@@ -3,9 +3,10 @@ const Pages = require("../../models/Pages/PagesModel");
 const PageActions = require("../../models/Pages/PageActionsModel");
 const ReportPagePost = require("../../models/Pages/PageRepost");
 const ReportPage = require("../../models/Pages/reportPageSchema");
-const PageAvatar = require('../../models/Pages/pageAvatarSchema');
-const CustomPageAvatar = require('../../models/Pages/pageCustomAvatarSchema');
-
+const PageAvatar = require("../../models/Pages/pageAvatarSchema");
+const CustomPageAvatar = require("../../models/Pages/pageCustomAvatarSchema");
+const dvCards = require("../../models/Pages/dvCardsModel");
+const ShoutOut = require("../../models/Pages/shoutOut");
 
 // const getAllpages = async (req, res) => {
 //   try {
@@ -29,6 +30,8 @@ const CustomPageAvatar = require('../../models/Pages/pageCustomAvatarSchema');
 
 const mongoose = require("mongoose"); // Make sure to import mongoose
 const postSchema = require("../../models/Pages/postSchema");
+const { getUsersWithinARadius } = require("../../utils/getUsersWithinARadius");
+const { sendNotificationToNearbyUsers } = require("../../server/socketServer");
 
 const getAllpages = async (req, res) => {
   try {
@@ -48,7 +51,6 @@ const getAllpages = async (req, res) => {
 
     const PageActionData = await PageActions.findOne({ pageId: userPageId });
 
-    
     let filteredPages = allPages;
 
     if (PageActionData) {
@@ -121,8 +123,7 @@ const addNewPage = async (req, res) => {
       gender,
       profileBackground,
     };
-    
-  
+
     const newPage = new Pages(PageData);
     const savePageData = await newPage.save();
     if (savePageData) {
@@ -245,7 +246,6 @@ const togglePageStatus = async (req, res) => {
         { isActive: !page.isActive },
         { new: true }
       );
-      console.log(isUpdatedPage);
       if (isUpdatedPage) {
         let boo = isUpdatedPage.isActive ? "Activation" : "Deactivation";
         res
@@ -294,14 +294,17 @@ const searchPages = async (req, res) => {
       ]),
     ]);
     // Extract reported page IDs
-    const reportedPageIds = reportedData.length > 0 ? reportedData[0].pageIds : [];
-    
+    const reportedPageIds =
+      reportedData.length > 0 ? reportedData[0].pageIds : [];
+
     // Filter out reported pages
-    
+
     let filteredPages = pages.filter(
-      (page) => !reportedPageIds.some((reportedId) => reportedId.toString()===page._id.toString())
+      (page) =>
+        !reportedPageIds.some(
+          (reportedId) => reportedId.toString() === page._id.toString()
+        )
     );
-    
 
     // Filter out blocked pages if `pageActionData` exists
     if (pageActionData) {
@@ -341,7 +344,6 @@ const searchPages = async (req, res) => {
     });
   }
 };
-
 
 const getPage = async (req, res) => {
   try {
@@ -492,21 +494,25 @@ const getAllAvatar = async (req, res) => {
     }
 
     // Initialize avatars array
-    let avatars=[]
+    let avatars = [];
     const allavatars = await PageAvatar.find();
 
     // If the page is not a creator, include custom avatars
     if (!page.isCreator) {
       const customAvatars = await CustomPageAvatar.find({ pageId });
-      avatars = [...customAvatars,...allavatars]
-    }else{
-      avatars= allavatars
+      avatars = [...customAvatars, ...allavatars];
+    } else {
+      avatars = allavatars;
     }
 
-    res.status(200).json({message:"All avatar fetched successfully",data:avatars});
+    res
+      .status(200)
+      .json({ message: "All avatar fetched successfully", data: avatars });
   } catch (error) {
     console.error("Error fetching avatars:", error);
-    res.status(500).json({ message: "An error occurred while fetching avatars" });
+    res
+      .status(500)
+      .json({ message: "An error occurred while fetching avatars" });
   }
 };
 
@@ -514,10 +520,10 @@ const addCustomAvatar = async (req, res) => {
   try {
     const { pageId, category } = req.body;
 
-console.log(pageId, category);
+    console.log(pageId, category);
 
     // Fetch the `isCreator` field for the given page ID
-    const page = await Pages.findOne({_id:pageId,  isCreator: false });
+    const page = await Pages.findOne({ _id: pageId, isCreator: false });
     if (!page) {
       return res.status(404).json({ message: "Page not found" });
     }
@@ -544,18 +550,453 @@ console.log(pageId, category);
 
     res.status(200).json({
       message: "Avatar uploaded successfully",
-      
     });
-
   } catch (error) {
     console.error("Error uploading avatar:", error);
-    res.status(500).json({ message: "An error occurred while uploading avatar" });
+    res
+      .status(500)
+      .json({ message: "An error occurred while uploading avatar" });
   }
 };
 
+//Page admin managing
+// ✅ Add admin (super admin only)
+const addAdminToPage = async (req, res) => {
+  const { pageId, userIdToAdd, role } = req.body;
+  const requesterId = req.user._id;
 
+  try {
+    const page = await Pages.findById(pageId);
+    if (!page) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Page not found" });
+    }
 
+    const isSuperAdmin = page.superAdmins.includes(requesterId.toString());
+    if (!isSuperAdmin) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Only super admins can add admins" });
+    }
 
+    if (role === "super") {
+      if (!page.superAdmins.includes(userIdToAdd)) {
+        page.superAdmins.push(userIdToAdd);
+      }
+    } else if (role === "co") {
+      if (!page.coAdmins.includes(userIdToAdd)) {
+        page.coAdmins.push(userIdToAdd);
+      }
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid role type" });
+    }
+
+    await page.save();
+    return res.status(200).json({
+      success: true,
+      message: "Admin added successfully",
+      page,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+// ✅ Remove admin (super admin only)
+const removeAdminFromPage = async (req, res) => {
+  const { pageId, userIdToRemove, role } = req.body;
+  const requesterId = req.user._id;
+
+  try {
+    const page = await Pages.findById(pageId);
+    if (!page) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Page not found" });
+    }
+
+    const isSuperAdmin = page.superAdmins.includes(requesterId.toString());
+    if (!isSuperAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: "Only super admins can remove admins",
+      });
+    }
+
+    if (role === "super") {
+      page.superAdmins = page.superAdmins.filter(
+        (id) => id.toString() !== userIdToRemove
+      );
+      if (page.superAdmins.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Page must have at least one super admin",
+        });
+      }
+    } else if (role === "co") {
+      page.coAdmins = page.coAdmins.filter(
+        (id) => id.toString() !== userIdToRemove
+      );
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid role type" });
+    }
+
+    await page.save();
+    return res.status(200).json({
+      success: true,
+      message: "Admin removed successfully",
+      page,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+// ✅ Co-admin leaves the page
+const leaveAsCoAdmin = async (req, res) => {
+  const { pageId } = req.body;
+  const userId = req.user._id;
+
+  try {
+    const page = await Pages.findById(pageId);
+    if (!page) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Page not found" });
+    }
+
+    page.coAdmins = page.coAdmins.filter(
+      (id) => id.toString() !== userId.toString()
+    );
+    await page.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "You have left as co-admin",
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+// ✅ Super admin leaves the page (only if another super admin exists)
+const leaveAsSuperAdmin = async (req, res) => {
+  const { pageId } = req.body;
+  const userId = req.user._id;
+
+  try {
+    const page = await Pages.findById(pageId);
+    if (!page) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Page not found" });
+    }
+
+    if (!page.superAdmins.includes(userId.toString())) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not a super admin",
+      });
+    }
+
+    if (page.superAdmins.length <= 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Page must have at least one super admin",
+      });
+    }
+
+    page.superAdmins = page.superAdmins.filter(
+      (id) => id.toString() !== userId.toString()
+    );
+    await page.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "You have left as super admin",
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+// ✅ Get all admins of a page (super + co)
+const getAllAdminsOfPage = async (req, res) => {
+  const { pageId } = req.body; // or use req.params.pageId if route is dynamic like /pages/:pageId/admins
+
+  try {
+    const page = await Pages.findById(pageId)
+      .populate("superAdmins", "name username profileImg") // Only select needed fields
+      .populate("coAdmins", "name username profileImg");
+
+    if (!page) {
+      return res.status(404).json({
+        success: false,
+        message: "Page not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Admins fetched successfully",
+      superAdmins: page.superAdmins,
+      coAdmins: page.coAdmins,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+const createDVCard = async (req, res) => {
+  const { pageId } = req.params;
+  const {
+    fullName,
+    designation,
+    companyName,
+    phone,
+    email,
+    location,
+    website,
+    category,
+    note,
+    latitude,
+    longitude,
+    date,
+    qrCodeURL,
+  } = req.body;
+  try {
+    if (!latitude || !longitude) {
+      return res.status(400).json({
+        success: false,
+        message: "Latitude and longitude are required",
+      });
+    }
+
+    const cardFrontImageFile = req.files["cardFrontImage"]?.[0]?.path;
+    const cardBackImageFile = req.files["cardBackImage"]?.[0]?.path;
+    const selfieFile = req.files["selfie"]?.[0]?.path;
+
+    const geolocation = {
+      type: "Point",
+      coordinates: [parseFloat(longitude), parseFloat(latitude)], // [longitude, latitude]
+    };
+
+    // Create new DV card
+    const newDVCard = await dvCards.create({
+      page: pageId,
+      cardFrontImage: cardFrontImageFile || null,
+      cardBackImage: cardBackImageFile || null,
+      selfie: selfieFile || null,
+      fullName,
+      designation,
+      companyName,
+      phone,
+      email,
+      location,
+      website,
+      qrCodeURL,
+      category,
+      note,
+      date: date ? new Date(date) : undefined,
+      geolocation,
+    });
+
+    if (!newDVCard) {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to create DV card",
+      });
+    }
+
+    // Update the page with the DV card ID
+    await Pages.findByIdAndUpdate(
+      pageId,
+      { dvCard: newDVCard._id },
+      { new: true }
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "DV card created successfully",
+      data: newDVCard,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+const createShoutOutCard = async (req, res) => {
+  const creatorId = req?.userId || req?.user?.id;
+  // const creatorId = "682abe896017e836dd119a35";
+  const {
+    message,
+    category,
+    subCategory,
+    event,
+    lng,
+    lat,
+    date,
+    time,
+    maxMembers,
+    radiusInKm,
+  } = req.body;
+
+  if (!time || !/^\d{2}:\d{2}-\d{2}:\d{2}$/.test(time)) {
+    return res.status(400).json({ message: "Invalid time format" });
+  }
+
+  const [start, end] = time.split("-");
+  const expiryDate = new Date(`${date}T${end}:00`);
+
+  try {
+    if (!creatorId) {
+      return res.status(403).json({ message: "Unauthorized! Pls Login" });
+    }
+
+    const radiusInMetres = radiusInKm * 1000;
+
+    const newShoutOutCard = await ShoutOut.create({
+      creator: creatorId,
+      message,
+      category,
+      subCategory,
+      event,
+      location: {
+        type: "Point",
+        coordinates: [lng, lat],
+      },
+      dateOfTheEvent: new Date(date),
+      timeOfTheEvent: time,
+      maxMembers,
+      radius: radiusInMetres,
+      expiresAt: expiryDate,
+    });
+
+    if (!newShoutOutCard) {
+      return res.status(404).json({ message: "Shout Out Card not created!!" });
+    }
+
+    const user = await User.findById(creatorId);
+    if (!user) {
+      return res.status(404).json({ message: "User Not Found" });
+    }
+
+    user.shoutOutCard = newShoutOutCard._id;
+    await user.save();
+
+    const nearByUsers = await getUsersWithinARadius(radiusInKm, creatorId);
+
+    res
+      .status(201)
+      .json({ message: "card Created successfully!", newShoutOutCard });
+
+    nearByUsers.forEach((user) => {
+      sendNotificationToNearbyUsers(user._id, newShoutOutCard);
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal Server Error", err });
+  }
+};
+
+const acceptShoutOutCard = async (req, res) => {
+  const userId = req.user?.id || req.user;
+  const { cardId } = req.params;
+
+  if (!userId) {
+    return res.status(403).json({ message: "Unauthorized" });
+  }
+
+  try {
+    const shoutOutCard = await ShoutOut.findById(cardId);
+    if (!shoutOutCard) {
+      return res.status(404).json({ message: "ShoutOut card not found" });
+    }
+
+    if (shoutOutCard.acceptedUsers.includes(userId)) {
+      return res
+        .status(400)
+        .json({ message: "You have already accepted this shoutout" });
+    }
+
+    if (shoutOutCard.acceptedUsers.length >= shoutOutCard.maxMembers) {
+      return res.status(400).json({ message: "Maximum members reached" });
+    }
+
+    shoutOutCard.acceptedUsers.push(userId);
+    await shoutOutCard.save();
+
+    res.status(201).json({ message: "Request Accepted!" });
+  } catch (err) {
+    console.error("❌ Error accepting shoutout:", err);
+    res.status(500).json({ message: "Internal server error", error: err });
+  }
+};
+
+const rejectShoutOutCard = async (req, res) => {
+  const userId = req.user?.id || req.user;
+  const { cardId } = req.params;
+
+  if (!userId) {
+    return res.status(403).json({ message: "Unauthorized" });
+  }
+
+  try {
+    const shoutOutCard = await ShoutOut.findById(cardId);
+    if (!shoutOutCard) {
+      return res.status(404).json({ message: "ShoutOut card not found" });
+    }
+
+    if (shoutOutCard.acceptedUsers.includes(userId)) {
+      return res
+        .status(400)
+        .json({ message: "You already accepted this shoutout" });
+    }
+
+    if (shoutOutCard.rejectedUsers.includes(userId)) {
+      return res
+        .status(400)
+        .json({ message: "You already rejected this shoutout" });
+    }
+
+    shoutOutCard.rejectedUsers.push(userId);
+    await shoutOutCard.save();
+
+    return res.status(200).json({ message: "You rejected the shoutout" });
+  } catch (err) {
+    console.error("❌ Error rejecting shoutout:", err);
+    res.status(500).json({ message: "Internal server error", error: err });
+  }
+};
 
 module.exports = {
   getAllpages,
@@ -568,5 +1009,14 @@ module.exports = {
   reportpagePost,
   reportpage,
   getAllAvatar,
-  addCustomAvatar
+  addCustomAvatar,
+  addAdminToPage,
+  removeAdminFromPage,
+  leaveAsCoAdmin,
+  leaveAsSuperAdmin,
+  getAllAdminsOfPage,
+  createDVCard,
+  createShoutOutCard,
+  acceptShoutOutCard,
+  rejectShoutOutCard,
 };

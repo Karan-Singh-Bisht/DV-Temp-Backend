@@ -9,6 +9,7 @@ const pageRoute = require("./routes/pageRoute");
 const userPostRoutes = require("./routes/userPostRoute");
 const userChatRoute = require("./routes/userChatRoute");
 const userMapRoutes = require("./routes/userMapRoute");
+const pageChatRoutes = require("./routes/pageChatRoutes");
 const cors = require("cors");
 const http = require("http");
 const cron = require("node-cron");
@@ -67,10 +68,11 @@ app.use("/api", apiRoutes);
 app.use("/contacts", contactRoutes);
 app.use("/api/user/posts", userPostRoutes);
 app.use("/api/user/chat", userChatRoute);
+app.use("/api/page/chat", pageChatRoutes);
 
 // Initialize Sockets
 setupSocket(server); // for user chat
-setupSocketPage(server); // for page chat
+// setupSocketPage(server); // for page chat
 
 // Optional route to modify documents
 app.post("/add-fields-to-documents", async (req, res) => {

@@ -10,7 +10,9 @@ exports.getUsers = async function (req, res) {
   try {
     // Check if the user ID is available in the request
     if (!req.user || !req.user.id) {
-      return res.status(400).json({ message: "User ID is missing in the request." });
+      return res
+        .status(400)
+        .json({ message: "User ID is missing in the request." });
     }
 
     const userId = req.user.id;
@@ -29,8 +31,8 @@ exports.getUsers = async function (req, res) {
       {
         $match: {
           $or: [{ requester: userId }, { recipient: userId }],
-          status: 'blocked'
-        }
+          status: "blocked",
+        },
       },
       {
         $project: {
@@ -38,13 +40,15 @@ exports.getUsers = async function (req, res) {
             $cond: {
               if: { $eq: ["$requester", userId] },
               then: "$recipient",
-              else: "$requester"
-            }
-          }
-        }
-      }
-    ]).then(results => results.map(result => result.blockedUserId.toString()));
-    console.log(blockedUserIds)
+              else: "$requester",
+            },
+          },
+        },
+      },
+    ]).then((results) =>
+      results.map((result) => result.blockedUserId.toString())
+    );
+    console.log(blockedUserIds);
 
     // Filter out blocked users from the list of users
     const userResponses = users
@@ -74,7 +78,6 @@ exports.getUsers = async function (req, res) {
   }
 };
 
-
 exports.getUserById = async function (req, res) {
   try {
     const user = await User.findById(req.params.id);
@@ -97,9 +100,9 @@ exports.getUserById = async function (req, res) {
       });
 
       if (friendship) {
-        if(friendship.status==='blocked'){
-          return res.status(404).json({message:'user is blocked'})
-        }else if (friendship.status === "accepted") {
+        if (friendship.status === "blocked") {
+          return res.status(404).json({ message: "user is blocked" });
+        } else if (friendship.status === "accepted") {
           friendshipStatus = "looped";
         } else if (friendship.status === "pending") {
           friendshipStatus = "requested";
@@ -215,7 +218,7 @@ exports.signupUser = async function (req, res) {
   } = req.body;
 
   try {
-    let existingUser = await User.findOne({ phoneNumber })
+    let existingUser = await User.findOne({ phoneNumber });
     // .populate("pages");
 
     if (existingUser) {
@@ -235,7 +238,7 @@ exports.signupUser = async function (req, res) {
       link,
       profileImg,
       bgColor,
-      pages: []
+      pages: [],
     });
 
     await user.save();
@@ -257,7 +260,7 @@ exports.signupUser = async function (req, res) {
       // updatedAt: user.updatedAt,
       isPrivate: user.isPrivate,
       bgColor: user.bgColor,
-      pages: [] //thi
+      pages: [], //thi
     };
 
     return res.status(201).send(userResponse);
@@ -371,8 +374,8 @@ exports.reportUser = async (req, res) => {
   try {
     const { reason, reporterUserId, details } = req.body;
 
-    const userId= req.user._id
-   
+    const userId = req.user._id;
+
     const isuser = await Pages.findById(userId);
     if (!isuser) {
       return res.status(404).json({ message: " No User found" });
@@ -381,7 +384,7 @@ exports.reportUser = async (req, res) => {
     // Create a new report
     const addReport = new ReportUser({
       reason,
-      userId:reporterUserId ,
+      userId: reporterUserId,
       details,
       reportedBy: userId,
     });
@@ -406,14 +409,17 @@ exports.reportUser = async (req, res) => {
 exports.allavatars = async (req, res) => {
   try {
     const userAvatars = await UserAvatar.find();
-    res.status(200).json({message:"All avatar fetched successfully", data:userAvatars}); // Return the found avatars in the response
+    res
+      .status(200)
+      .json({ message: "All avatar fetched successfully", data: userAvatars }); // Return the found avatars in the response
   } catch (error) {
     console.error(error); // Log the error for debugging
-    res.status(500).json({ message: "An error occurred while fetching avatars" }); // Send error response
+    res
+      .status(500)
+      .json({ message: "An error occurred while fetching avatars" }); // Send error response
   }
 };
 
-
-const test=()=>{
+const test = () => {
   console.log("test fn");
-}
+};

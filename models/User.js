@@ -13,8 +13,48 @@ const UserSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   isPrivate: { type: Boolean, default: true },
   updatedAt: { type: Date, default: Date.now },
-  bgColor:{ type: String, required: true },
-  pages: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Pages' }]  
+  bgColor: { type: String, required: true },
+  isVerified: { type: Boolean, default: false },
+  location: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      default: "Point",
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true,
+    },
+  },
+  // Pages owned or created
+  pages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Pages" }],
+  dvCard: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "DVCards",
+  },
+  shoutOutCard: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ShoutOut",
+    },
+  ],
+  reportCount: {
+    type: Number,
+    default: 0,
+  },
+  suspendedUntil: {
+    type: Date,
+  },
+  isSuspended: {
+    type: Boolean,
+    default: false,
+  },
+
+  // 👇 Optionally track page roles for reverse referencing
+  // adminOfPages: [{
+  //   pageId: { type: mongoose.Schema.Types.ObjectId, ref: 'Pages' },
+  //   role: { type: String, enum: ["super", "co"] }
+  // }]
 });
 
 module.exports = mongoose.model("User", UserSchema);
