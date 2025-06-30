@@ -38,6 +38,15 @@ const {
   saveFeed,
   getAllSavedFeeds,
   createCreatorVerificationRequest,
+  reportPages,
+  getAllReportedPages,
+  getParticularReportedPage,
+  deleteReportUser,
+  deletePageReport,
+  resolveReportUser,
+  rejectReportUser,
+  resolvePageReport,
+  rejectPageReport,
 } = require("../controllers/adminController/adminController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const {
@@ -91,6 +100,54 @@ router.post(
 router.get("/get-all-reported-users", authMiddleware, getAllReportedUsers);
 
 router.get("/get-reported-user/:id", authMiddleware, getReportedUser);
+
+router.patch(
+  "/resolve-reported-user/:reportId",
+  authMiddleware,
+  resolveReportUser
+);
+
+router.patch(
+  "/reject-reported-user/:reportId",
+  authMiddleware,
+  rejectReportUser
+);
+
+router.delete(
+  "/delete-user-report/:reportId",
+  authMiddleware,
+  deleteReportUser
+);
+
+//Reported Pages
+
+router.post(
+  "/report-page/:pageId",
+  // userAuthMiddleware,
+  reportPages
+);
+
+router.get("/get-all-report-page", authMiddleware, getAllReportedPages);
+
+router.get(
+  "/get-reported-page/:pageId",
+  authMiddleware,
+  getParticularReportedPage
+);
+
+router.patch(
+  "/resolve-page-report/:reportId",
+  authMiddleware,
+  resolvePageReport
+);
+
+router.patch("/reject-page-report/:reportId", authMiddleware, rejectPageReport);
+
+router.delete(
+  "/delete-page-report/:reportId",
+  authMiddleware,
+  deletePageReport
+);
 
 //User Verification
 router.get(

@@ -49,6 +49,13 @@ const PagesSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "DVCards",
     },
+    isSuspended: {
+      type: Boolean,
+      default: false,
+    },
+    suspendedUntil: {
+      type: Date,
+    },
 
     // 👉 Optional: track who added each admin in the future (for auditing)
     // adminHistory: [

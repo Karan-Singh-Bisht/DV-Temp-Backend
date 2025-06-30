@@ -855,8 +855,8 @@ const createDVCard = async (req, res) => {
 };
 
 const createShoutOutCard = async (req, res) => {
-  // const creatorId = req?.userId || req?.user?.id;
-  const creatorId = "682abe896017e836dd119a35";
+  const creatorId = req?.userId || req?.user?.id;
+  // const creatorId = "682abe896017e836dd119a35";
   const {
     message,
     category,

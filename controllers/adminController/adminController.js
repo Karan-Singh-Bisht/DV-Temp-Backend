@@ -15,6 +15,7 @@ const UserVerification = require("../../models/userVerification");
 const BusinessVerification = require("../../models/Pages/businessVerification");
 const VisioFeedSave = require("../../models/visioFeedSaveModel");
 const CreatorVerification = require("../../models/Pages/creatorVerification");
+const PageReport = require("../../models/Pages/reportPageSchema");
 
 // Login function
 exports.login = async function (req, res) {
@@ -32,7 +33,7 @@ exports.login = async function (req, res) {
 
     res.cookie("token", token, {
       expires: new Date(Date.now() + 86400000),
-      httpOnly: true,
+      sameSite: "lax",
     });
 
     res.json({ token, adminId: admin._id, username: admin.username });
@@ -593,13 +594,10 @@ exports.getInfoCard = async (req, res) => {
 };
 
 //Report User
-
 exports.reportUser = async (req, res) => {
   // const reportedBy = req.user?.userId;
-  const reportedBy = "682abe896017e836dd119a35";
+  const reportedBy = "682c46a00e5bd673a55e0ad0";
   const { reportedUser, reason } = req.body;
-
-  console.log(reportedBy, reportedUser, reason);
 
   if (!reportedBy || !reportedUser || !reason) {
     return res.status(400).json({ message: "All fields are required" });
@@ -633,12 +631,10 @@ exports.reportUser = async (req, res) => {
   }
 };
 
+//Get all reported users
 exports.getAllReportedUsers = async (req, res) => {
   try {
     const reportedUsers = await ReportUser.find().populate("userId reportedBy");
-    if (!reportedUsers || reportedUsers.length === 0) {
-      return res.status(404).json({ message: "No reported users found" });
-    }
     res.status(200).json(reportedUsers);
   } catch (err) {
     console.error("Error fetching reported users:", err.message);
@@ -646,12 +642,13 @@ exports.getAllReportedUsers = async (req, res) => {
   }
 };
 
+//Get particular Reported User
 exports.getReportedUser = async (req, res) => {
   const { id } = req.params;
 
   try {
     const reportedUser = await ReportUser.findById(id).populate(
-      "userId reportedBy"
+      "userId reportedBy resolvedBy"
     );
     if (!reportedUser) {
       return res.status(404).json({ message: "Reported user not found" });
@@ -663,7 +660,314 @@ exports.getReportedUser = async (req, res) => {
   }
 };
 
-//Block user
+//Resolve reported User
+exports.resolveReportUser = async (req, res) => {
+  const { reportId } = req.params;
+  const { actionTaken, resolverComments } = req.body;
+  const resolverId = req.admin;
+
+  if (!["warning", "suspended"].includes(actionTaken)) {
+    return res.status(400).json({ message: "Invalid action" });
+  }
+
+  const report = await ReportUser.findById(reportId);
+  if (!report) return res.status(404).json({ message: "Report not found" });
+  if (report.resolved)
+    return res.status(400).json({ message: "Already resolved" });
+
+  report.resolved = true;
+  report.actionTaken = actionTaken;
+  report.resolvedBy = resolverId;
+  report.resolvedAt = new Date();
+  report.resolverComments = resolverComments;
+
+  await report.save();
+
+  if (actionTaken === "warning") {
+    const populatedReport = await ReportUser.findById(report._id).populate(
+      "userId reportedBy resolvedBy"
+    );
+
+    return res.status(201).json({
+      message: "Report Resolved Warning sent!!",
+      report: populatedReport,
+    });
+  }
+
+  if (actionTaken === "suspended") {
+    await User.findByIdAndUpdate(
+      report.userId,
+      {
+        suspendedUntil: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+        isSuspended: true,
+      },
+      { new: true }
+    );
+  }
+
+  // Re-populate to get updated user data
+  const updatedPopulatedReport = await ReportUser.findById(report._id).populate(
+    [
+      { path: "userId" },
+      { path: "reportedBy" },
+      { path: "resolvedBy", select: "-password" },
+    ]
+  );
+
+  return res
+    .status(200)
+    .json({ message: "Report Resolved", report: updatedPopulatedReport });
+};
+
+//Reject reported user
+exports.rejectReportUser = async (req, res) => {
+  const { reportId } = req.params;
+  const { actionTaken, resolverComments } = req.body;
+  const resolverId = req.admin;
+  try {
+    if (actionTaken !== "none") {
+      return res.status(400).json({ message: "Invalid Action" });
+    }
+    const report = await ReportUser.findById(reportId);
+    if (!report) {
+      return res.status(404).json({ message: "Report not found!" });
+    }
+    if (report.resolved) {
+      return res.status(400).json({ message: "Report already resolved" });
+    }
+    report.resolved = true;
+    report.actionTaken = actionTaken;
+    report.resolvedBy = resolverId;
+    report.resolvedAt = new Date();
+    report.resolverComments = resolverComments;
+
+    await report.save();
+    const newReport = await ReportUser.findById(reportId).populate([
+      { path: "userId" },
+      { path: "reportedBy" },
+      { path: "resolvedBy", select: "-password" },
+    ]);
+    res
+      .status(200)
+      .json({ message: "Report rejected successfully!!", newReport });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Internal Server Error!" });
+  }
+};
+
+//Delete Reported User
+exports.deleteReportUser = async (req, res) => {
+  const { reportId } = req.params;
+  const report = await ReportUser.findByIdAndDelete(reportId);
+  if (!report) {
+    return res.status(404).json({ message: "Report not found" });
+  }
+  res.status(200).json({ message: "Report deleted successfully!" });
+};
+
+//Report Pages
+
+exports.reportPages = async (req, res) => {
+  const { pageId } = req.params;
+  // const userId = req.user?.id || req.user;
+  const userId = "682c46a00e5bd673a55e0ad0";
+  const { reason, details } = req.body;
+
+  try {
+    if (!pageId || !userId || !reason || !details) {
+      return res.status(406).json({ message: "All fields are required!!" });
+    }
+    const page = await Pages.findById(pageId);
+    if (!page) {
+      return res.status(404).json({ message: "Page not found!" });
+    }
+
+    const existingReport = await PageReport.findOne({
+      pageId,
+      reportedBy: userId,
+    });
+
+    if (existingReport) {
+      return res.status(400).json({ message: "Report already exists!" });
+    }
+
+    const newPageReport = await PageReport.create({
+      pageId,
+      reportedBy: userId,
+      reason,
+      details,
+    });
+    if (!newPageReport) {
+      return res.status(401).json({ message: "Report not created" });
+    }
+    res
+      .status(201)
+      .json({ message: "Report Created Successfully!", newPageReport });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.getAllReportedPages = async (req, res) => {
+  try {
+    const reportedPages = await PageReport.find({})
+      .populate("pageId")
+      .populate("reportedBy")
+      .lean();
+    if (!reportedPages) {
+      return res.status(404).json({ message: "No Page Reported" });
+    }
+    res.status(200).json(reportedPages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal Server Error" }, err);
+  }
+};
+
+exports.getParticularReportedPage = async (req, res) => {
+  const { pageId } = req.params;
+  try {
+    const page = await PageReport.findById(pageId)
+      .populate("pageId")
+      .populate("reportedBy")
+      .populate({ path: "resolvedBy", select: "-password" })
+      .lean();
+    if (!page) {
+      return res.status(404).json({ message: "Reported Page Not Found!" });
+    }
+    res.status(200).json(page);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" }, err);
+  }
+};
+
+exports.resolvePageReport = async (req, res) => {
+  const { reportId } = req.params;
+  const { actionTaken, resolverComments } = req.body;
+  const resolverId = req.admin;
+
+  const VALID_ACTIONS = ["warning", "suspended"];
+  const SUSPENSION_DURATION_DAYS = 7;
+
+  try {
+    if (!VALID_ACTIONS.includes(actionTaken)) {
+      return res.status(400).json({ message: "Invalid action" });
+    }
+
+    const report = await PageReport.findById(reportId);
+    if (!report) {
+      return res.status(404).json({ message: "Report Not Found!!" });
+    }
+
+    if (report.resolved) {
+      return res
+        .status(400)
+        .json({ message: "Page Report already resolved!!" });
+    }
+
+    // Mark the report as resolved
+    report.resolved = true;
+    report.actionTaken = actionTaken;
+    report.resolvedBy = resolverId;
+    report.resolvedAt = Date.now();
+    report.resolverComments = resolverComments;
+    await report.save();
+
+    // Handle the action
+    switch (actionTaken) {
+      case "warning":
+        console.log("Message sent to page!!");
+        break;
+
+      case "suspended":
+        await Pages.findByIdAndUpdate(
+          report.pageId,
+          {
+            isSuspended: true,
+            suspendedUntil:
+              Date.now() + SUSPENSION_DURATION_DAYS * 24 * 60 * 60 * 1000,
+          },
+          { new: true }
+        );
+        break;
+      default:
+        return res.status(400).json({ message: "Invalid Action Taken!!" });
+    }
+
+    // Populate and send the final updated report
+    await report.populate([
+      { path: "pageId" },
+      { path: "reportedBy" },
+      { path: "resolvedBy", select: "-password" },
+    ]);
+    return res.status(200).json({
+      message:
+        actionTaken === "warning"
+          ? "Warning sent to user via email"
+          : "Page Report Resolved!!",
+      report,
+    });
+  } catch (err) {
+    console.error("Error resolving page report:", err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.rejectPageReport = async (req, res) => {
+  const { reportId } = req.params;
+  const { actionTaken, resolverComments } = req.body;
+  const resolverId = req.admin;
+  try {
+    if (actionTaken !== "none") {
+      return res.status(400).json({ message: "Invalid Action" });
+    }
+    const report = await PageReport.findById(reportId);
+    if (!report) {
+      return res.status(404).json({ message: "Report not found!" });
+    }
+    if (report.resolved) {
+      return res.status(400).json({ message: "Report already resolved" });
+    }
+    report.resolved = true;
+    report.actionTaken = actionTaken;
+    report.resolvedBy = resolverId;
+    report.resolvedAt = new Date();
+    report.resolverComments = resolverComments;
+
+    await report.save();
+    const newReport = await PageReport.findById(reportId).populate([
+      { path: "pageId" },
+      { path: "reportedBy" },
+      { path: "resolvedBy", select: "-password" },
+    ]);
+    res
+      .status(200)
+      .json({ message: "Report rejected successfully!!", newReport });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Internal Server Error!" });
+  }
+};
+
+exports.deletePageReport = async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    if (!reportId) {
+      return res.status(400).json({ message: "Report Id is required" });
+    }
+    const report = await PageReport.findByIdAndDelete(reportId);
+    if (!report) {
+      return res.status(404).json({ message: "Report not found!!" });
+    }
+    return res.status(200).json({ message: "Report Deleted Successfully!" });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal Server Error!" });
+  }
+};
 
 //User Verification Requests
 
