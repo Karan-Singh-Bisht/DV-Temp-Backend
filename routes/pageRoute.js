@@ -43,7 +43,9 @@ router.post('/page/reportpage',userAuthMiddleware,pageController.reportpage)
 
 
 //avatar allpageavatars
-router.get('/pages/getallavatarpage/:pageId',userAuthMiddleware, pageController.getAllAvatar)
+router.get('/pages/getallbusinesspage/:pageId',userAuthMiddleware, pageController.getAllAvatar)
+router.get('/pages/getallcreatorpage/:pageId',userAuthMiddleware, pageController.getCreatorAvatars);
+//router.post('pages/getallcreatorpage/:pageId',userAuthMiddleware, console.log("helloo"));
 router.post('/pages/upload-customavatar',userAuthMiddleware,uploadAvatarMulter, pageController.addCustomAvatar)
 
 

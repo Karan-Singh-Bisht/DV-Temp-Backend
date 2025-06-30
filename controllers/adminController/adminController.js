@@ -10,6 +10,7 @@ const User = require("../../models/User");
 const Pages = require("../../models/Pages/PagesModel");
 const Post = require("../../models/Pages/postSchema");
 const Infonics = require("../../models/Infonics");
+const CreatorPageAvatar = require('../../models/Pages/creatorPageAvatarSchema');
 
 // Login function
 exports.login = async function (req, res) {
@@ -312,7 +313,6 @@ exports.uploadPageAvatar = async (req, res) => {
 
     // Save the avatar to the database
     await newAvatar.save();
-
     res.status(200).json({
       message: "Avatar uploaded successfully",
       avatar: avatarUrl,
@@ -323,6 +323,40 @@ exports.uploadPageAvatar = async (req, res) => {
   }
 };
 
+
+exports.uploadCreatorPageAvatar = async (req, res) => {
+  try {
+    const { category } = req.body;
+
+    // Validate uploaded file
+    const avatarFile = req.files["avatar"]?.[0];
+    if (!avatarFile) {
+      return res.status(400).json({ message: "Avatar is required" });
+    }
+
+    const avatarUrl = {
+      path: avatarFile.path,
+      public_id: avatarFile.filename,
+    };
+
+    // Save avatar to CreatorPageAvatar collection
+    const newAvatar = new CreatorPageAvatar({
+      category,
+      avatarName: avatarUrl,
+    });
+
+    await newAvatar.save();
+
+    res.status(200).json({
+      message: "Creator Page avatar uploaded successfully",
+      avatar: avatarUrl,
+    });
+  } catch (error) {
+    console.error("Error uploading creator avatar:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+ 
 //get all users
 exports.getAllUsers = async (req, res) => {
   try {

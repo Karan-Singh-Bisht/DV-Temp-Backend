@@ -446,15 +446,12 @@ const getAllDeletedPosts = async (req, res) => {
 
 const getCombinedPosts = async (req, res) => {
   try {
-    
     const allPagePosts = await PostModel.find({ isArchive: false })
       .populate("pageId", "pageName date_of_birth gender userName profileImg")
       .lean();
 
-    
     const allFeeds = await Media.find({}).lean();
 
-    
     const determineMediaType = (url) => {
       const extension = url.split('.').pop().toLowerCase();
       if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension)) {
@@ -466,23 +463,35 @@ const getCombinedPosts = async (req, res) => {
       return 'unknown'; 
     };
 
-    
-    const normalizedPagePosts = allPagePosts.map((post) => ({
-      type: "pagePost",
-      id: post._id,
-      title: post.title,
-      description: post.description,
-      media: post.media,
-      createdAt: post.createdAt,
-      pageDetails: post.pageId,
-      platform: "Devi",
-      location: post.location,
-      category: post.category,
-      subCategory: post.subCategory,
-      mediatype: post.mediatype,
-    }));
+    const normalizedPagePosts = allPagePosts.map((post) => {
+      let combinedMedia = [];
 
-    
+      // Extract image paths
+      if (Array.isArray(post.media) && post.media.length > 0) {
+        combinedMedia.push(...post.media.map(mediaItem => mediaItem.path));
+      }
+
+      // Include video path if present
+      if (post.mediatype === 'video' && post.video?.path) {
+        combinedMedia.push(post.video.path);
+      }
+
+      return {
+        type: "pagePost",
+        id: post._id,
+        title: post.title,
+        description: post.description,
+        media: combinedMedia,
+        createdAt: post.createdAt,
+        pageDetails: post.pageId,
+        platform: "Devi",
+        location: post.location,
+        category: post.category,
+        subCategory: post.subCategory,
+        mediatype: post.mediatype,
+      };
+    });
+
     const normalizedFeeds = allFeeds.map((feed) => ({
       type: "feedPost",
       id: feed._id,
@@ -494,25 +503,25 @@ const getCombinedPosts = async (req, res) => {
       location: feed.location,
       category: feed.categories,
       subCategory: feed.subCategories,
-      mediatype: feed.mediaUrl.length > 0 ? determineMediaType(feed.mediaUrl[0]) : "unknown", 
+      mediatype: feed.mediaUrl.length > 0 ? determineMediaType(feed.mediaUrl[0]) : "unknown",
     }));
 
-   
     const combinedPosts = [...normalizedPagePosts, ...normalizedFeeds];
-
-    
     combinedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    
     res.status(200).json({
       data: combinedPosts,
       message: "Successfully fetched combined posts",
     });
   } catch (error) {
     console.error("Error fetching combined posts:", error);
-    res.status(500).json({ message: "Error fetching combined posts", error: error.message });
+    res.status(500).json({
+      message: "Error fetching combined posts",
+      error: error.message,
+    });
   }
 };
+
 
 
 
