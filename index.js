@@ -43,9 +43,7 @@ app.set("trust proxy", 1);
 app.use(cookieParser());
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://dv-admin-beta.vercel.app",
-  "https://dv-admin-git-main-karan-singh-bishts-projects.vercel.app/",
-  "https://dv-admin-8xwbqdhvs-karan-singh-bishts-projects.vercel.app/",
+  "https://dv-admin.netlify.app/",
 ];
 
 app.use(
