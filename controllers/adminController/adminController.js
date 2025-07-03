@@ -35,9 +35,9 @@ exports.login = async function (req, res) {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "None",
-      expires: new Date(Date.now() + 86400000),
+      secure: process.env.NODE_ENV === "production", // ✅ true in prod
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // ✅ None in prod
+      expires: new Date(Date.now() + 86400000), // 1 day
     });
 
     res.json({ token, adminId: admin._id, username: admin.username });
