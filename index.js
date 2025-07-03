@@ -39,6 +39,7 @@ const axios = require("axios");
 //   }
 // });
 
+app.set("trust proxy", 1);
 app.use(cookieParser());
 const allowedOrigins = [
   "http://localhost:5173",

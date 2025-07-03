@@ -10,7 +10,7 @@ const User = require("../../models/User");
 const Pages = require("../../models/Pages/PagesModel");
 const Post = require("../../models/Pages/postSchema");
 const Infonics = require("../../models/Infonics");
-const CreatorPageAvatar = require('../../models/Pages/creatorPageAvatarSchema');
+const CreatorPageAvatar = require("../../models/Pages/creatorPageAvatarSchema");
 const ReportUser = require("../../models/reportUserSchema");
 const UserVerification = require("../../models/userVerification");
 const BusinessVerification = require("../../models/Pages/businessVerification");
@@ -35,8 +35,9 @@ exports.login = async function (req, res) {
 
     res.cookie("token", token, {
       httpOnly: true,
+      secure: true,
+      sameSite: "None",
       expires: new Date(Date.now() + 86400000),
-      sameSite: "lax",
     });
 
     res.json({ token, adminId: admin._id, username: admin.username });
@@ -422,7 +423,6 @@ exports.uploadPageAvatar = async (req, res) => {
   }
 };
 
-
 exports.uploadCreatorPageAvatar = async (req, res) => {
   try {
     const { category } = req.body;
@@ -455,7 +455,7 @@ exports.uploadCreatorPageAvatar = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
- 
+
 //get all users
 exports.getAllUsers = async (req, res) => {
   try {
