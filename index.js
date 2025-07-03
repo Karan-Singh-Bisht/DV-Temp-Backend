@@ -43,7 +43,7 @@ app.set("trust proxy", 1);
 app.use(cookieParser());
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://dv-admin.netlify.app/",
+  "https://dv-admin.netlify.app",
 ];
 
 app.use(
