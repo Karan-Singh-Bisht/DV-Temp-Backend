@@ -47,6 +47,7 @@ const {
   rejectReportUser,
   resolvePageReport,
   rejectPageReport,
+  checkAuth,
 } = require("../controllers/adminController/adminController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const {
@@ -60,6 +61,7 @@ const userAuthMiddleware = require("../middlewares/userAuthMiddleware");
 const router = express.Router();
 
 router.post("/login", login);
+router.get("/auth/check", checkAuth);
 // router.post('/login',authMiddleware, login);
 
 // Vision feed routes
@@ -68,7 +70,7 @@ router.put("/feed/:id", authMiddleware, updatePost);
 router.delete("/feed/:id", authMiddleware, deletePost);
 router.get("/feeds", authMiddleware, getAllFeeds);
 router.get("/feed/:id", authMiddleware, getFeedById);
-router.delete("/feed/:id", authMiddleware, deleteVisionFeed);
+router.delete("/visiofeed/:id", authMiddleware, deleteVisionFeed);
 router.post("/feed/saveFeed/:pageId/:visioFeedId", saveFeed);
 router.get("/feed/saveFeeds/:pageId", getAllSavedFeeds);
 router.post("/avatar/upload-avataruser", uploadAvatarMulter, uploadUserAvatar);

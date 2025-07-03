@@ -40,12 +40,25 @@ const axios = require("axios");
 // });
 
 app.use(cookieParser());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://dv-admin-beta.vercel.app",
+];
+
 app.use(
   cors({
-    origin: "*", // Frontend URL
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true); // ✅ allow it
+      } else {
+        return callback(new Error("Not allowed by CORS")); // ❌ block it
+      }
+    },
+    credentials: true, // required to send cookies
   })
 );
-app.options("*", cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

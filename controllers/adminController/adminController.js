@@ -16,6 +16,7 @@ const BusinessVerification = require("../../models/Pages/businessVerification");
 const VisioFeedSave = require("../../models/visioFeedSaveModel");
 const CreatorVerification = require("../../models/Pages/creatorVerification");
 const PageReport = require("../../models/Pages/reportPageSchema");
+const jwt = require("jsonwebtoken");
 
 // Login function
 exports.login = async function (req, res) {
@@ -32,6 +33,7 @@ exports.login = async function (req, res) {
     // console.log("varanille data:" + admin._id);
 
     res.cookie("token", token, {
+      httpOnly: true,
       expires: new Date(Date.now() + 86400000),
       sameSite: "lax",
     });
@@ -39,6 +41,18 @@ exports.login = async function (req, res) {
     res.json({ token, adminId: admin._id, username: admin.username });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.checkAuth = async function (req, res) {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(400).json({ message: "Token is required!!" });
+  }
+  if (jwt.verify(token, process.env.JWT_SECRET)) {
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(401);
   }
 };
 
@@ -209,9 +223,6 @@ exports.deletePost = async (req, res) => {
 exports.getAllFeeds = async (req, res) => {
   try {
     const feeds = await Media.find({});
-    if (!feeds || feeds.length === 0) {
-      return res.status(404).json({ message: "No feeds found" });
-    }
     res.json(feeds);
   } catch (err) {
     res
