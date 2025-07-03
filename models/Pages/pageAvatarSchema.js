@@ -18,5 +18,5 @@ const PageAvatarSchema = new mongoose.Schema({
   },
 });
 
-const userAvatar = mongoose.model('PageAvatar', PageAvatarSchema)
+const userAvatar = mongoose.model('BusinesspageAvatar', PageAvatarSchema)
 module.exports = userAvatar;

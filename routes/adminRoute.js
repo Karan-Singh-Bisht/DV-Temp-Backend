@@ -16,27 +16,28 @@ const {
   deletePage,
   getAllPagePosts,
   getPagePost,
+  deletePagePost,
   getInfoCards,
   getInfoCard,
   deleteVisionFeed,
+  uploadCreatorPageAvatar,
+  saveFeed,
+  getAllSavedFeeds,
+  reportUser,
   getAllReportedUsers,
+  getReportedUser,
   getAllUserVerificationRequests,
   createVerificationRequest,
   getSpecificVerificationRequest,
   acceptUserVerificationRequest,
   rejectUserVerificationRequest,
   deleteUserVerificationRequest,
-  deletePagePost,
-  reportUser,
-  getReportedUser,
   createBusinessVerificationRequest,
   getAllBusinessVerificationRequests,
+  getSpecificBusinessVerificationRequest,
   acceptBusinessVerificationRequest,
   rejectBusinessVerificationRequest,
   deleteBusinessVerificationRequest,
-  getSpecificBusinessVerificationRequest,
-  saveFeed,
-  getAllSavedFeeds,
   createCreatorVerificationRequest,
   reportPages,
   getAllReportedPages,
@@ -74,7 +75,8 @@ router.delete("/visiofeed/:id", authMiddleware, deleteVisionFeed);
 router.post("/feed/saveFeed/:pageId/:visioFeedId", saveFeed);
 router.get("/feed/saveFeeds/:pageId", getAllSavedFeeds);
 router.post("/avatar/upload-avataruser", uploadAvatarMulter, uploadUserAvatar);
-router.post("/avatar/upload-avatarpage", uploadAvatarMulter, uploadPageAvatar);
+router.post("/avatar/upload-businessavatarpage", uploadAvatarMulter, uploadPageAvatar);
+router.post("/avatar/upload-creatoravatarpage", uploadAvatarMulter, uploadCreatorPageAvatar);
 
 router.get("/get-all-users", authMiddleware, getAllUsers);
 router.get("/get-user-details/:id", authMiddleware, getUserDetails);

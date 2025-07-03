@@ -7,6 +7,7 @@ const PageAvatar = require("../../models/Pages/pageAvatarSchema");
 const CustomPageAvatar = require("../../models/Pages/pageCustomAvatarSchema");
 const dvCards = require("../../models/Pages/dvCardsModel");
 const ShoutOut = require("../../models/Pages/shoutOut");
+const CreatorPageAvatar = require("../../models/Pages/creatorPageAvatarSchema")
 
 // const getAllpages = async (req, res) => {
 //   try {
@@ -516,14 +517,39 @@ const getAllAvatar = async (req, res) => {
   }
 };
 
+
+const getCreatorAvatars = async (req, res) => {
+  try {
+    const { pageId } = req.params;
+
+    const page = await Pages.findOne({ _id: pageId, isCreator: true });
+    if (!page) {
+      return res.status(404).json({ message: "Creator page not found" });
+    }
+
+    // const creatorAvatars = await CreatorPageAvatar.find({ pageId });
+    const creatorAvatars = await CreatorPageAvatar.find({});
+
+    res.status(200).json({
+      message: "Creator avatars fetched successfully",
+      data: creatorAvatars,
+    });
+  } catch (error) {
+    console.error("Error fetching creator avatars:", error);
+    res.status(500).json({ message: "Failed to fetch creator avatars" });
+  }
+};
+
+
+
 const addCustomAvatar = async (req, res) => {
   try {
     const { pageId, category } = req.body;
 
     console.log(pageId, category);
 
-    // Fetch the `isCreator` field for the given page ID
-    const page = await Pages.findOne({ _id: pageId, isCreator: false });
+    // Fetch page to determine if it's a creator page or not
+    const page = await Pages.findById(pageId);
     if (!page) {
       return res.status(404).json({ message: "Page not found" });
     }
@@ -538,14 +564,23 @@ const addCustomAvatar = async (req, res) => {
       public_id: avatarFile.filename,
     };
 
-    // Create a new UserAvatar instance
-    const newAvatar = new CustomPageAvatar({
-      pageId,
-      category,
-      avatarName: avatarUrl,
-    });
+    let newAvatar;
 
-    // Save the avatar to the database
+    // Save avatar in respective schema
+    if (page.isCreator) {
+      newAvatar = new CreatorPageAvatar({
+        pageId,
+        category,
+        avatarName: avatarUrl,
+      });
+    } else {
+      newAvatar = new CustomPageAvatar({
+        pageId,
+        category,
+        avatarName: avatarUrl,
+      });
+    }
+
     await newAvatar.save();
 
     res.status(200).json({
@@ -558,6 +593,90 @@ const addCustomAvatar = async (req, res) => {
       .json({ message: "An error occurred while uploading avatar" });
   }
 };
+
+
+// const addCustomAvatar = async (req, res) => {
+//   try {
+//     const { pageId, category } = req.body;
+
+// console.log(pageId, category);
+
+//     // Fetch the `isCreator` field for the given page ID
+//     const page = await Pages.findOne({_id:pageId,  isCreator: false });
+//     if (!page) {
+//       return res.status(404).json({ message: "Page not found" });
+//     }
+
+//     const avatarFile = req.files["avatar"]?.[0];
+//     if (!avatarFile) {
+//       return res.status(400).json({ message: "Avatar is required" });
+//     }
+
+//     const avatarUrl = {
+//       path: avatarFile.path,
+//       public_id: avatarFile.filename,
+//     };
+
+//     // Create a new UserAvatar instance
+//     const newAvatar = new CustomPageAvatar({
+//       pageId,
+//       category,
+//       avatarName: avatarUrl,
+//     });
+
+//     // Save the avatar to the database
+//     await newAvatar.save();
+
+//     res.status(200).json({
+//       message: "Avatar uploaded successfully",
+      
+//     });
+
+//   } catch (error) {
+//     console.error("Error uploading avatar:", error);
+//     res.status(500).json({ message: "An error occurred while uploading avatar" });
+//   }
+// };
+
+
+// const uploadCreatorPageAvatar = async (req, res) => {
+//   try {
+//     const { pageId, category } = req.body;
+
+//     const page = await Pages.findOne({ _id: pageId, isCreator: true });
+//     if (!page) {
+//       return res.status(404).json({ message: "Creator Page not found" });
+//     }
+
+//     const avatarFile = req.files["avatar"]?.[0];
+//     if (!avatarFile) {
+//       return res.status(400).json({ message: "Avatar is required" });
+//     }
+
+//     const avatarUrl = {
+//       path: avatarFile.path,
+//       public_id: avatarFile.filename,
+//     };
+
+//     const newAvatar = new CreatorPageAvatar({
+//       pageId,
+//       category,
+//       avatarName: avatarUrl,
+//     });
+
+//     await newAvatar.save();
+
+//     res.status(200).json({
+//       message: "Creator Page avatar uploaded successfully",
+//       data: newAvatar,
+//     });
+//   } catch (error) {
+//     console.error("Error uploading creator avatar:", error);
+//     res.status(500).json({ message: "Internal Server Error" });
+//   }
+// };
+
+
 
 //Page admin managing
 // ✅ Add admin (super admin only)
@@ -1010,6 +1129,8 @@ module.exports = {
   reportpage,
   getAllAvatar,
   addCustomAvatar,
+  //uploadCreatorPageAvatar,
+  getCreatorAvatars,
   addAdminToPage,
   removeAdminFromPage,
   leaveAsCoAdmin,

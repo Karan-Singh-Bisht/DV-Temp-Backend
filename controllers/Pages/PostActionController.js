@@ -60,24 +60,29 @@ const allSavedPost = async (req, res) => {
   try {
     const pageId = req.params.pageId;
 
-    // Find the document based on postId
-    const allData = await PostSave.findOne({ pageId }).populate("pageId");
+    const allData = await PostSave.findOne({ pageId })
+      .populate({
+        path: "savedPosts",
+        populate: {
+          path: "pageId",
+          select: "pageName profileImg", // Only return these fields from Pages
+        },
+      });
 
     if (allData) {
       res.status(200).json({ data: allData, success: true });
     } else {
-      res
-        .status(404)
-        .json({
-          success: false,
-          message: "No saved posts found for this postId",
-        });
+      res.status(404).json({
+        success: false,
+        message: "No saved posts found for this pageId",
+      });
     }
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 
 const allArchivedPost = async (req, res) => {
   try {
