@@ -39,7 +39,16 @@ const {
   rejectBusinessVerificationRequest,
   deleteBusinessVerificationRequest,
   createCreatorVerificationRequest,
-
+  reportPages,
+  getAllReportedPages,
+  getParticularReportedPage,
+  deleteReportUser,
+  deletePageReport,
+  resolveReportUser,
+  rejectReportUser,
+  resolvePageReport,
+  rejectPageReport,
+  checkAuth,
 } = require("../controllers/adminController/adminController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const {
@@ -53,6 +62,7 @@ const userAuthMiddleware = require("../middlewares/userAuthMiddleware");
 const router = express.Router();
 
 router.post("/login", login);
+router.get("/auth/check", checkAuth);
 // router.post('/login',authMiddleware, login);
 
 // Vision feed routes
@@ -61,7 +71,7 @@ router.put("/feed/:id", authMiddleware, updatePost);
 router.delete("/feed/:id", authMiddleware, deletePost);
 router.get("/feeds", authMiddleware, getAllFeeds);
 router.get("/feed/:id", authMiddleware, getFeedById);
-router.delete("/feed/:id", authMiddleware, deleteVisionFeed);
+router.delete("/visiofeed/:id", authMiddleware, deleteVisionFeed);
 router.post("/feed/saveFeed/:pageId/:visioFeedId", saveFeed);
 router.get("/feed/saveFeeds/:pageId", getAllSavedFeeds);
 router.post("/avatar/upload-avataruser", uploadAvatarMulter, uploadUserAvatar);
@@ -94,6 +104,54 @@ router.post(
 router.get("/get-all-reported-users", authMiddleware, getAllReportedUsers);
 
 router.get("/get-reported-user/:id", authMiddleware, getReportedUser);
+
+router.patch(
+  "/resolve-reported-user/:reportId",
+  authMiddleware,
+  resolveReportUser
+);
+
+router.patch(
+  "/reject-reported-user/:reportId",
+  authMiddleware,
+  rejectReportUser
+);
+
+router.delete(
+  "/delete-user-report/:reportId",
+  authMiddleware,
+  deleteReportUser
+);
+
+//Reported Pages
+
+router.post(
+  "/report-page/:pageId",
+  // userAuthMiddleware,
+  reportPages
+);
+
+router.get("/get-all-report-page", authMiddleware, getAllReportedPages);
+
+router.get(
+  "/get-reported-page/:pageId",
+  authMiddleware,
+  getParticularReportedPage
+);
+
+router.patch(
+  "/resolve-page-report/:reportId",
+  authMiddleware,
+  resolvePageReport
+);
+
+router.patch("/reject-page-report/:reportId", authMiddleware, rejectPageReport);
+
+router.delete(
+  "/delete-page-report/:reportId",
+  authMiddleware,
+  deletePageReport
+);
 
 //User Verification
 router.get(

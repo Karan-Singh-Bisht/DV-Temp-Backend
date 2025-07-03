@@ -12,6 +12,7 @@ const userMapRoutes = require("./routes/userMapRoute");
 const pageChatRoutes = require("./routes/pageChatRoutes");
 const cors = require("cors");
 const http = require("http");
+const cron = require("node-cron");
 require("dotenv").config();
 
 const { setupSocket } = require("./server/socketServer");
@@ -25,10 +26,37 @@ const server = http.createServer(app);
 connectDB();
 
 // Middleware
+const axios = require("axios");
+
+// // Run every 5 minutes
+// cron.schedule("*/5 * * * *", async () => {
+//   try {
+//     console.log("Running cron job to ping backend...");
+//     const response = await axios.get("https://devibackend.onrender.com");
+//     console.log("Ping response:", response.data);
+//   } catch (err) {
+//     console.error("Cron job failed:", err.message);
+//   }
+// });
+
 app.use(cookieParser());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://dv-admin-beta.vercel.app",
+];
+
 app.use(
   cors({
-    origin: "*", // Frontend URL
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true); // ✅ allow it
+      } else {
+        return callback(new Error("Not allowed by CORS")); // ❌ block it
+      }
+    },
+    credentials: true, // required to send cookies
   })
 );
 

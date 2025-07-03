@@ -38,6 +38,17 @@ const UserSchema = new mongoose.Schema({
       ref: "ShoutOut",
     },
   ],
+  reportCount: {
+    type: Number,
+    default: 0,
+  },
+  suspendedUntil: {
+    type: Date,
+  },
+  isSuspended: {
+    type: Boolean,
+    default: false,
+  },
 
   // 👇 Optionally track page roles for reverse referencing
   // adminOfPages: [{
