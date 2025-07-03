@@ -13,7 +13,6 @@ const ReportUserSchema = new mongoose.Schema(
       required: true,
     },
     reason: { type: String, required: true },
-    details: { type: String, required: true },
   },
 
   { TimeRanges: true }

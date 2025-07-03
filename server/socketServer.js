@@ -63,4 +63,17 @@ const sendNotification = (userId, data) => {
   }
 };
 
-module.exports = { setupSocket, sendNotification };
+const sendNotificationToNearbyUsers = (userId, shoutOut) => {
+  const userSocketId = userSockets.get(userId.toString());
+  if (userSocketId) {
+    io.to(userSocketId).emit("sendNotificationToNearbyUsers", shoutOut);
+  } else {
+    console.log(`User ${userId} is not connected!!`);
+  }
+};
+
+module.exports = {
+  sendNotificationToNearbyUsers,
+  setupSocket,
+  sendNotification,
+};

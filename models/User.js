@@ -14,9 +14,30 @@ const UserSchema = new mongoose.Schema({
   isPrivate: { type: Boolean, default: true },
   updatedAt: { type: Date, default: Date.now },
   bgColor: { type: String, required: true },
-
+  isVerified: { type: Boolean, default: false },
+  location: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      default: "Point",
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true,
+    },
+  },
   // Pages owned or created
   pages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Pages" }],
+  dvCard: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "DVCards",
+  },
+  shoutOutCard: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ShoutOut",
+    },
+  ],
 
   // 👇 Optionally track page roles for reverse referencing
   // adminOfPages: [{
@@ -26,4 +47,3 @@ const UserSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model("User", UserSchema);
-

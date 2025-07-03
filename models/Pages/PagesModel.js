@@ -34,7 +34,8 @@ const PagesSchema = new mongoose.Schema(
     Bio: { type: String },
     profileBackground: { type: String, required: true },
     Website: { type: String },
-    isCreator: { type: Boolean, required: true },
+    isCreator: { type: Boolean, required: true, default: true },
+    isVerified: { type: Boolean, default: false },
     profileImg: { type: String, required: true },
     date_of_birth: { type: String, required: true },
     gender: { type: String, required: true },
@@ -44,6 +45,10 @@ const PagesSchema = new mongoose.Schema(
     },
     isActive: { type: Boolean, default: true },
     isPrivate: { type: Boolean, default: false },
+    dvCard: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DVCards",
+    },
 
     // 👉 Optional: track who added each admin in the future (for auditing)
     // adminHistory: [
@@ -55,7 +60,6 @@ const PagesSchema = new mongoose.Schema(
     //     timestamp: { type: Date, default: Date.now }
     //   }
     // ]
-
   },
   { timestamps: true }
 );
